@@ -2,16 +2,16 @@ import { IProduct } from '@/shared/interfaces/product.interface'
 
 /*
 Модель продажи
-date - дата продажи
+saleDate - дата продажи
 productId - id продукта
-count - количество проданного
-sum - сумма продажи
+quantitySold - количество проданного
+totalPrice - сумма продажи
 * */
 export interface ISale {
   id: number
-  date: Date
+  saleDate: Date
   productId: number
   product: IProduct
-  count: number
-  sum: number
+  quantitySold: number
+  totalPrice: number
 }
