@@ -18,6 +18,15 @@ const TasksTable = () => {
       .catch(e => setError(e.message))
   }, [])
 
+  const handleDelete = async (id: number) => {
+    try {
+      await TaskService.delete(id)
+      setTasks(prev => prev.filter(task => task.id !== id))
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error deleting task')
+    }
+  }
+
   const filtered = tasks.filter(task => {
     const matchesDate = !date || task.deadline.slice(0, 10) === date
     const matchesPriority = !priority || task.priority === priority
@@ -62,6 +71,7 @@ const TasksTable = () => {
             <th className="p-2">Дедлайн</th>
             <th className="p-2">Приоритет</th>
             <th className="p-2">Статус</th>
+            <th className="p-2">Действия</th>
           </tr>
         </thead>
         <tbody>
@@ -79,6 +89,14 @@ const TasksTable = () => {
               </td>
               <td className="p-2">{task.priority}</td>
               <td className="p-2">{task.status}</td>
+              <td className="p-2">
+                <Button
+                  className="bg-error text-white px-4 py-1"
+                  onClick={() => handleDelete(task.id)}
+                >
+                  Удалить
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>

@@ -35,6 +35,16 @@ const ProductsTable = () => {
       .catch(e => setError(e.message))
   }
 
+  const handleDelete = async (id: number) => {
+    try {
+      await ProductService.delete(id)
+      setProducts(prev => prev.filter(p => p.id !== id))
+      if (selected?.id === id) setSelected(null)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error deleting product')
+    }
+  }
+
   return (
     <div>
       <div className="flex justify-between mb-4">
@@ -74,6 +84,7 @@ const ProductsTable = () => {
             <th className="p-2">Category</th>
             <th className="p-2">Balance</th>
             <th className="p-2">Price</th>
+            <th className="p-2">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -92,6 +103,17 @@ const ProductsTable = () => {
                 )}
               </td>
               <td className="p-2">${prod.salePrice}</td>
+              <td className="p-2">
+                <Button
+                  className="bg-error text-white px-4 py-1"
+                  onClick={e => {
+                    e.stopPropagation()
+                    handleDelete(prod.id)
+                  }}
+                >
+                  Delete
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>

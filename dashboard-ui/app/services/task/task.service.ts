@@ -21,4 +21,8 @@ export const TaskService = {
     const response = await axiosClassic.put<ITask>(`/task/${id}`, data)
     return response.data
   },
+
+  async delete(id: number) {
+    await axiosClassic.delete(`/task/${id}`)
+  },
 }
