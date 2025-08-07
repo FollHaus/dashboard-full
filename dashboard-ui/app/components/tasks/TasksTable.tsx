@@ -11,11 +11,14 @@ const TasksTable = () => {
   const [date, setDate] = useState('')
   const [priority, setPriority] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
+    setIsLoading(true)
     TaskService.getAll()
       .then(setTasks)
       .catch(e => setError(e.message))
+      .finally(() => setIsLoading(false))
   }, [])
 
   const filtered = tasks.filter(task => {
@@ -54,35 +57,39 @@ const TasksTable = () => {
         </Link>
       </div>
 
-      <table className="min-w-full bg-neutral-100 rounded shadow-md">
-        <thead>
-          <tr className="text-left border-b border-neutral-300">
-            <th className="p-2">Задача</th>
-            <th className="p-2">Исполнитель</th>
-            <th className="p-2">Дедлайн</th>
-            <th className="p-2">Приоритет</th>
-            <th className="p-2">Статус</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map(task => (
-            <tr
-              key={task.id}
-              className="border-b border-neutral-200 hover:bg-neutral-200"
-            >
-              <td className="p-2">
-                <Link href={`/tasks/${task.id}`}>{task.title}</Link>
-              </td>
-              <td className="p-2">{task.executor || '-'}</td>
-              <td className="p-2">
-                {new Date(task.deadline).toLocaleDateString()}
-              </td>
-              <td className="p-2">{task.priority}</td>
-              <td className="p-2">{task.status}</td>
+      {isLoading ? (
+        <div className="py-4 text-center">Loading...</div>
+      ) : (
+        <table className="min-w-full bg-neutral-100 rounded shadow-md">
+          <thead>
+            <tr className="text-left border-b border-neutral-300">
+              <th className="p-2">Задача</th>
+              <th className="p-2">Исполнитель</th>
+              <th className="p-2">Дедлайн</th>
+              <th className="p-2">Приоритет</th>
+              <th className="p-2">Статус</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filtered.map(task => (
+              <tr
+                key={task.id}
+                className="border-b border-neutral-200 hover:bg-neutral-200"
+              >
+                <td className="p-2">
+                  <Link href={`/tasks/${task.id}`}>{task.title}</Link>
+                </td>
+                <td className="p-2">{task.executor || '-'}</td>
+                <td className="p-2">
+                  {new Date(task.deadline).toLocaleDateString()}
+                </td>
+                <td className="p-2">{task.priority}</td>
+                <td className="p-2">{task.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
       {error && <p className="text-error mt-2">{error}</p>}
     </div>
   )

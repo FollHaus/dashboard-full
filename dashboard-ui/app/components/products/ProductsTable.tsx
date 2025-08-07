@@ -10,12 +10,15 @@ const ProductsTable = () => {
   const [category, setCategory] = useState('')
   const [selected, setSelected] = useState<IProduct | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   // Загружаем список продуктов при монтировании
   useEffect(() => {
+    setIsLoading(true)
     ProductService.getAll()
       .then(setProducts)
       .catch(e => setError(e.message))
+      .finally(() => setIsLoading(false))
   }, [])
 
   const categories = Array.from(
@@ -30,9 +33,11 @@ const ProductsTable = () => {
   const isLow = (balance: number) => balance <= 5
 
   const selectProduct = (id: number) => {
+    setIsLoading(true)
     ProductService.getById(id)
       .then(setSelected)
       .catch(e => setError(e.message))
+      .finally(() => setIsLoading(false))
   }
 
   return (
@@ -67,35 +72,39 @@ const ProductsTable = () => {
         </div>
       </div>
 
-      <table className="min-w-full bg-neutral-100 rounded shadow-md">
-        <thead>
-          <tr className="text-left border-b border-neutral-300">
-            <th className="p-2">Name</th>
-            <th className="p-2">Category</th>
-            <th className="p-2">Balance</th>
-            <th className="p-2">Price</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map(prod => (
-            <tr
-              key={prod.id}
-              onClick={() => selectProduct(prod.id)}
-              className={`cursor-pointer border-b border-neutral-200 hover:bg-neutral-200 ${isLow(prod.remains) ? 'bg-warning/20' : ''}`}
-            >
-              <td className="p-2">{prod.name}</td>
-              <td className="p-2">{prod.category?.name || '-'}</td>
-              <td className="p-2">
-                {prod.remains}
-                {isLow(prod.remains) && (
-                  <span className="text-error ml-1">(!)</span>
-                )}
-              </td>
-              <td className="p-2">${prod.salePrice}</td>
+      {isLoading ? (
+        <div className="py-4 text-center">Loading...</div>
+      ) : (
+        <table className="min-w-full bg-neutral-100 rounded shadow-md">
+          <thead>
+            <tr className="text-left border-b border-neutral-300">
+              <th className="p-2">Name</th>
+              <th className="p-2">Category</th>
+              <th className="p-2">Balance</th>
+              <th className="p-2">Price</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filtered.map(prod => (
+              <tr
+                key={prod.id}
+                onClick={() => selectProduct(prod.id)}
+                className={`cursor-pointer border-b border-neutral-200 hover:bg-neutral-200 ${isLow(prod.remains) ? 'bg-warning/20' : ''}`}
+              >
+                <td className="p-2">{prod.name}</td>
+                <td className="p-2">{prod.category?.name || '-'}</td>
+                <td className="p-2">
+                  {prod.remains}
+                  {isLow(prod.remains) && (
+                    <span className="text-error ml-1">(!)</span>
+                  )}
+                </td>
+                <td className="p-2">${prod.salePrice}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       {error && <p className="text-error mt-2">{error}</p>}
       {selected && (
