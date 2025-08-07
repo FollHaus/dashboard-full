@@ -11,18 +11,18 @@ export const getContentType = () => ({
 
 /**
  * Базовый URL API.
- * Значение берётся из переменной окружения `process.env.APP_URL`.
- * В конечной точке будет добавляться `/api`, например:
- * http://localhost:3000/api
+ * Взято из `NEXT_PUBLIC_API_URL` чтобы фронтенд
+ * знал адрес бекенда при сборке.
+ * Пример: http://localhost:4000/api
  */
-export const APP_URL = `${process.env.APP_URL}/api`
+export const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api`
 
 /**
  * Экземпляр Axios без авторизации.
  * Используется, когда не требуется токен.
  */
 export const axiosClassic = axios.create({
-  baseURL: APP_URL,
+  baseURL: API_URL,
   headers: getContentType(), // Установка заголовков по умолчанию
 })
 
@@ -31,7 +31,7 @@ export const axiosClassic = axios.create({
  * Поддерживает автоматическое добавление токена в заголовки запроса.
  */
 const instance = axios.create({
-  baseURL: APP_URL,
+  baseURL: API_URL,
   headers: getContentType(),
 })
 

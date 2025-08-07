@@ -15,26 +15,39 @@ export default function ReportsPage() {
   const [product, setProduct] = useState('')
   const [employee, setEmployee] = useState('')
   const [data, setData] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    ReportService.getAvailable().then(setAvailable)
-    ReportService.getHistory().then(setHistory)
+    ReportService.getAvailable()
+      .then(setAvailable)
+      .catch(e => setError(e.message))
+    ReportService.getHistory()
+      .then(setHistory)
+      .catch(e => setError(e.message))
   }, [])
 
   const generate = async () => {
-    const report = await ReportService.generate({
-      type,
-      params: { period: { start, end }, product, employee },
-    })
-    setData(report.data)
-    const hist = await ReportService.getHistory()
-    setHistory(hist)
+    try {
+      const report = await ReportService.generate({
+        type,
+        params: { period: { start, end }, product, employee },
+      })
+      setData(report.data)
+      const hist = await ReportService.getHistory()
+      setHistory(hist)
+    } catch (e: any) {
+      setError(e.message)
+    }
   }
 
   const exportReport = async (format: string) => {
-    if (!history.length) return
-    const last = history[history.length - 1]
-    await ReportService.export(last.id, format)
+    try {
+      if (!history.length) return
+      const last = history[history.length - 1]
+      await ReportService.export(last.id, format)
+    } catch (e: any) {
+      setError(e.message)
+    }
   }
 
   return (
@@ -123,6 +136,7 @@ export default function ReportsPage() {
             ))}
           </ul>
         </div>
+        {error && <p className="text-error">{error}</p>}
       </div>
     </Layout>
   )

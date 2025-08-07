@@ -8,6 +8,8 @@ salePrice - продажная цена
 remains - остаток
 * */
 
+import { ICategory } from './category.interface'
+
 export interface IProduct {
   id: number
   name: string
@@ -16,4 +18,6 @@ export interface IProduct {
   purchasePrice: number
   salePrice: number
   remains: number
+  // Связанная категория может приходить из бэкенда
+  category?: ICategory
 }

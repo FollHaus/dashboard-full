@@ -2,6 +2,7 @@
 
 import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import Field from '@/ui/Field/Field'
 import TextArea from '@/ui/TextArea/TextArea'
 import Button from '@/ui/Button/Button'
@@ -33,12 +34,15 @@ const TaskForm = ({ task }: Props) => {
   })
 
   const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
 
   const onSubmit = (data: ITask) => {
     const method = task
       ? TaskService.update(task.id, data)
       : TaskService.create(data)
-    method.then(() => router.push('/tasks'))
+    method
+      .then(() => router.push('/tasks'))
+      .catch(e => setError(e.message))
   }
 
   return (
@@ -83,6 +87,7 @@ const TaskForm = ({ task }: Props) => {
       >
         Сохранить
       </Button>
+      {error && <p className="text-error">{error}</p>}
     </form>
   )
 }

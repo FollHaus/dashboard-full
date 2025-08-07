@@ -18,6 +18,7 @@ import { AuthService } from '@/services/auth/auth.service'
 const LoginForm: FC = () => {
   const { ref, isShow, setIsShow } = useOutside<HTMLDivElement>(false)
   const [type, setType] = useState<'login' | 'register'>('login')
+  const [error, setError] = useState<string | null>(null)
 
   const {
     register,
@@ -37,6 +38,7 @@ const LoginForm: FC = () => {
       reset()
       setIsShow(false)
     },
+    onError: (e: any) => setError(e.message),
   })
 
   const registerMutation = useMutation({
@@ -48,6 +50,7 @@ const LoginForm: FC = () => {
       reset()
       setIsShow(false)
     },
+    onError: (e: any) => setError(e.message),
   })
 
   const loginSync = loginMutation.mutate
@@ -106,6 +109,7 @@ const LoginForm: FC = () => {
             >
               Регистрация
             </Button>
+            {error && <p className="text-error text-sm mt-2">{error}</p>}
           </form>
         </motion.div>
       )}

@@ -10,9 +10,12 @@ const TasksTable = () => {
   const [tasks, setTasks] = useState<ITask[]>([])
   const [date, setDate] = useState('')
   const [priority, setPriority] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    TaskService.getAll().then(setTasks)
+    TaskService.getAll()
+      .then(setTasks)
+      .catch(e => setError(e.message))
   }, [])
 
   const filtered = tasks.filter(task => {
@@ -80,6 +83,7 @@ const TasksTable = () => {
           ))}
         </tbody>
       </table>
+      {error && <p className="text-error mt-2">{error}</p>}
     </div>
   )
 }
