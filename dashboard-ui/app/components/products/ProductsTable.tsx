@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Button from '@/ui/Button/Button'
 import ProductDetails from './ProductDetails'
+import ProductForm from './ProductForm'
 import { ProductService } from '@/services/product/product.service'
 import { IProduct } from '@/shared/interfaces/product.interface'
 
@@ -9,6 +10,7 @@ const ProductsTable = () => {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
   const [selected, setSelected] = useState<IProduct | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Загружаем список продуктов при монтировании
@@ -62,7 +64,12 @@ const ProductsTable = () => {
           </select>
         </div>
         <div className="flex space-x-2">
-          <Button className="bg-primary-500 text-white px-4 py-1">Add product</Button>
+          <Button
+            className="bg-primary-500 text-white px-4 py-1"
+            onClick={() => setIsCreating(true)}
+          >
+            Add product
+          </Button>
           <Button className="bg-primary-500 text-white px-4 py-1">Import/Export list</Button>
         </div>
       </div>
@@ -100,6 +107,19 @@ const ProductsTable = () => {
       {error && <p className="text-error mt-2">{error}</p>}
       {selected && (
         <ProductDetails product={selected} onClose={() => setSelected(null)} />
+      )}
+      {isCreating && (
+        <div className="mt-4">
+          <ProductForm
+            onSuccess={() => {
+              ProductService.getAll()
+                .then(setProducts)
+                .catch(e => setError(e.message))
+              setIsCreating(false)
+            }}
+            onCancel={() => setIsCreating(false)}
+          />
+        </div>
       )}
     </div>
   )
