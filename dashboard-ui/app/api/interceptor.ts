@@ -51,5 +51,18 @@ instance.interceptors.request.use(config => {
   return config // Возвращаем обновлённый конфиг запроса
 })
 
+/**
+ * Глобальная обработка ответов.
+ * Выделяем сообщение об ошибке и пробрасываем его выше, чтобы UI мог
+ * показать понятный текст пользователю.
+ */
+instance.interceptors.response.use(
+  response => response,
+  error => {
+    const message = error?.response?.data?.message || error.message
+    return Promise.reject(new Error(message))
+  }
+)
+
 // Экспортируем основной инстанс Axios
 export default instance
