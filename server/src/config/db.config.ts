@@ -9,8 +9,7 @@ export function getSequelizeConfig(
 	const database = configService.get<string>('DB_DATABASE')
 	const username = configService.get<string>('DB_USERNAME')
 	const password = configService.get<string>('DB_PASSWORD')
-
-	console.log({ host, port, database, username, password }) // лог для отладки
+	const isDevelopment = configService.get<string>('NODE_ENV') === 'development'
 
 	if (!database || !username || !password) {
 		throw new Error(
@@ -27,7 +26,7 @@ export function getSequelizeConfig(
 		password,
 		autoLoadModels: true,
 		synchronize: true,
-		sync: { force: true }, // для сброса данных в БД
+		...(isDevelopment ? { sync: { force: true } } : {}),
 		dialectOptions: { connectTimeout: 5000 }, // 5 сек таймаут
 		retryAttempts: 1,
 		retryDelay: 2000,
