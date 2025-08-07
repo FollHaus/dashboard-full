@@ -11,6 +11,7 @@ import { SaleModule } from './sale/sale.module'
 import { TaskModule } from './task/task.module'
 import { CategoryModule } from './category/category.module'
 import { AnalyticsModule } from './analytics/analytics.module'
+import { ReportModule } from './report/report.module'
 
 @Module({
 	imports: [
@@ -26,10 +27,11 @@ import { AnalyticsModule } from './analytics/analytics.module'
 		AuthModule,
 		ProductModule,
 		SaleModule,
-		TaskModule,
-		CategoryModule,
-		AnalyticsModule
-	],
+                TaskModule,
+                CategoryModule,
+                AnalyticsModule,
+                ReportModule
+        ],
 	controllers: [AppController],
 	providers: [AppService]
 })
