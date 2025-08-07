@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// Базовые элементы
+html {
+  scroll-behavior: smooth;
+  font-size: 16px; // Базовый размер шрифта
+}
+
+
+body {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+  background-color: #fcfcf5;
+  color: black;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Убираем магические отступы по умолчанию
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+// Убираем отступы у основных элементов
+ul,
+ol,
+li,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+a,
+button,
+input,
+textarea,
+select {
+  margin: 0;
+  padding: 0;
+}
+
+// Удаляем подчеркивание у ссылок
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.3s ease;
+}
+
+// Нормализуем списки
+ul,
+ol {
+  list-style: none;
+}
+
+// Нормализуем кнопки
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
