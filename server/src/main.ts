@@ -11,8 +11,11 @@ async function bootstrap() {
         // Разрешаем запросы с фронтенда.
         // URL фронта задаётся через переменную окружения CLIENT_URL
         const config = app.get(ConfigService)
+        const clientUrl = config.get<string>('CLIENT_URL', 'http://localhost:3000')
+
+        // Настройка CORS, чтобы фронтенд мог обращаться к бекенду без ошибок
         app.enableCors({
-                origin: config.get('CLIENT_URL', 'http://localhost:3000'),
+                origin: clientUrl,
                 credentials: true
         })
 

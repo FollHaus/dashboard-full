@@ -34,4 +34,31 @@ Main modules exposed by the server:
 - `task` – task management.
 - `reports` – generating and exporting reports.
 
-The frontend services in `dashboard-ui/app/services/*` use Axios to interact with these endpoints.
+### Example integration
+
+Frontend services in `dashboard-ui/app/services/*` call the backend with Axios.
+Each method corresponds to a REST endpoint and returns data or throws an error
+that UI components can handle.
+
+```ts
+// login example
+AuthService.login(email, password)
+  .then(data => setUser(data.user))
+  .catch(err => setError(err.message))
+
+// fetch products
+ProductService.getAll().then(setProducts)
+```
+
+See the service files for full CRUD examples:
+
+- `auth` – `POST /auth/login`, `POST /auth/register`.
+- `products` – `GET /products`, `POST /products`, `PUT /products/:id`, `DELETE /products/:id`.
+- `task` – `GET /task`, `POST /task`, `PUT /task/:id`, `DELETE /task/:id`.
+- `reports` – `POST /reports/generate`, `GET /reports/history`, `GET /reports/:id/export/:format`.
+
+Because CORS is enabled in the backend (`server/src/main.ts`), the frontend can
+access the API at `NEXT_PUBLIC_API_URL` without cross-origin issues.
+
+The root `npm run dev` command launches both the NestJS server and the Next.js
+frontend in watch mode for development.
