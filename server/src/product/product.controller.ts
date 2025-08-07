@@ -1,19 +1,22 @@
 import {
-	Body,
-	Controller,
-	Delete,
-	Get,
-	Param,
-	ParseIntPipe,
-	Post,
-	Put
+        Body,
+        Controller,
+        Delete,
+        Get,
+        Param,
+        ParseIntPipe,
+        Post,
+        Put,
+        UseGuards
 } from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
 import { ProductService } from './product.service'
 import { ProductModel } from './product.model'
 import { CreateProductDto } from './dto/product.dto'
 import { UpdateProductDto } from './dto/update.product.dto'
 import { AddStockDto } from './dto/stock.dto'
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('products')
 export class ProductController {
 	constructor(private readonly productService: ProductService) {}

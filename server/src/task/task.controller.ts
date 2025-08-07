@@ -1,18 +1,21 @@
 import {
-	Body,
-	Controller,
-	Delete,
-	Get,
-	Param,
-	ParseIntPipe,
-	Post,
-	Put
+        Body,
+        Controller,
+        Delete,
+        Get,
+        Param,
+        ParseIntPipe,
+        Post,
+        Put,
+        UseGuards
 } from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
 import { TaskService } from './task.service'
 import { TaskModel } from './task.model'
 import { CreateTaskDto } from './dto/task.dto'
 import { UpdateTaskDto } from './dto/update.task.dto'
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('task')
 export class TaskController {
 	constructor(private readonly taskService: TaskService) {}

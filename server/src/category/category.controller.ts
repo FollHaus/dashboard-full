@@ -1,18 +1,21 @@
 import {
-	Body,
-	Controller,
-	Delete,
-	Get,
-	Param,
-	ParseIntPipe,
-	Post,
-	Put
+        Body,
+        Controller,
+        Delete,
+        Get,
+        Param,
+        ParseIntPipe,
+        Post,
+        Put,
+        UseGuards
 } from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
 import { CategoryService } from './category.service'
 import { CategoryModel } from './category.model'
 import { CreateCategoryDto } from './dto/category.dto'
 import { UpdateCategoryDto } from './dto/update.category.dto'
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('category')
 export class CategoryController {
 	constructor(private readonly categoryService: CategoryService) {}
