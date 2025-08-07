@@ -1,7 +1,17 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common'
+import {
+        Body,
+        Controller,
+        Get,
+        Param,
+        ParseIntPipe,
+        Post,
+        UseGuards
+} from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
 import { ReportService } from './report.service'
 import { GenerateReportDto } from './dto/generate-report.dto'
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('reports')
 export class ReportController {
         constructor(private readonly reportService: ReportService) {}

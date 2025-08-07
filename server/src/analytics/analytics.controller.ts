@@ -1,4 +1,5 @@
-import { Controller, Get, Query } from '@nestjs/common'
+import { Controller, Get, Query, UseGuards } from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
 import { AnalyticsService } from './analytics.service'
 import { ProductModel } from '../product/product.model'
 
@@ -11,6 +12,7 @@ function parseCategories(value?: string): number[] | undefined {
 		.filter((n) => !isNaN(n))
 }
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('analytics')
 export class AnalyticsController {
 	constructor(private readonly analyticsService: AnalyticsService) {}
