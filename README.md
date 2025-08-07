@@ -23,8 +23,35 @@ Frontend (`dashboard-ui/.env`):
 
 Backend (`server/.env`):
 - `CLIENT_URL` – allowed origin for CORS (e.g. `http://localhost:3000`).
-- `DATABASE_URL` – connection string to PostgreSQL.
+- `NODE_ENV` – `development` enables model sync; `production` requires migrations.
+- `DB_HOST` – database host (default `127.0.0.1`).
+- `DB_PORT` – database port (default `5432`).
+- `DB_DATABASE` – database name.
+- `DB_USERNAME` – database user.
+- `DB_PASSWORD` – database password.
 - `JWT_SECRET` – secret key for signing JWT tokens.
+
+### Database migrations
+
+The backend uses **Sequelize CLI** for explicit migrations.
+
+Generate a migration:
+
+```bash
+npm run db:migrate:generate --prefix server -- --name <migration-name>
+```
+
+Run migrations (required in production):
+
+```bash
+npm run db:migrate --prefix server
+```
+
+To undo the last migration:
+
+```bash
+npm run db:migrate:undo --prefix server
+```
 
 ## API
 
