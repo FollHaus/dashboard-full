@@ -1,9 +1,10 @@
 import Layout from "@/ui/Layout";
 import React from "react";
-import {metadata} from "./layout";
+import type { Metadata } from "next";
 
-
-metadata.title = "Главная";
+export const metadata: Metadata = {
+  title: "Главная",
+};
 
 
 export default function Home() {
