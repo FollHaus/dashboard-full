@@ -1,0 +1,10 @@
+{
+  "name": "dashboard-full",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run start:dev --prefix server\" \"npm run dev --prefix dashboard-ui\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

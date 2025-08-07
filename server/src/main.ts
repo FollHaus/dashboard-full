@@ -8,7 +8,8 @@ async function bootstrap() {
 	const app = await NestFactory.create(AppModule)
         console.log('> BOOTSTRAP: создан app')
 
-        // Разрешаем запросы с фронтенда
+        // Разрешаем запросы с фронтенда.
+        // URL фронта задаётся через переменную окружения CLIENT_URL
         const config = app.get(ConfigService)
         app.enableCors({
                 origin: config.get('CLIENT_URL', 'http://localhost:3000'),
