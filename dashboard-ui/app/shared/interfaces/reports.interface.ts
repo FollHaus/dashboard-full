@@ -3,3 +3,9 @@ export interface IReports {
   name: string
   category: string
 }
+
+export interface IReportHistory {
+  id: number
+  type: string
+  createdAt: string
+}
