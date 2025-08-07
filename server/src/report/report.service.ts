@@ -1,17 +1,13 @@
 import { Injectable } from '@nestjs/common'
-
-interface GeneratedReport {
-        id: number
-        type: string
-        params: any
-        data: any
-        createdAt: Date
-}
+import { InjectModel } from '@nestjs/sequelize'
+import { ReportModel } from './report.model'
 
 @Injectable()
 export class ReportService {
-        private reports: GeneratedReport[] = []
-        private counter = 1
+        constructor(
+                @InjectModel(ReportModel)
+                private reportRepo: typeof ReportModel
+        ) {}
 
         getAvailable() {
                 return [
@@ -21,23 +17,24 @@ export class ReportService {
                 ]
         }
 
-        generate(type: string, params: any) {
-                const report: GeneratedReport = {
-                        id: this.counter++,
+        async generate(type: string, params: any) {
+                return this.reportRepo.create({
                         type,
                         params,
-                        data: { message: `data for ${type}` },
-                        createdAt: new Date()
-                }
-                this.reports.push(report)
-                return report
+                        data: { message: `data for ${type}` }
+                })
         }
 
         getHistory() {
-                return this.reports
+                return this.reportRepo.findAll()
         }
 
-        export(id: number, format: string) {
+        async export(id: number, format: string) {
+                const report = await this.reportRepo.findByPk(id)
+                if (!report) {
+                        return { message: `Report ${id} not found` }
+                }
                 return { message: `Report ${id} exported to ${format}` }
         }
 }
+
