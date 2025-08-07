@@ -1,11 +1,11 @@
 import {
-	IsDateString,
-	IsEnum,
-	IsNotEmpty,
-	IsOptional,
-	IsString
+        IsDateString,
+        IsEnum,
+        IsNotEmpty,
+        IsOptional,
+        IsString
 } from 'class-validator'
-import { TaskStatus } from '../task.model'
+import { TaskStatus, TaskPriority } from '../task.model'
 
 export class CreateTaskDto {
 	@IsString()
@@ -19,11 +19,15 @@ export class CreateTaskDto {
 	@IsDateString()
 	deadline: string
 
-	@IsEnum(TaskStatus)
-	@IsOptional()
-	status?: TaskStatus
+        @IsEnum(TaskStatus)
+        @IsOptional()
+        status?: TaskStatus
 
-	@IsString()
-	@IsOptional()
-	executor?: string
+        @IsEnum(TaskPriority)
+        @IsOptional()
+        priority?: TaskPriority
+
+        @IsString()
+        @IsOptional()
+        executor?: string
 }

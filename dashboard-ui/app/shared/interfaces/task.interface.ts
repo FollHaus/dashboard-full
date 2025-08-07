@@ -10,10 +10,18 @@ export enum TaskStatus {
   Completed = 'Готово',
 }
 
+export enum TaskPriority {
+  Low = 'Низкий',
+  Medium = 'Средний',
+  High = 'Высокий',
+}
+
 export interface ITask {
-  id: string
+  id: number
   title: string
   description?: string
-  deadline: Date
+  deadline: string
   status: TaskStatus
+  executor?: string
+  priority: TaskPriority
 }
