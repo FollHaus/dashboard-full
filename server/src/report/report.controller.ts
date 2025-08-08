@@ -5,7 +5,8 @@ import {
         Param,
         ParseIntPipe,
         Post,
-        UseGuards
+        UseGuards,
+        ValidationPipe
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { ReportService } from './report.service'
@@ -22,8 +23,8 @@ export class ReportController {
         }
 
         @Post('generate')
-        generate(@Body() dto: GenerateReportDto) {
-                return this.reportService.generate(dto.type, dto.params)
+        generate(@Body(new ValidationPipe()) dto: GenerateReportDto) {
+                return this.reportService.generate(dto)
         }
 
         @Get('history')
