@@ -89,3 +89,34 @@ access the API at `NEXT_PUBLIC_API_URL` without cross-origin issues.
 
 The root `npm run dev` command launches both the NestJS server and the Next.js
 frontend in watch mode for development.
+
+### Integration points
+
+Each UI action results in a REST call:
+
+| Module      | Frontend sends                               | Backend responds with            |
+|-------------|----------------------------------------------|----------------------------------|
+| Auth        | `POST /auth/login` `{ email, password }`     | user data + JWT tokens           |
+| Products    | `GET/POST/PUT/DELETE /products`              | list of products / updated item  |
+| Tasks       | `GET/POST/PUT/DELETE /task`                  | task entities                    |
+| Reports     | `POST /reports/generate` report params       | generated report, history list   |
+
+Errors returned by the API are converted to human readable messages inside
+`app/api/interceptor.ts`. For example, a 401 response clears stored tokens so the
+user can re-authenticate.
+
+UI components update their state after successful requests. Examples:
+
+```tsx
+// delete a task and refresh table
+await TaskService.delete(id)
+setTasks(prev => prev.filter(t => t.id !== id))
+
+// create product and reload list
+await ProductService.create(data)
+ProductService.getAll().then(setProducts)
+```
+
+Configuration values such as API base URL and allowed CORS origin are supplied
+via `.env` files. Changing `NEXT_PUBLIC_API_URL` or `CLIENT_URL` is enough to point
+the apps to a different backend or frontend without touching the code.
