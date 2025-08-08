@@ -1,5 +1,7 @@
 import axios from 'axios'
 import Cookies from 'js-cookie'
+// Удаляет access token из cookies при разлогине или истечении сессии
+import { removeTokenFromStorage } from '@/services/auth/auth.helper'
 
 /**
  * Функция возвращает стандартные заголовки для запросов.
@@ -59,6 +61,12 @@ instance.interceptors.request.use(config => {
 instance.interceptors.response.use(
   response => response,
   error => {
+    // Если бекенд вернул 401 — токен недействителен, удаляем его
+    if (error.response?.status === 401) {
+      removeTokenFromStorage()
+    }
+
+    // Формируем понятное сообщение об ошибке для UI
     const message = error?.response?.data?.message || error.message
     return Promise.reject(new Error(message))
   }
