@@ -1,4 +1,4 @@
-import { axiosClassic } from '@/api/interceptor'
+import axios from '../../api/interceptor'
 import { IProduct } from '@/shared/interfaces/product.interface'
 
 // Сервис для взаимодействия с продуктами склада
@@ -8,7 +8,7 @@ export const ProductService = {
    * Получение всех продуктов со склада.
    */
   async getAll() {
-    const response = await axiosClassic.get<IProduct[]>('/products')
+    const response = await axios.get<IProduct[]>('/products')
     return response.data
   },
 
@@ -17,7 +17,7 @@ export const ProductService = {
    * Получение одного продукта по ID.
    */
   async getById(id: number) {
-    const response = await axiosClassic.get<IProduct>(`/products/${id}`)
+    const response = await axios.get<IProduct>(`/products/${id}`)
     return response.data
   },
 
@@ -26,7 +26,7 @@ export const ProductService = {
    * Создание нового продукта.
    */
   async create(data: Omit<IProduct, 'id'>) {
-    const response = await axiosClassic.post<IProduct>('/products', data)
+    const response = await axios.post<IProduct>('/products', data)
     return response.data
   },
 
@@ -35,7 +35,7 @@ export const ProductService = {
    * Обновление данных продукта.
    */
   async update(id: number, data: Partial<IProduct>) {
-    const response = await axiosClassic.put<IProduct>(`/products/${id}`, data)
+    const response = await axios.put<IProduct>(`/products/${id}`, data)
     return response.data
   },
 
@@ -44,7 +44,7 @@ export const ProductService = {
    * Удаление продукта.
    */
   async delete(id: number) {
-    await axiosClassic.delete(`/products/${id}`)
+    await axios.delete(`/products/${id}`)
   },
 
   /**
@@ -52,7 +52,7 @@ export const ProductService = {
    * Увеличение остатка (приход на склад).
    */
   async addStock(id: number, qty: number) {
-    const response = await axiosClassic.post(`/products/${id}/stock`, { qty })
+    const response = await axios.post(`/products/${id}/stock`, { qty })
     return response.data
   },
 }

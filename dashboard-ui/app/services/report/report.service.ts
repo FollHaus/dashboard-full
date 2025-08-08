@@ -1,4 +1,4 @@
-import { axiosClassic } from '@/api/interceptor'
+import axios from '../../api/interceptor'
 
 export const ReportService = {
   /**
@@ -6,7 +6,7 @@ export const ReportService = {
    * Список доступных отчётов.
    */
   async getAvailable() {
-    const response = await axiosClassic.get('/reports')
+    const response = await axios.get('/reports')
     return response.data
   },
 
@@ -15,7 +15,7 @@ export const ReportService = {
    * Генерация отчёта по переданным параметрам.
    */
   async generate(data: any) {
-    const response = await axiosClassic.post('/reports/generate', data)
+    const response = await axios.post('/reports/generate', data)
     return response.data
   },
 
@@ -24,7 +24,7 @@ export const ReportService = {
    * История сгенерированных отчётов.
    */
   async getHistory() {
-    const response = await axiosClassic.get('/reports/history')
+    const response = await axios.get('/reports/history')
     return response.data
   },
 
@@ -33,7 +33,7 @@ export const ReportService = {
    * Выгрузка отчёта в указанном формате (pdf, excel).
    */
   async export(id: number, format: string) {
-    const response = await axiosClassic.get(`/reports/${id}/export/${format}`, {
+    const response = await axios.get(`/reports/${id}/export/${format}`, {
       responseType: 'blob',
     })
     return response.data
