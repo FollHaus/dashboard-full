@@ -71,18 +71,24 @@ export default function ReportsPage() {
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Параметры</h3>
           <div className="flex flex-wrap gap-2">
-            <input
-              type="date"
-              value={start}
-              onChange={e => setStart(e.target.value)}
-              className="border border-neutral-300 rounded px-2 py-1"
-            />
-            <input
-              type="date"
-              value={end}
-              onChange={e => setEnd(e.target.value)}
-              className="border border-neutral-300 rounded px-2 py-1"
-            />
+            <label className="flex flex-col">
+              <span className="text-sm">Start date</span>
+              <input
+                type="date"
+                value={start}
+                onChange={e => setStart(e.target.value)}
+                className="border border-neutral-300 rounded px-2 py-1"
+              />
+            </label>
+            <label className="flex flex-col">
+              <span className="text-sm">End date</span>
+              <input
+                type="date"
+                value={end}
+                onChange={e => setEnd(e.target.value)}
+                className="border border-neutral-300 rounded px-2 py-1"
+              />
+            </label>
             <input
               placeholder="Product"
               value={product}

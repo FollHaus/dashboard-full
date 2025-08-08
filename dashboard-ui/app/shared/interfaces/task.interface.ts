@@ -1,9 +1,12 @@
 /*
 Модель задачи
-deadline - срок выполнения
+title - заголовок задачи
 description - описание задачи
+executor - исполнитель задачи
+deadline - срок выполнения
 status - статус задачи
-* */
+priority - приоритет выполнения
+*/
 export enum TaskStatus {
   Pending = 'Ожидает',
   InProgress = 'Выполняется',
