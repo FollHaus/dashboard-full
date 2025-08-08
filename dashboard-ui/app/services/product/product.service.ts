@@ -25,8 +25,22 @@ export const ProductService = {
    * POST /products
    * Создание нового продукта.
    */
-  async create(data: Omit<IProduct, 'id'>) {
-    const response = await axiosClassic.post<IProduct>('/products', data)
+  async create(
+    data: Omit<IProduct, 'id' | 'category'> & {
+      categoryId?: number
+      categoryName?: string
+    }
+  ) {
+    const payload: Record<string, any> = {
+      name: data.name,
+      articleNumber: data.articleNumber,
+      purchasePrice: data.purchasePrice,
+      salePrice: data.salePrice,
+      remains: data.remains,
+    }
+    if (data.categoryId !== undefined) payload.categoryId = data.categoryId
+    if (data.categoryName !== undefined) payload.categoryName = data.categoryName
+    const response = await axiosClassic.post<IProduct>('/products', payload)
     return response.data
   },
 

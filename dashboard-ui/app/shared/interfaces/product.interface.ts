@@ -13,7 +13,8 @@ import { ICategory } from './category.interface'
 export interface IProduct {
   id: number
   name: string
-  categoryId: number
+  categoryId?: number
+  categoryName?: string
   articleNumber: string
   purchasePrice: number
   salePrice: number

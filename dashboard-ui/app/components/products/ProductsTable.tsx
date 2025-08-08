@@ -21,12 +21,12 @@ const ProductsTable = () => {
   }, [])
 
   const categories = Array.from(
-    new Set(products.map(p => p.category?.name || ''))
+    new Set(products.map(p => p.category?.name || p.categoryName || ''))
   )
 
   const filtered = products.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) &&
-    (!category || p.category?.name === category)
+    (!category || (p.category?.name || p.categoryName) === category)
   )
 
   const isLow = (balance: number) => balance <= 5
@@ -102,7 +102,7 @@ const ProductsTable = () => {
               className={`cursor-pointer border-b border-neutral-200 hover:bg-neutral-200 ${isLow(prod.remains) ? 'bg-warning/20' : ''}`}
             >
               <td className="p-2">{prod.name}</td>
-              <td className="p-2">{prod.category?.name || '-'}</td>
+              <td className="p-2">{prod.category?.name || prod.categoryName || '-'}</td>
               <td className="p-2">
                 {prod.remains}
                 {isLow(prod.remains) && (

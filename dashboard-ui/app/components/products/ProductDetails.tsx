@@ -21,7 +21,12 @@ const ProductDetails: FC<Props> = ({ product, onClose }) => {
       </div>
       <div className="space-y-1 text-sm">
         <p>Article: {product.articleNumber}</p>
-        <p>Category ID: {product.categoryId}</p>
+        <p>
+          Category:{' '}
+          {product.category?.name ||
+            product.categoryName ||
+            (product.categoryId !== undefined ? product.categoryId : 'N/A')}
+        </p>
         <p>Purchase price: ${product.purchasePrice}</p>
         <p>Sale price: ${product.salePrice}</p>
         <p>Remains: {product.remains}</p>

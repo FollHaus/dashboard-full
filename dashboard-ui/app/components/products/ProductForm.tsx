@@ -26,7 +26,8 @@ const ProductForm = ({ product, onSuccess, onCancel }: Props) => {
   } = useForm<ProductFormData>({
     defaultValues: {
       name: product?.name || '',
-      categoryId: product?.categoryId ?? 0,
+      categoryId: product?.categoryId,
+      categoryName: product?.category?.name || '',
       articleNumber: product?.articleNumber || '',
       purchasePrice: product?.purchasePrice ?? 0,
       salePrice: product?.salePrice ?? 0,
@@ -57,9 +58,18 @@ const ProductForm = ({ product, onSuccess, onCancel }: Props) => {
       />
       <Field
         type="number"
-        {...register('categoryId', { valueAsNumber: true })}
+        {...register('categoryId', {
+          setValueAs: v => (v === '' ? undefined : Number(v)),
+        })}
         placeholder="Category ID"
         error={errors.categoryId}
+      />
+      <Field
+        {...register('categoryName', {
+          setValueAs: v => (v === '' ? undefined : v),
+        })}
+        placeholder="Category name"
+        error={errors.categoryName}
       />
       <Field
         {...register('articleNumber', { required: 'Enter article number' })}
