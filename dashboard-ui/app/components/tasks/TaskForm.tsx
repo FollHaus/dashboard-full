@@ -60,27 +60,36 @@ const TaskForm = ({ task }: Props) => {
         {...register('executor')}
         placeholder="Исполнитель"
       />
-      <Field type="date" {...register('deadline', { required: true })} />
-      <select
-        {...register('priority')}
-        className="border border-neutral-300 rounded px-2 py-1 w-full"
-      >
-        {Object.values(TaskPriority).map(p => (
-          <option key={p} value={p}>
-            {p}
-          </option>
-        ))}
-      </select>
-      <select
-        {...register('status')}
-        className="border border-neutral-300 rounded px-2 py-1 w-full"
-      >
-        {Object.values(TaskStatus).map(s => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
+      <div>
+        <label className="block mb-1">Дедлайн</label>
+        <Field type="date" {...register('deadline', { required: true })} />
+      </div>
+      <div>
+        <label className="block mb-1">Приоритет</label>
+        <select
+          {...register('priority')}
+          className="border border-neutral-300 rounded px-2 py-1 w-full"
+        >
+          {Object.values(TaskPriority).map(p => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block mb-1">Статус</label>
+        <select
+          {...register('status')}
+          className="border border-neutral-300 rounded px-2 py-1 w-full"
+        >
+          {Object.values(TaskStatus).map(s => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
       <Button
         type="submit"
         className="bg-primary-500 text-white px-4 py-1"
