@@ -1,4 +1,4 @@
-import { axiosClassic } from '@/api/interceptor'
+import axios from '../../api/interceptor'
 import { ITask } from '@/shared/interfaces/task.interface'
 
 export const TaskService = {
@@ -7,7 +7,7 @@ export const TaskService = {
    * Получение всех задач.
    */
   async getAll() {
-    const response = await axiosClassic.get<ITask[]>('/task')
+    const response = await axios.get<ITask[]>('/task')
     return response.data
   },
 
@@ -16,7 +16,7 @@ export const TaskService = {
    * Получение одной задачи по идентификатору.
    */
   async getById(id: string | number) {
-    const response = await axiosClassic.get<ITask>(`/task/${id}`)
+    const response = await axios.get<ITask>(`/task/${id}`)
     return response.data
   },
 
@@ -25,7 +25,7 @@ export const TaskService = {
    * Создание новой задачи.
    */
   async create(data: Omit<ITask, 'id'>) {
-    const response = await axiosClassic.post<ITask>('/task', data)
+    const response = await axios.post<ITask>('/task', data)
     return response.data
   },
 
@@ -34,7 +34,7 @@ export const TaskService = {
    * Обновление существующей задачи.
    */
   async update(id: string | number, data: Partial<ITask>) {
-    const response = await axiosClassic.put<ITask>(`/task/${id}`, data)
+    const response = await axios.put<ITask>(`/task/${id}`, data)
     return response.data
   },
 
@@ -43,6 +43,6 @@ export const TaskService = {
    * Удаление задачи.
    */
   async delete(id: number) {
-    await axiosClassic.delete(`/task/${id}`)
+    await axios.delete(`/task/${id}`)
   },
 }
