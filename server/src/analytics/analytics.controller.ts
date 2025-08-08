@@ -1,16 +1,9 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Query, UseGuards, ValidationPipe } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { AnalyticsService } from './analytics.service'
 import { ProductModel } from '../product/product.model'
-
-// Функция для парсинга строковых категорий в массив чисел
-function parseCategories(value?: string): number[] | undefined {
-	if (!value) return undefined
-	return value
-		.split(',')
-		.map((id) => parseInt(id, 10))
-		.filter((n) => !isNaN(n))
-}
+import { AnalyticsQueryDto } from './dto/analytics.query.dto'
+import { LowStockQueryDto } from './dto/low-stock.query.dto'
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('analytics')
@@ -25,15 +18,14 @@ export class AnalyticsController {
 	 * @param categories - Строка с ID категорий через запятую
 	 * @returns Промис с числом — суммарной выручкой
 	 */
-	@Get('revenue')
-	getRevenue(
-		@Query('startDate') startDate?: string,
-		@Query('endDate') endDate?: string,
-		@Query('categories') categories?: string
-	): Promise<number> {
-		const ids = parseCategories(categories)
-		return this.analyticsService.getRevenue(startDate, endDate, ids)
-	}
+        @Get('revenue')
+        getRevenue(
+                @Query(new ValidationPipe({ transform: true }))
+                query: AnalyticsQueryDto
+        ): Promise<number> {
+                const { startDate, endDate, categories } = query
+                return this.analyticsService.getRevenue(startDate, endDate, categories)
+        }
 
 	/**
 	 * Получает данные о продажах по категориям за определённый период.
@@ -43,15 +35,14 @@ export class AnalyticsController {
 	 * @param categories - Строка с ID категорий через запятую
 	 * @returns Промис с массивом данных о продажах
 	 */
-	@Get('category-sales')
-	getCategorySales(
-		@Query('startDate') startDate?: string,
-		@Query('endDate') endDate?: string,
-		@Query('categories') categories?: string
-	): Promise<any[]> {
-		const ids = parseCategories(categories)
-		return this.analyticsService.getSalesByCategories(startDate, endDate, ids)
-	}
+        @Get('category-sales')
+        getCategorySales(
+                @Query(new ValidationPipe({ transform: true }))
+                query: AnalyticsQueryDto
+        ): Promise<any[]> {
+                const { startDate, endDate, categories } = query
+                return this.analyticsService.getSalesByCategories(startDate, endDate, categories)
+        }
 
 	/**
 	 * Получает список товаров с низким уровнем запасов.
@@ -60,13 +51,12 @@ export class AnalyticsController {
 	 * @param categories - Строка с ID категорий через запятую
 	 * @returns Промис с массивом объектов ProductModel
 	 */
-	@Get('low-stock')
-	getLowStock(
-		@Query('threshold') threshold = '10',
-		@Query('categories') categories?: string
-	): Promise<ProductModel[]> {
-		const ids = parseCategories(categories)
-		const thr = parseInt(threshold, 10)
-		return this.analyticsService.getLowStockProducts(thr, ids)
-	}
+        @Get('low-stock')
+        getLowStock(
+                @Query(new ValidationPipe({ transform: true }))
+                query: LowStockQueryDto
+        ): Promise<ProductModel[]> {
+                const { threshold = 10, categories } = query
+                return this.analyticsService.getLowStockProducts(threshold, categories)
+        }
 }
