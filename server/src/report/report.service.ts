@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 import { ReportModel } from './report.model'
+import { GenerateReportDto } from './dto/generate-report.dto'
 
 @Injectable()
 export class ReportService {
@@ -17,7 +18,7 @@ export class ReportService {
                 ]
         }
 
-        async generate(type: string, params: any) {
+        async generate({ type, params }: GenerateReportDto) {
                 return this.reportRepo.create({
                         type,
                         params,
@@ -37,4 +38,3 @@ export class ReportService {
                 return { message: `Report ${id} exported to ${format}` }
         }
 }
-
