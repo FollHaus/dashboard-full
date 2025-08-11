@@ -1,4 +1,4 @@
-import axios from '@/api/interceptor'
+import axios from '../../api/interceptor'
 import { ITopProduct } from '@/shared/interfaces/top-product.interface'
 import { ISalesStat } from '@/shared/interfaces/sales-stat.interface'
 

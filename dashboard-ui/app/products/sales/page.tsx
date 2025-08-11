@@ -1,14 +1,13 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import Layout from '@/ui/Layout'
 import type { Metadata } from 'next'
 import { AnalyticsService } from '@/services/analytics/analytics.service'
 import { ITopProduct } from '@/shared/interfaces/top-product.interface'
 
-export const metadata: Metadata = {
-  title: 'Статистика продаж товаров',
-}
+// export const metadata: Metadata = {
+//   title: 'Статистика продаж товаров',
+// }
 
 export default function ProductSalesPage() {
   const [items, setItems] = useState<ITopProduct[]>([])
