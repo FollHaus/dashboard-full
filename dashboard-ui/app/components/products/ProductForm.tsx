@@ -53,35 +53,41 @@ const ProductForm = ({ product, onSuccess, onCancel }: Props) => {
       <Field
         {...register('name', { required: 'Enter name' })}
         placeholder="Name"
+        label="Name"
         error={errors.name}
       />
       <Field
         type="number"
         {...register('categoryId', { valueAsNumber: true })}
         placeholder="Category ID"
+        label="Category ID"
         error={errors.categoryId}
       />
       <Field
         {...register('articleNumber', { required: 'Enter article number' })}
         placeholder="Article number"
+        label="Article number"
         error={errors.articleNumber}
       />
       <Field
         type="number"
         {...register('purchasePrice', { valueAsNumber: true })}
         placeholder="Purchase price"
+        label="Purchase price"
         error={errors.purchasePrice}
       />
       <Field
         type="number"
         {...register('salePrice', { valueAsNumber: true })}
         placeholder="Sale price"
+        label="Sale price"
         error={errors.salePrice}
       />
       <Field
         type="number"
         {...register('remains', { valueAsNumber: true })}
         placeholder="Remains"
+        label="Remains"
         error={errors.remains}
       />
       <div className="flex space-x-2">
