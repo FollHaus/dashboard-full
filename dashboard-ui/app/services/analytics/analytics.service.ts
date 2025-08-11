@@ -18,4 +18,12 @@ export const AnalyticsService = {
     const res = await axios.get<ITurnover>(`/analytics/turnover`)
     return res.data
   },
+  async getProductRemains() {
+    const res = await axios.get<number>(`/analytics/product-remains`)
+    return res.data
+  },
+  async getOpenTasks() {
+    const res = await axios.get<number>(`/analytics/open-tasks`)
+    return res.data
+  },
 }

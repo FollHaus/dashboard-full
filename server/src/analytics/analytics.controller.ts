@@ -37,6 +37,22 @@ export class AnalyticsController {
                 return this.analyticsService.getTurnover()
         }
 
+        /**
+         * Возвращает общее количество товаров на складе.
+         */
+        @Get('product-remains')
+        getProductRemains() {
+                return this.analyticsService.getProductRemains()
+        }
+
+        /**
+         * Возвращает количество открытых задач.
+         */
+        @Get('open-tasks')
+        getOpenTasks() {
+                return this.analyticsService.getOpenTasksCount()
+        }
+
 	/**
 	 * Получает данные о продажах по категориям за определённый период.
 	 *
