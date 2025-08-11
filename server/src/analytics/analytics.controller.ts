@@ -4,6 +4,7 @@ import { AnalyticsService } from './analytics.service'
 import { ProductModel } from '../product/product.model'
 import { AnalyticsQueryDto } from './dto/analytics.query.dto'
 import { LowStockQueryDto } from './dto/low-stock.query.dto'
+import { TopProductsQueryDto } from './dto/top-products.query.dto'
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('analytics')
@@ -42,6 +43,21 @@ export class AnalyticsController {
         ): Promise<any[]> {
                 const { startDate, endDate, categories } = query
                 return this.analyticsService.getSalesByCategories(startDate, endDate, categories)
+        }
+
+        /**
+         * Получает топ товаров по продажам.
+         *
+         * @param limit - Сколько товаров вернуть (по умолчанию 10)
+         * @param categories - Строка с ID категорий через запятую
+         */
+        @Get('top-products')
+        getTopProducts(
+                @Query(new ValidationPipe({ transform: true }))
+                query: TopProductsQueryDto
+        ): Promise<any[]> {
+                const { limit, startDate, endDate, categories } = query
+                return this.analyticsService.getTopProducts(limit, startDate, endDate, categories)
         }
 
 	/**

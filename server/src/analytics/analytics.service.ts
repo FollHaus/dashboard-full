@@ -59,11 +59,11 @@ export class AnalyticsService {
 	 * @param categoryIds - Массив ID категорий для фильтрации
 	 * @returns Промис с массивом объектов данных о продажах по категориям
 	 */
-	async getSalesByCategories(
-		startDate?: string,
-		endDate?: string,
-		categoryIds?: number[]
-	): Promise<any[]> {
+        async getSalesByCategories(
+                startDate?: string,
+                endDate?: string,
+                categoryIds?: number[]
+        ): Promise<any[]> {
 		const whereSales: any = {}
 		if (startDate || endDate) {
 			if (startDate && endDate) {
@@ -100,8 +100,66 @@ export class AnalyticsService {
 			],
 			raw: true
 		})
-		return rows
-	}
+                return rows
+        }
+
+        /**
+         * Получает топ товаров по количеству продаж.
+         *
+         * @param limit - Сколько товаров вернуть (по умолчанию 10)
+         * @param startDate - Дата начала периода
+         * @param endDate - Дата окончания периода
+         * @param categoryIds - Массив ID категорий для фильтрации
+         */
+        async getTopProducts(
+                limit = 10,
+                startDate?: string,
+                endDate?: string,
+                categoryIds?: number[]
+        ): Promise<any[]> {
+                const whereSales: any = {}
+                if (startDate || endDate) {
+                        if (startDate && endDate) {
+                                whereSales.saleDate = { [Op.between]: [startDate, endDate] }
+                        } else if (startDate) {
+                                whereSales.saleDate = { [Op.gte]: startDate }
+                        } else if (endDate) {
+                                whereSales.saleDate = { [Op.lte]: endDate }
+                        }
+                }
+
+                const includeProduct: any = {
+                        model: ProductModel,
+                        attributes: [],
+                        include: [{ model: CategoryModel, attributes: [] }]
+                }
+                if (categoryIds && categoryIds.length) {
+                        includeProduct.where = { categoryId: { [Op.in]: categoryIds } }
+                }
+
+                const rows = await this.saleRepo.findAll({
+                        attributes: [
+                                [col('product.id'), 'productId'],
+                                [col('product.name'), 'productName'],
+                                [col('product->category.name'), 'categoryName'],
+                                [fn('SUM', col('quantity_sold')), 'totalUnits'],
+                                [fn('SUM', col('total_price')), 'totalRevenue']
+                        ],
+                        where: whereSales,
+                        include: [includeProduct],
+                        group: [
+                                'product.id',
+                                'product.name',
+                                'product->category.id',
+                                'product->category.name'
+                        ],
+                        order: [[fn('SUM', col('quantity_sold')), 'DESC']],
+                        raw: true,
+                        ...(limit ? { limit } : {})
+                })
+
+                return rows
+        }
 
 	/**
 	 * Получает список товаров с низким уровнем запасов.
