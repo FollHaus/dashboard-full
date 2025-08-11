@@ -15,7 +15,8 @@ import { TaskModel } from '../task/task.model'
                 // Регистрация моделей, используемых в сервисе аналитики
                 SequelizeModule.forFeature([SaleModel, ProductModel, CategoryModel, TaskModel])
 	],
-	controllers: [AnalyticsController], // Регистрация контроллера аналитики
-	providers: [AnalyticsService] // Регистрация сервиса аналитики
+        controllers: [AnalyticsController], // Регистрация контроллера аналитики
+        providers: [AnalyticsService], // Регистрация сервиса аналитики
+        exports: [AnalyticsService]
 })
 export class AnalyticsModule {}

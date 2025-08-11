@@ -1,5 +1,13 @@
-import { IsDateString, IsEnum, IsOptional, ValidateNested } from 'class-validator'
-import { Type } from 'class-transformer'
+import {
+        IsArray,
+        IsDateString,
+        IsEnum,
+        IsInt,
+        IsOptional,
+        IsString,
+        ValidateNested
+} from 'class-validator'
+import { Type, Transform } from 'class-transformer'
 
 export enum ReportType {
         SALES = 'sales',
@@ -15,6 +23,38 @@ export class ReportParamsDto {
         @IsOptional()
         @IsDateString()
         endDate?: string
+
+        @IsOptional()
+        @Transform(({ value }) => {
+                if (typeof value === 'string') {
+                        return value
+                                .split(',')
+                                .map((id) => parseInt(id, 10))
+                                .filter((n) => !isNaN(n))
+                }
+                if (Array.isArray(value)) {
+                        return value
+                                .map((id) => parseInt(id, 10))
+                                .filter((n) => !isNaN(n))
+                }
+                return undefined
+        })
+        @IsInt({ each: true })
+        categories?: number[]
+
+        @IsOptional()
+        @Transform(({ value }) => {
+                if (typeof value === 'string') {
+                        return value.split(',')
+                }
+                if (Array.isArray(value)) {
+                        return value
+                }
+                return undefined
+        })
+        @IsString({ each: true })
+        @IsArray()
+        metrics?: string[]
 }
 
 export class GenerateReportDto {

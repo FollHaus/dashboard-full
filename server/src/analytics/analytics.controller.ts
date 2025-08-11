@@ -65,6 +65,18 @@ export class AnalyticsController {
                 return this.analyticsService.getOpenTasksCount()
         }
 
+        /**
+         * Рассчитывает KPI продаж за период.
+         */
+        @Get('kpis')
+        getKpis(
+                @Query(new ValidationPipe({ transform: true }))
+                query: AnalyticsQueryDto
+        ) {
+                const { startDate, endDate, categories } = query
+                return this.analyticsService.getKpis(startDate, endDate, categories)
+        }
+
 	/**
 	 * Получает данные о продажах по категориям за определённый период.
 	 *
