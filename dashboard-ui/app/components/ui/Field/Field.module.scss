@@ -3,6 +3,10 @@
 .field {
   @apply py-2;
 
+  .label {
+    @apply block mb-1 text-sm font-medium text-neutral-700;
+  }
+
   input {
     @apply bg-neutral-50 font-medium text-lg rounded-lg;
     @include shadow('md');

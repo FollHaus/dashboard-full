@@ -17,7 +17,7 @@ export const getContentType = () => ({
  * знал адрес бекенда при сборке.
  * Пример: http://localhost:4000/api
  */
-export const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api`
+export const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api`
 
 /**
  * Экземпляр Axios без авторизации.
