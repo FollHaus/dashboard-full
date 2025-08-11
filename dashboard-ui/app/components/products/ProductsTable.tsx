@@ -8,29 +8,42 @@ import { IProduct } from '@/shared/interfaces/product.interface'
 
 const ProductsTable = () => {
   const [products, setProducts] = useState<IProduct[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('')
+  const [searchMode, setSearchMode] = useState<'name' | 'category'>('name')
   const [selected, setSelected] = useState<IProduct | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const [sortField, setSortField] = useState<'name' | 'remains' | 'salePrice'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
-  // Загружаем список продуктов при монтировании
-  useEffect(() => {
+  const fetchProducts = () => {
+    setIsLoading(true)
+    setError(null)
     ProductService.getAll()
       .then(setProducts)
       .catch(e => setError(e.message))
+      .finally(() => setIsLoading(false))
+  }
+
+  // Загружаем список продуктов при монтировании
+  useEffect(() => {
+    fetchProducts()
   }, [])
 
-  const categories = Array.from(
-    new Set(products.map(p => p.category?.name || ''))
-  )
+  // Обновляем значение поиска с задержкой
+  useEffect(() => {
+    const handler = setTimeout(() => setSearch(searchTerm), 400)
+    return () => clearTimeout(handler)
+  }, [searchTerm])
 
-  const filtered = products.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) &&
-    (!category || p.category?.name === category)
-  )
+  const filtered = products.filter(p => {
+    const term = search.toLowerCase()
+    if (!term) return true
+    if (searchMode === 'name') return p.name.toLowerCase().includes(term)
+    return p.category?.name?.toLowerCase().includes(term)
+  })
 
   const sorted = [...filtered].sort((a, b) => {
     const aValue = a[sortField]
@@ -71,27 +84,25 @@ const ProductsTable = () => {
     <div>
       <div className="flex justify-between mb-4">
         <div className="flex space-x-2">
-          <input
-            type="text"
-            placeholder="Поиск товаров"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="border border-neutral-300 rounded px-2 py-1"
-          />
           <select
-            value={category}
-            onChange={e => setCategory(e.target.value)}
+            value={searchMode}
+            onChange={e => setSearchMode(e.target.value as 'name' | 'category')}
             className="border border-neutral-300 rounded px-2 py-1"
           >
-            <option value="">Все категории</option>
-            {categories
-              .filter(Boolean)
-              .map(c => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
+            <option value="name">Name</option>
+            <option value="category">Category</option>
           </select>
+          <input
+            type="text"
+            placeholder={
+              searchMode === 'name'
+                ? 'Search by name...'
+                : 'Search by category...'
+            }
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="border border-neutral-300 rounded px-2 py-1"
+          />
         </div>
         <div className="flex space-x-2">
           <Button
@@ -131,39 +142,68 @@ const ProductsTable = () => {
           </tr>
         </thead>
         <tbody>
-          {sorted.map(prod => (
-            <tr
-              key={prod.id}
-              onClick={() => selectProduct(prod.id)}
-              className={`cursor-pointer border-b border-neutral-200 hover:bg-neutral-200 ${isLow(prod.remains) ? 'bg-warning/20' : ''}`}
-            >
-              <td className="p-2">{prod.name}</td>
-              <td className="p-2">{prod.category?.name || '-'}</td>
-              <td className="p-2">{prod.articleNumber}</td>
-              <td className="p-2">
-                {prod.remains}
-                {isLow(prod.remains) && (
-                  <span className="text-error ml-1">(!)</span>
-                )}
-              </td>
-              <td className="p-2">${prod.salePrice}</td>
-              <td className="p-2">
+          {isLoading &&
+            Array.from({ length: 5 }).map((_, idx) => (
+              <tr key={idx} className="animate-pulse border-b border-neutral-200">
+                {Array.from({ length: 6 }).map((__, i) => (
+                  <td key={i} className="p-2">
+                    <div className="h-4 bg-neutral-300 rounded" />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          {!isLoading && error && (
+            <tr>
+              <td colSpan={6} className="p-2 text-center text-error">
+                {error}
                 <Button
-                  className="bg-error text-white px-4 py-1"
-                  onClick={e => {
-                    e.stopPropagation()
-                    handleDelete(prod.id)
-                  }}
+                  className="ml-2 bg-primary-500 text-white px-4 py-1"
+                  onClick={fetchProducts}
                 >
-                  Удалить
+                  Repeat
                 </Button>
               </td>
             </tr>
-          ))}
+          )}
+          {!isLoading && !error && sorted.length === 0 && (
+            <tr>
+              <td colSpan={6} className="p-2 text-center">
+                Nothing found
+              </td>
+            </tr>
+          )}
+          {!isLoading && !error &&
+            sorted.map(prod => (
+              <tr
+                key={prod.id}
+                onClick={() => selectProduct(prod.id)}
+                className={`cursor-pointer border-b border-neutral-200 hover:bg-neutral-200 ${isLow(prod.remains) ? 'bg-warning/20' : ''}`}
+              >
+                <td className="p-2">{prod.name}</td>
+                <td className="p-2">{prod.category?.name || '-'}</td>
+                <td className="p-2">{prod.articleNumber}</td>
+                <td className="p-2">
+                  {prod.remains}
+                  {isLow(prod.remains) && (
+                    <span className="text-error ml-1">(!)</span>
+                  )}
+                </td>
+                <td className="p-2">${prod.salePrice}</td>
+                <td className="p-2">
+                  <Button
+                    className="bg-error text-white px-4 py-1"
+                    onClick={e => {
+                      e.stopPropagation()
+                      handleDelete(prod.id)
+                    }}
+                  >
+                    Удалить
+                  </Button>
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
-
-      {error && <p className="text-error mt-2">{error}</p>}
       {selected && (
         <ProductDetails product={selected} onClose={() => setSelected(null)} />
       )}
@@ -171,9 +211,7 @@ const ProductsTable = () => {
         <div className="mt-4">
           <ProductForm
             onSuccess={() => {
-              ProductService.getAll()
-                .then(setProducts)
-                .catch(e => setError(e.message))
+              fetchProducts()
               setIsCreating(false)
             }}
             onCancel={() => setIsCreating(false)}
