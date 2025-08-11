@@ -6,6 +6,7 @@ import {
         IsString
 } from 'class-validator'
 import { TaskStatus, TaskPriority } from '../task.model'
+import { IsFutureDate } from '../../validators/is-future-date.decorator'
 
 export class CreateTaskDto {
 	@IsString()
@@ -16,8 +17,9 @@ export class CreateTaskDto {
 	@IsOptional()
 	description?: string
 
-	@IsDateString()
-	deadline: string
+        @IsDateString()
+        @IsFutureDate()
+        deadline: string
 
         @IsEnum(TaskStatus)
         @IsOptional()

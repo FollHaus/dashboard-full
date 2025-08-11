@@ -62,7 +62,19 @@ const TaskForm = ({ task }: Props) => {
       />
       <div>
         <label className="block mb-1">Дедлайн</label>
-        <Field type="date" {...register('deadline', { required: true })} />
+        <Field
+          type="date"
+          min={new Date().toISOString().split('T')[0]}
+          {...register('deadline', {
+            required: 'Укажите дату',
+            validate: value => {
+              const today = new Date()
+              today.setHours(0, 0, 0, 0)
+              return new Date(value) >= today || 'Дата не может быть в прошлом'
+            },
+          })}
+          error={errors.deadline}
+        />
       </div>
       <div>
         <label className="block mb-1">Приоритет</label>
