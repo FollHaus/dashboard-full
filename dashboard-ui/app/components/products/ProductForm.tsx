@@ -1,12 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 import Field from '@/ui/Field/Field'
 import Button from '@/ui/Button/Button'
-import { IProduct } from '@/shared/interfaces/product.interface'
+import {
+  IProduct,
+  IProductCreate,
+} from '@/shared/interfaces/product.interface'
 import { ProductService } from '@/services/product/product.service'
+import { CategoryService } from '@/services/category/category.service'
+import { ICategory } from '@/shared/interfaces/category.interface'
 
 interface Props {
   product?: IProduct
@@ -14,9 +19,7 @@ interface Props {
   onCancel?: () => void
 }
 
-// Form data does not include id and populated category
-// because those are handled by the backend
-export type ProductFormData = Omit<IProduct, 'id' | 'category'>
+export type ProductFormData = IProductCreate
 
 const ProductForm = ({ product, onSuccess, onCancel }: Props) => {
   const {
@@ -26,7 +29,7 @@ const ProductForm = ({ product, onSuccess, onCancel }: Props) => {
   } = useForm<ProductFormData>({
     defaultValues: {
       name: product?.name || '',
-      categoryId: product?.categoryId ?? 0,
+      categoryName: product?.category?.name || '',
       articleNumber: product?.articleNumber || '',
       purchasePrice: product?.purchasePrice ?? 0,
       salePrice: product?.salePrice ?? 0,
@@ -35,6 +38,13 @@ const ProductForm = ({ product, onSuccess, onCancel }: Props) => {
   })
 
   const [error, setError] = useState<string | null>(null)
+  const [categories, setCategories] = useState<ICategory[]>([])
+
+  useEffect(() => {
+    CategoryService.getAll()
+      .then(setCategories)
+      .catch(e => setError(e.message))
+  }, [])
 
   const onSubmit = (data: ProductFormData) => {
     const method = product
@@ -57,12 +67,17 @@ const ProductForm = ({ product, onSuccess, onCancel }: Props) => {
         error={errors.name}
       />
       <Field
-        type="number"
-        {...register('categoryId', { valueAsNumber: true })}
-        placeholder="ID категории"
-        label="ID категории"
-        error={errors.categoryId}
+        {...register('categoryName', { required: 'Введите категорию' })}
+        placeholder="Категория"
+        label="Категория"
+        list="category-list"
+        error={errors.categoryName}
       />
+      <datalist id="category-list">
+        {categories.map(cat => (
+          <option key={cat.id} value={cat.name} />
+        ))}
+      </datalist>
       <Field
         {...register('articleNumber', { required: 'Введите артикул' })}
         placeholder="Артикул"

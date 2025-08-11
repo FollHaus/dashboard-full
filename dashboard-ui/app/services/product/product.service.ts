@@ -1,5 +1,8 @@
 import axios from '../../api/interceptor'
-import { IProduct } from '@/shared/interfaces/product.interface'
+import {
+  IProduct,
+  IProductCreate,
+} from '@/shared/interfaces/product.interface'
 
 // Сервис для взаимодействия с продуктами склада
 export const ProductService = {
@@ -25,7 +28,7 @@ export const ProductService = {
    * POST /products
    * Создание нового продукта.
    */
-  async create(data: Omit<IProduct, 'id'>) {
+  async create(data: IProductCreate) {
     const response = await axios.post<IProduct>('/products', data)
     return response.data
   },
@@ -34,7 +37,7 @@ export const ProductService = {
    * PUT /products/:id
    * Обновление данных продукта.
    */
-  async update(id: number, data: Partial<IProduct>) {
+  async update(id: number, data: Partial<IProductCreate>) {
     const response = await axios.put<IProduct>(`/products/${id}`, data)
     return response.data
   },

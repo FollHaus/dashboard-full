@@ -88,10 +88,33 @@ export class ProductService {
 	 * @param id - идентификатор
 	 * @param dto - новые данные
 	 */
-	async update(id: number, dto: UpdateProductDto): Promise<ProductModel> {
-		const prod = await this.findOne(id)
-		return prod.update(dto)
-	}
+        async update(id: number, dto: UpdateProductDto): Promise<ProductModel> {
+                const prod = await this.findOne(id)
+
+                const updateData: any = { ...dto }
+
+                if (dto.categoryId || dto.categoryName) {
+                        let categoryId: number
+
+                        if (dto.categoryId) {
+                                const cat = await this.categoryRepo.findByPk(dto.categoryId)
+                                if (!cat)
+                                        throw new NotFoundException('Категория с таким ID не найдена')
+                                categoryId = dto.categoryId
+                        } else if (dto.categoryName) {
+                                const [cat] = await this.categoryRepo.findOrCreate({
+                                        where: { name: dto.categoryName.trim() },
+                                        defaults: { name: dto.categoryName.trim() }
+                                })
+                                categoryId = cat.id
+                        }
+
+                        updateData.categoryId = categoryId
+                        delete updateData.categoryName
+                }
+
+                return prod.update(updateData)
+        }
 
 	/**
 	 * 5) Удаляет продукт.
