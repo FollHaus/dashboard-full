@@ -13,9 +13,10 @@ const periods = [
 
 const SalesChart = () => {
   const [period, setPeriod] = useState(7);
-  const { data } = useQuery({
+  const { data, isFetching } = useQuery({
     queryKey: ["sales", period],
     queryFn: () => AnalyticsService.getSales(period),
+    keepPreviousData: true,
   });
 
   const values = data?.map((d) => d.total) ?? [];
@@ -37,21 +38,35 @@ const SalesChart = () => {
           ))}
         </select>
       </div>
-      <div className="flex items-end space-x-2 h-40">
-        {data?.map((item) => (
-          <div key={item.date} className="flex flex-col items-center flex-1">
-            <div
-              className="bg-primary-500 w-full rounded-t"
-              style={{ height: max ? `${(item.total / max) * 100}%` : 0 }}
-            ></div>
-            <span className="mt-2 text-xs text-neutral-800">
-              {new Date(item.date).toLocaleDateString("ru-RU", {
-                day: "numeric",
-                month: "short",
-              })}
-            </span>
+      <div className="relative flex items-end space-x-2 h-40">
+        {data
+          ? data.map((item) => (
+              <div key={item.date} className="flex flex-col items-center flex-1">
+                <div
+                  className="bg-primary-500 w-full rounded-t"
+                  style={{ height: max ? `${(item.total / max) * 100}%` : 0 }}
+                ></div>
+                <span className="mt-2 text-xs text-neutral-800">
+                  {new Date(item.date).toLocaleDateString("ru-RU", {
+                    day: "numeric",
+                    month: "short",
+                  })}
+                </span>
+              </div>
+            ))
+          : Array.from({ length: period }).map((_, idx) => (
+              <div
+                key={idx}
+                className="flex flex-col items-center flex-1 animate-pulse"
+              >
+                <div className="bg-neutral-300 w-full rounded-t h-full" />
+              </div>
+            ))}
+        {isFetching && data && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/50">
+            <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
