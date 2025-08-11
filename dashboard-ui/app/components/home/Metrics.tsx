@@ -14,13 +14,23 @@ const periods = [
 
 const Metrics = () => {
   const [turnover, setTurnover] = useState<ITurnover | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [turnoverError, setTurnoverError] = useState<string | null>(null)
+  const [stock, setStock] = useState<number | null>(null)
+  const [stockError, setStockError] = useState<string | null>(null)
+  const [openTasks, setOpenTasks] = useState<number | null>(null)
+  const [tasksError, setTasksError] = useState<string | null>(null)
   const [period, setPeriod] = useState<typeof periods[number]['key']>('day')
 
   useEffect(() => {
     AnalyticsService.getTurnover()
       .then(setTurnover)
-      .catch(e => setError(e.message))
+      .catch(e => setTurnoverError(e.message))
+    AnalyticsService.getProductRemains()
+      .then(setStock)
+      .catch(e => setStockError(e.message))
+    AnalyticsService.getOpenTasks()
+      .then(setOpenTasks)
+      .catch(e => setTasksError(e.message))
   }, [])
 
   const format = (val: number) => val.toLocaleString('ru-RU')
@@ -30,20 +40,18 @@ const Metrics = () => {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div className="bg-neutral-100 p-4 rounded-card shadow-card">
         <h3 className="text-lg font-semibold mb-2">Оборот</h3>
-        <div className="flex flex-wrap gap-2 mb-2">
+        <select
+          value={period}
+          onChange={e => setPeriod(e.target.value as typeof periods[number]['key'])}
+          className="mb-2 border border-neutral-300 rounded px-2 py-1 text-sm"
+        >
           {periods.map(p => (
-            <button
-              key={p.key}
-              onClick={() => setPeriod(p.key)}
-              className={`text-xs px-2 py-1 rounded ${
-                period === p.key ? 'bg-primary-600 text-white' : 'bg-neutral-200'
-              }`}
-            >
+            <option key={p.key} value={p.key}>
               {p.label}
-            </button>
+            </option>
           ))}
-        </div>
-        {error && <p className="text-error text-sm mb-1">{error}</p>}
+        </select>
+        {turnoverError && <p className="text-error text-sm mb-1">{turnoverError}</p>}
         <p className="text-2xl font-bold">{format(value)} ₽</p>
       </div>
       <div className="bg-neutral-100 p-4 rounded-card shadow-card">
@@ -53,11 +61,15 @@ const Metrics = () => {
       </div>
       <div className="bg-neutral-100 p-4 rounded-card shadow-card">
         <h3 className="text-lg font-semibold mb-2">Товары на складе</h3>
-        <p className="text-2xl font-bold">1 200 шт.</p>
+        {stockError && <p className="text-error text-sm mb-1">{stockError}</p>}
+        <p className="text-2xl font-bold">
+          {stock !== null ? `${format(stock)} шт.` : '-'}
+        </p>
       </div>
       <div className="bg-neutral-100 p-4 rounded-card shadow-card">
         <h3 className="text-lg font-semibold mb-2">Открытые задачи</h3>
-        <p className="text-2xl font-bold">8</p>
+        {tasksError && <p className="text-error text-sm mb-1">{tasksError}</p>}
+        <p className="text-2xl font-bold">{openTasks !== null ? openTasks : '-'}</p>
       </div>
     </div>
   )

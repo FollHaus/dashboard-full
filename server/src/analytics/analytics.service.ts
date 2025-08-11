@@ -5,15 +5,18 @@ import { DateTime } from 'luxon'
 import { SaleModel } from '../sale/sale.model'
 import { ProductModel } from '../product/product.model'
 import { CategoryModel } from '../category/category.model'
+import { TaskModel, TaskStatus } from '../task/task.model'
 
 @Injectable()
 export class AnalyticsService {
-	constructor(
-		@InjectModel(SaleModel)
-		private readonly saleRepo: typeof SaleModel,
-		@InjectModel(ProductModel)
-		private readonly productRepo: typeof ProductModel
-	) {}
+        constructor(
+                @InjectModel(SaleModel)
+                private readonly saleRepo: typeof SaleModel,
+                @InjectModel(ProductModel)
+                private readonly productRepo: typeof ProductModel,
+                @InjectModel(TaskModel)
+                private readonly taskRepo: typeof TaskModel
+        ) {}
 
 	/**
 	 * Получает общую выручку за определённый период.
@@ -211,6 +214,23 @@ export class AnalyticsService {
                 ])
 
                 return { day, week, month, year, allTime }
+        }
+
+        /**
+         * Возвращает общее количество товаров на складе.
+         */
+        async getProductRemains(): Promise<number> {
+                const total = await this.productRepo.sum('remains')
+                return parseInt(String(total)) || 0
+        }
+
+        /**
+         * Возвращает количество открытых задач.
+         */
+        async getOpenTasksCount(): Promise<number> {
+                return this.taskRepo.count({
+                        where: { status: { [Op.ne]: TaskStatus.Completed } },
+                })
         }
 
         /**
