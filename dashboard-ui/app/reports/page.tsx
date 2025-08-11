@@ -130,7 +130,10 @@ export default function ReportsPage() {
   )
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const values = Array.from(e.target.selectedOptions).map(o => Number(o.value))
+    const values = Array.from(
+      e.target.selectedOptions,
+      option => Number(option.value),
+    )
     setSelectedCategories(values)
   }
 
