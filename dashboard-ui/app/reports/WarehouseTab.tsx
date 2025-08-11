@@ -2,27 +2,25 @@
 
 import { FC } from 'react'
 
-interface PeriodProps {
-  start: string
-  end: string
+interface Stats {
+  initial: number
+  arrival: number
+  departure: number
+  final: number
 }
 
-const WarehouseTab: FC<PeriodProps> = () => {
-  const stats = {
-    initial: 1200,
-    arrival: 300,
-    departure: 200,
-    final: 1300,
-  }
+interface MovementItem {
+  date: string
+  arrival: number
+  departure: number
+}
 
-  const movement = [
-    { date: '2024-01-01', arrival: 30, departure: 20 },
-    { date: '2024-01-02', arrival: 50, departure: 40 },
-    { date: '2024-01-03', arrival: 20, departure: 35 },
-    { date: '2024-01-04', arrival: 40, departure: 30 },
-    { date: '2024-01-05', arrival: 60, departure: 45 },
-  ]
+interface WarehouseTabProps {
+  stats: Stats
+  movement: MovementItem[]
+}
 
+const WarehouseTab: FC<WarehouseTabProps> = ({ stats, movement }) => {
   return (
     <div className='space-y-6'>
       <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
