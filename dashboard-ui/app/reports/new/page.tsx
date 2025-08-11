@@ -5,14 +5,14 @@ import { useState } from 'react'
 import Layout from '@/ui/Layout'
 
 const periodPresets = [
-  { label: 'Today', value: 'today' },
-  { label: '7 days', value: '7d' },
-  { label: '30 days', value: '30d' },
-  { label: 'This month', value: 'month' },
-  { label: 'Any range', value: 'custom' },
+  { label: 'Сегодня', value: 'today' },
+  { label: '7 дней', value: '7d' },
+  { label: '30 дней', value: '30d' },
+  { label: 'Этот месяц', value: 'month' },
+  { label: 'Произвольный диапазон', value: 'custom' },
 ]
 
-const categories = ['Electronics', 'Clothing', 'Home']
+const categories = ['Электроника', 'Одежда', 'Дом']
 
 interface KPI {
   title: string
@@ -25,18 +25,21 @@ export default function NewReportPage() {
   const [period, setPeriod] = useState('today')
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
-  const [activeTab, setActiveTab] = useState<'sales' | 'warehouse' | 'tasks'>(
-    'sales'
-  )
+  const tabs = [
+    { key: 'sales', label: 'Продажи' },
+    { key: 'warehouse', label: 'Склад' },
+    { key: 'tasks', label: 'Задачи' },
+  ]
+  const [activeTab, setActiveTab] = useState<'sales' | 'warehouse' | 'tasks'>('sales')
   const [selected, setSelected] = useState<string[]>([...categories])
 
   const kpis: KPI[] = [
-    { title: 'Revenue', value: 150000, change: 5.2, currency: true },
-    { title: 'Number of orders', value: 320, change: -1.3 },
-    { title: 'Units sold', value: 845, change: 2.1 },
-    { title: 'Average receipt', value: 4700, change: 0.4, currency: true },
-    { title: 'Margin', value: 23000, change: -0.8, currency: true },
-    { title: 'Completed tasks', value: 42, change: 3.5 },
+    { title: 'Выручка', value: 150000, change: 5.2, currency: true },
+    { title: 'Количество заказов', value: 320, change: -1.3 },
+    { title: 'Проданные единицы', value: 845, change: 2.1 },
+    { title: 'Средний чек', value: 4700, change: 0.4, currency: true },
+    { title: 'Маржа', value: 23000, change: -0.8, currency: true },
+    { title: 'Выполненные задачи', value: 42, change: 3.5 },
   ]
 
   const toggleCategory = (cat: string) => {
@@ -46,7 +49,7 @@ export default function NewReportPage() {
   }
 
   const exportCSV = () => {
-    const rows = ['Metric,Value']
+    const rows = ['Показатель,Значение']
     kpis.forEach(k => rows.push(`${k.title},${k.value}`))
     const blob = new Blob([rows.join('\n')], {
       type: 'text/csv;charset=utf-8;',
@@ -114,22 +117,22 @@ export default function NewReportPage() {
             className="bg-primary-500 text-white px-4 py-1 rounded"
             onClick={exportCSV}
           >
-            Export CSV
+            Экспорт CSV
           </button>
         </div>
 
         <div className="flex gap-4 border-b">
-          {['sales', 'warehouse', 'tasks'].map(tab => (
+          {tabs.map(t => (
             <button
-              key={tab}
+              key={t.key}
               className={`pb-2 ${
-                activeTab === tab
+                activeTab === t.key
                   ? 'border-b-2 border-primary-500 font-semibold'
                   : 'text-neutral-500'
               }`}
-              onClick={() => setActiveTab(tab as any)}
+              onClick={() => setActiveTab(t.key)}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {t.label}
             </button>
           ))}
         </div>

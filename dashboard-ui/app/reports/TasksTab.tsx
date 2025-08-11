@@ -14,12 +14,12 @@ const TasksTab: FC<TasksTabProps> = ({ completed, prevCompleted }) => {
   return (
     <div
       className='p-4 bg-white rounded shadow cursor-pointer'
-      onClick={() => alert('Open tasks details')}
+      onClick={() => alert('Открыть задачи')}
     >
-      <div className='font-medium'>Completed tasks</div>
+      <div className='font-medium'>Выполненные задачи</div>
       <div className='text-3xl font-semibold'>{completed}</div>
       <div className={`text-sm ${isGrowth ? 'text-green-600' : 'text-red-600'}`}>
-        {isGrowth ? '+' : ''}{diff} from previous period
+        {isGrowth ? '+' : ''}{diff} от предыдущего периода
       </div>
     </div>
   )
