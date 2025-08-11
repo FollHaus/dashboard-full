@@ -9,6 +9,7 @@ import TasksTab from './TasksTab'
 import { CategoryService } from '@/services/category/category.service'
 import { AnalyticsService } from '@/services/analytics/analytics.service'
 import { ICategory } from '@/shared/interfaces/category.interface'
+import Select from '@/ui/Select/Select'
 
 const tabs = [
   { key: 'sales', label: 'Продажи' },
@@ -85,14 +86,24 @@ export default function ReportsPage() {
   const [end, setEnd] = useState('')
   const [categories, setCategories] = useState<ICategory[]>([])
   const [selectedCategories, setSelectedCategories] = useState<number[]>([])
+  const [catLoading, setCatLoading] = useState(false)
+  const [catError, setCatError] = useState(false)
   const [revenueData, setRevenueData] = useState<{ date: string; value: number }[]>([])
   const [topProducts, setTopProducts] = useState<{ name: string; revenue: number }[]>([])
 
+  const loadCategories = () => {
+    setCatLoading(true)
+    setCatError(false)
+    CategoryService.getAll()
+      .then(data => {
+        setCategories(data)
+      })
+      .catch(() => setCatError(true))
+      .finally(() => setCatLoading(false))
+  }
+
   useEffect(() => {
-    CategoryService.getAll().then(data => {
-      setCategories(data)
-      setSelectedCategories(data.map(c => c.id))
-    })
+    loadCategories()
   }, [])
 
   useEffect(() => {
@@ -128,14 +139,6 @@ export default function ReportsPage() {
     () => revenueData.reduce((s, r) => s + r.value, 0),
     [revenueData]
   )
-
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const values = Array.from(
-      e.target.selectedOptions,
-      option => Number(option.value),
-    )
-    setSelectedCategories(values)
-  }
 
   const handleExport = () => {
     let data: any[] = []
@@ -198,18 +201,15 @@ export default function ReportsPage() {
           )}
           <div className='flex flex-col'>
             <span className='text-sm'>Категории</span>
-            <select
-              multiple
-              value={selectedCategories.map(String)}
-              onChange={handleCategoryChange}
-              className='border border-neutral-300 rounded px-2 py-1 min-w-[200px] h-24'
-            >
-              {categories.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <Select
+              options={categories.map(c => ({ value: c.id, label: c.name }))}
+              value={selectedCategories}
+              onChange={setSelectedCategories}
+              placeholder='Select a category'
+              loading={catLoading}
+              error={catError ? 'Failed to load categories' : undefined}
+              onRetry={loadCategories}
+            />
           </div>
           <button
             onClick={handleExport}
