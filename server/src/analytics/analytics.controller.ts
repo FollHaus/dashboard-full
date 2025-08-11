@@ -29,6 +29,14 @@ export class AnalyticsController {
                 return this.analyticsService.getRevenue(startDate, endDate, categories)
         }
 
+        /**
+         * Возвращает оборот за день, неделю, месяц, год и всё время.
+         */
+        @Get('turnover')
+        getTurnover() {
+                return this.analyticsService.getTurnover()
+        }
+
 	/**
 	 * Получает данные о продажах по категориям за определённый период.
 	 *

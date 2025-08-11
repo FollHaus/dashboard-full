@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 import { col, fn, Op } from 'sequelize'
+import { DateTime } from 'luxon'
 import { SaleModel } from '../sale/sale.model'
 import { ProductModel } from '../product/product.model'
 import { CategoryModel } from '../category/category.model'
@@ -177,6 +178,39 @@ export class AnalyticsService {
                         where.categoryId = { [Op.in]: categoryIds }
                 }
                 return this.productRepo.findAll({ where, include: ['category'] })
+        }
+
+        /**
+         * Возвращает оборот за день, неделю, месяц, год и за всё время
+         * в часовом поясе Europe/Moscow.
+         */
+        async getTurnover(): Promise<{
+                day: number
+                week: number
+                month: number
+                year: number
+                allTime: number
+        }> {
+                const now = DateTime.now().setZone('Europe/Moscow')
+                const today = now.toFormat('yyyy-LL-dd')
+
+                const dayStart = now.startOf('day').toFormat('yyyy-LL-dd')
+                const weekStart = now
+                        .startOf('day')
+                        .minus({ days: now.weekday - 1 })
+                        .toFormat('yyyy-LL-dd')
+                const monthStart = now.startOf('month').toFormat('yyyy-LL-dd')
+                const yearStart = now.startOf('year').toFormat('yyyy-LL-dd')
+
+                const [day, week, month, year, allTime] = await Promise.all([
+                        this.getRevenue(dayStart, today),
+                        this.getRevenue(weekStart, today),
+                        this.getRevenue(monthStart, today),
+                        this.getRevenue(yearStart, today),
+                        this.getRevenue(),
+                ])
+
+                return { day, week, month, year, allTime }
         }
 
         /**
