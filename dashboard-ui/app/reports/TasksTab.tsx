@@ -2,14 +2,12 @@
 
 import { FC } from 'react'
 
-interface PeriodProps {
-  start: string
-  end: string
+interface TasksTabProps {
+  completed: number
+  prevCompleted: number
 }
 
-const TasksTab: FC<PeriodProps> = () => {
-  const completed = 42
-  const prevCompleted = 35
+const TasksTab: FC<TasksTabProps> = ({ completed, prevCompleted }) => {
   const diff = completed - prevCompleted
   const isGrowth = diff >= 0
 
