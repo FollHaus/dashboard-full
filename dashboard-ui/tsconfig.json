@@ -30,7 +30,8 @@
       "@/services/*": ["services/*"],
       "@/utils/*": ["utils/*"],
       "@/store/*": ["store/*"],
-      "@/assets/*": ["assets/*"]
+      "@/assets/*": ["assets/*"],
+      "@/providers/*": ["providers/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
