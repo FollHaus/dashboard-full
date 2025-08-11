@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
+import { CategoryService } from '@/services/category/category.service'
+import { ICategory } from '@/shared/interfaces/category.interface'
 import Layout from '@/ui/Layout'
 
 const periodPresets = [
@@ -11,8 +13,6 @@ const periodPresets = [
   { label: 'Этот месяц', value: 'month' },
   { label: 'Произвольный диапазон', value: 'custom' },
 ]
-
-const categories = ['Электроника', 'Одежда', 'Дом']
 
 interface KPI {
   title: string
@@ -30,8 +30,11 @@ export default function NewReportPage() {
     { key: 'warehouse', label: 'Склад' },
     { key: 'tasks', label: 'Задачи' },
   ]
-  const [activeTab, setActiveTab] = useState<'sales' | 'warehouse' | 'tasks'>('sales')
-  const [selected, setSelected] = useState<string[]>([...categories])
+  const [activeTab, setActiveTab] = useState<'sales' | 'warehouse' | 'tasks'>(
+    'sales',
+  )
+  const [categories, setCategories] = useState<ICategory[]>([])
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([])
 
   const kpis: KPI[] = [
     { title: 'Выручка', value: 150000, change: 5.2, currency: true },
@@ -42,10 +45,18 @@ export default function NewReportPage() {
     { title: 'Выполненные задачи', value: 42, change: 3.5 },
   ]
 
-  const toggleCategory = (cat: string) => {
-    setSelected(prev =>
-      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
-    )
+  useEffect(() => {
+    CategoryService.getAll().then(data => {
+      setCategories(data)
+      setSelectedCategories(data.map(c => c.id))
+    })
+  }, [])
+
+  const handleCategoryChange = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    const values = Array.from(e.target.selectedOptions).map(o => Number(o.value))
+    setSelectedCategories(values)
   }
 
   const exportCSV = () => {
@@ -100,17 +111,20 @@ export default function NewReportPage() {
                 </div>
               )}
             </div>
-            <div className="flex flex-wrap gap-2">
-              {categories.map(cat => (
-                <label key={cat} className="flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(cat)}
-                    onChange={() => toggleCategory(cat)}
-                  />
-                  <span>{cat}</span>
-                </label>
-              ))}
+            <div className="flex flex-col">
+              <span className="text-sm">Категории</span>
+              <select
+                multiple
+                value={selectedCategories.map(String)}
+                onChange={handleCategoryChange}
+                className="border rounded px-2 py-1 min-w-[200px] h-24"
+              >
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           <button
