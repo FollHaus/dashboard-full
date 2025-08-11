@@ -26,39 +26,39 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ stats, movement }) => {
       <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
         <div
           className='p-4 bg-white rounded shadow cursor-pointer'
-          onClick={() => alert('Open initial balance')}
+          onClick={() => alert('Открыть начальный остаток')}
         >
-          <div className='text-sm'>Initial stock balance</div>
+          <div className='text-sm'>Начальный остаток на складе</div>
           <div className='text-xl font-semibold'>{stats.initial}</div>
         </div>
         <div
           className='p-4 bg-white rounded shadow cursor-pointer'
-          onClick={() => alert('Open arrivals')}
+          onClick={() => alert('Открыть поступления')}
         >
-          <div className='text-sm'>Stock arrival</div>
+          <div className='text-sm'>Поступление товара</div>
           <div className='text-xl font-semibold text-green-600'>{stats.arrival}</div>
         </div>
         <div
           className='p-4 bg-white rounded shadow cursor-pointer'
-          onClick={() => alert('Open departures')}
+          onClick={() => alert('Открыть расход')}
         >
-          <div className='text-sm'>Stock departure</div>
+          <div className='text-sm'>Списание товара</div>
           <div className='text-xl font-semibold text-red-600'>{stats.departure}</div>
         </div>
         <div
           className='p-4 bg-white rounded shadow cursor-pointer'
-          onClick={() => alert('Open final balance')}
+          onClick={() => alert('Открыть конечный остаток')}
         >
-          <div className='text-sm'>Final stock balance</div>
+          <div className='text-sm'>Конечный остаток на складе</div>
           <div className='text-xl font-semibold'>{stats.final}</div>
         </div>
       </div>
 
       <div
         className='p-4 bg-white rounded shadow cursor-pointer'
-        onClick={() => alert('Open stock movement details')}
+        onClick={() => alert('Открыть движение товара')}
       >
-        <div className='font-medium mb-2'>Stock movement</div>
+        <div className='font-medium mb-2'>Движение товара</div>
         <div className='flex items-end space-x-2 h-32'>
           {movement.map(m => (
             <div key={m.date} className='flex-1 flex flex-col justify-end'>

@@ -8,17 +8,17 @@ import WarehouseTab from './WarehouseTab'
 import TasksTab from './TasksTab'
 
 const tabs = [
-  { key: 'sales', label: 'Sales' },
-  { key: 'warehouse', label: 'Warehouse' },
-  { key: 'tasks', label: 'Tasks' },
+  { key: 'sales', label: 'Продажи' },
+  { key: 'warehouse', label: 'Склад' },
+  { key: 'tasks', label: 'Задачи' },
 ] as const
 
 type TabKey = (typeof tabs)[number]['key']
 
 const categories = [
-  { id: 1, name: 'Electronics' },
-  { id: 2, name: 'Clothing' },
-  { id: 3, name: 'Home' },
+  { id: 1, name: 'Электроника' },
+  { id: 2, name: 'Одежда' },
+  { id: 3, name: 'Дом' },
 ]
 
 interface SaleRecord {
@@ -59,16 +59,16 @@ const salesRecordsPrev: SaleRecord[] = [
 ]
 
 const productSales = [
-  { name: 'Laptop', categoryId: 1, revenue: 3000 },
-  { name: 'Phone', categoryId: 1, revenue: 2500 },
-  { name: 'Jeans', categoryId: 2, revenue: 1800 },
-  { name: 'Shirt', categoryId: 2, revenue: 1600 },
-  { name: 'Sofa', categoryId: 3, revenue: 1400 },
-  { name: 'Lamp', categoryId: 3, revenue: 1200 },
-  { name: 'Headphones', categoryId: 1, revenue: 1100 },
-  { name: 'Jacket', categoryId: 2, revenue: 1000 },
-  { name: 'Table', categoryId: 3, revenue: 900 },
-  { name: 'Watch', categoryId: 1, revenue: 800 },
+  { name: 'Ноутбук', categoryId: 1, revenue: 3000 },
+  { name: 'Телефон', categoryId: 1, revenue: 2500 },
+  { name: 'Джинсы', categoryId: 2, revenue: 1800 },
+  { name: 'Рубашка', categoryId: 2, revenue: 1600 },
+  { name: 'Диван', categoryId: 3, revenue: 1400 },
+  { name: 'Лампа', categoryId: 3, revenue: 1200 },
+  { name: 'Наушники', categoryId: 1, revenue: 1100 },
+  { name: 'Куртка', categoryId: 2, revenue: 1000 },
+  { name: 'Стол', categoryId: 3, revenue: 900 },
+  { name: 'Часы', categoryId: 1, revenue: 800 },
 ]
 
 const warehouseStats = { initial: 1200, arrival: 300, departure: 200, final: 1300 }
@@ -245,22 +245,26 @@ export default function ReportsPage() {
   }
 
   const kpis = [
-    { label: 'Revenue (₽)', value: metrics.revenue, change: metrics.revenueChange },
-    { label: 'Number of orders', value: metrics.orders, change: metrics.ordersChange },
-    { label: 'Units sold', value: metrics.units, change: metrics.unitsChange },
+    { label: 'Выручка (₽)', value: metrics.revenue, change: metrics.revenueChange },
     {
-      label: 'Average receipt (₽)',
+      label: 'Количество заказов',
+      value: metrics.orders,
+      change: metrics.ordersChange,
+    },
+    { label: 'Проданные единицы', value: metrics.units, change: metrics.unitsChange },
+    {
+      label: 'Средний чек (₽)',
       value: metrics.avgReceipt,
       change: metrics.avgReceiptChange,
     },
     {
-      label: 'Margin (₽)',
+      label: 'Маржа (₽)',
       value: metrics.marginValue,
       change: metrics.marginChange,
       extra: `${metrics.marginPercent.toFixed(1)}%`,
     },
     {
-      label: 'Completed tasks (pcs.)',
+      label: 'Выполненные задачи (шт.)',
       value: tasksStats.current,
       change: tasksStats.previous
         ? ((tasksStats.current - tasksStats.previous) / tasksStats.previous) * 100
@@ -273,23 +277,23 @@ export default function ReportsPage() {
       <div className='space-y-6'>
         <div className='flex flex-wrap items-end gap-4'>
           <div className='flex flex-col'>
-            <span className='text-sm'>Period</span>
+            <span className='text-sm'>Период</span>
             <select
               value={period}
               onChange={e => setPeriod(e.target.value as any)}
               className='border border-neutral-300 rounded px-2 py-1'
             >
-              <option value='today'>Today</option>
-              <option value='7d'>7 days</option>
-              <option value='30d'>30 days</option>
-              <option value='month'>This month</option>
-              <option value='custom'>Custom</option>
+              <option value='today'>Сегодня</option>
+              <option value='7d'>7 дней</option>
+              <option value='30d'>30 дней</option>
+              <option value='month'>Этот месяц</option>
+              <option value='custom'>Произвольный</option>
             </select>
           </div>
           {period === 'custom' && (
             <>
               <label className='flex flex-col'>
-                <span className='text-sm'>Start date</span>
+                <span className='text-sm'>Дата начала</span>
                 <input
                   type='date'
                   value={start}
@@ -298,7 +302,7 @@ export default function ReportsPage() {
                 />
               </label>
               <label className='flex flex-col'>
-                <span className='text-sm'>End date</span>
+                <span className='text-sm'>Дата окончания</span>
                 <input
                   type='date'
                   value={end}
@@ -309,7 +313,7 @@ export default function ReportsPage() {
             </>
           )}
           <div className='flex flex-col'>
-            <span className='text-sm'>Categories</span>
+            <span className='text-sm'>Категории</span>
             <div className='flex flex-wrap gap-2'>
               {categories.map(c => (
                 <label key={c.id} className='flex items-center space-x-1'>
@@ -327,7 +331,7 @@ export default function ReportsPage() {
             onClick={handleExport}
             className='ml-auto px-4 py-2 bg-primary-500 text-white rounded'
           >
-            Export CSV
+            Экспорт CSV
           </button>
         </div>
 

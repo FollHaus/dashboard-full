@@ -36,9 +36,9 @@ const SalesTab: FC<SalesTabProps> = ({ revenueData, topProducts, totalRevenue })
     <div className='space-y-6'>
       <div
         className='p-4 bg-white rounded shadow cursor-pointer'
-        onClick={() => alert('Open revenue details')}
+        onClick={() => alert('Открыть детали выручки')}
       >
-        <div className='font-medium mb-2'>Revenue by day</div>
+        <div className='font-medium mb-2'>Выручка по дням</div>
         <svg viewBox='0 0 100 100' className='w-full h-24'>
           <polyline
             fill='none'
@@ -51,12 +51,12 @@ const SalesTab: FC<SalesTabProps> = ({ revenueData, topProducts, totalRevenue })
       </div>
 
       <div className='p-4 bg-white rounded shadow space-y-2'>
-        <div className='font-medium'>Top-10 products by revenue</div>
+        <div className='font-medium'>Топ-10 товаров по выручке</div>
         {topProducts.map(p => (
           <div
             key={p.name}
             className='flex items-center cursor-pointer'
-            onClick={() => alert(`Open ${p.name} details`)}
+            onClick={() => alert(`Открыть детали ${p.name}`)}
           >
             <span className='w-32 text-sm'>{p.name}</span>
             <div className='flex-1 bg-neutral-200 h-2 mr-2'>
@@ -70,9 +70,9 @@ const SalesTab: FC<SalesTabProps> = ({ revenueData, topProducts, totalRevenue })
         ))}
         <div
           className='text-sm mt-2 cursor-pointer'
-          onClick={() => alert('Open top products share details')}
+          onClick={() => alert('Открыть долю топовых товаров')}
         >
-          Share of top-10 products: {share.toFixed(1)}%
+          Доля топ-10 товаров: {share.toFixed(1)}%
         </div>
       </div>
     </div>
