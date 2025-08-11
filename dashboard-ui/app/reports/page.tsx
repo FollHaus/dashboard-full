@@ -61,10 +61,11 @@ export default function ReportsPage() {
             ))}
           </ul>
           <Button
+            type="button"
             className="mt-2 bg-primary-500 text-white px-4 py-1"
             onClick={generate}
           >
-            Generate a new report
+            Создать отчёт
           </Button>
         </div>
 
@@ -72,7 +73,7 @@ export default function ReportsPage() {
           <h3 className="text-lg font-medium">Параметры</h3>
           <div className="flex flex-wrap gap-2">
             <label className="flex flex-col">
-              <span className="text-sm">Start date</span>
+              <span className="text-sm">Дата начала</span>
               <input
                 type="date"
                 value={start}
@@ -81,7 +82,7 @@ export default function ReportsPage() {
               />
             </label>
             <label className="flex flex-col">
-              <span className="text-sm">End date</span>
+              <span className="text-sm">Дата окончания</span>
               <input
                 type="date"
                 value={end}
@@ -89,18 +90,22 @@ export default function ReportsPage() {
                 className="border border-neutral-300 rounded px-2 py-1"
               />
             </label>
-            <input
-              placeholder="Product"
-              value={product}
-              onChange={e => setProduct(e.target.value)}
-              className="border border-neutral-300 rounded px-2 py-1"
-            />
-            <input
-              placeholder="Employee"
-              value={employee}
-              onChange={e => setEmployee(e.target.value)}
-              className="border border-neutral-300 rounded px-2 py-1"
-            />
+            <label className="flex flex-col">
+              <span className="text-sm">Продукт</span>
+              <input
+                value={product}
+                onChange={e => setProduct(e.target.value)}
+                className="border border-neutral-300 rounded px-2 py-1"
+              />
+            </label>
+            <label className="flex flex-col">
+              <span className="text-sm">Сотрудник</span>
+              <input
+                value={employee}
+                onChange={e => setEmployee(e.target.value)}
+                className="border border-neutral-300 rounded px-2 py-1"
+              />
+            </label>
           </div>
         </div>
 
@@ -117,16 +122,18 @@ export default function ReportsPage() {
             </table>
             <div className="flex space-x-2">
               <Button
+                type="button"
                 className="bg-primary-500 text-white px-4 py-1"
                 onClick={() => exportReport('pdf')}
               >
-                Export to PDF
+                Экспорт в PDF
               </Button>
               <Button
+                type="button"
                 className="bg-primary-500 text-white px-4 py-1"
                 onClick={() => exportReport('excel')}
               >
-                Export to Excel
+                Экспорт в Excel
               </Button>
             </div>
           </div>

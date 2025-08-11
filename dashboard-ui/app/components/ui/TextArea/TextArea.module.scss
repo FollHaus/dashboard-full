@@ -1,0 +1,27 @@
+@use "../../../assets/styles/mixins" as *;
+
+.editor {
+  @apply py-2;
+
+  .textarea {
+    @apply bg-neutral-50 font-medium text-lg rounded-lg w-full;
+    @include shadow('md');
+    height: 6rem;
+    padding: 1rem;
+    outline: none;
+
+    &::placeholder {
+      color: #b8b09e;
+    }
+
+    &:focus {
+      @apply focus:border-neutral-600 focus:ring-2 focus:ring-inset focus:ring-neutral-600;
+    }
+  }
+
+  .error {
+    @apply p-1 text-neutral-900;
+    font-size: 0.75rem;
+  }
+}
+
