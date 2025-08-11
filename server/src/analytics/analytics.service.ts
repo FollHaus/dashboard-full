@@ -168,14 +168,48 @@ export class AnalyticsService {
 	 * @param categoryIds - Массив ID категорий для фильтрации
 	 * @returns Промис с массивом объектов ProductModel
 	 */
-	async getLowStockProducts(
-		threshold = 10,
-		categoryIds?: number[]
-	): Promise<ProductModel[]> {
-		const where: any = { remains: { [Op.lte]: threshold } }
-		if (categoryIds && categoryIds.length) {
-			where.categoryId = { [Op.in]: categoryIds }
-		}
-		return this.productRepo.findAll({ where, include: ['category'] })
-	}
+        async getLowStockProducts(
+                threshold = 10,
+                categoryIds?: number[]
+        ): Promise<ProductModel[]> {
+                const where: any = { remains: { [Op.lte]: threshold } }
+                if (categoryIds && categoryIds.length) {
+                        where.categoryId = { [Op.in]: categoryIds }
+                }
+                return this.productRepo.findAll({ where, include: ['category'] })
+        }
+
+        /**
+         * Возвращает сумму продаж по дням за выбранный период.
+         *
+         * @param period - Количество дней (7, 14, 30, 365)
+         */
+        async getSales(period: number): Promise<{ date: string; total: number }[]> {
+                const endDate = new Date()
+                const startDate = new Date()
+                startDate.setDate(endDate.getDate() - (period - 1))
+
+                const rows = await this.saleRepo.findAll({
+                        attributes: [
+                                [col('sale_date'), 'date'],
+                                [fn('SUM', col('total_price')), 'total']
+                        ],
+                        where: {
+                                saleDate: {
+                                        [Op.between]: [
+                                                startDate.toISOString().slice(0, 10),
+                                                endDate.toISOString().slice(0, 10)
+                                        ]
+                                }
+                        },
+                        group: [col('sale_date')],
+                        order: [[col('sale_date'), 'ASC']],
+                        raw: true
+                })
+
+                return rows.map((r: any) => ({
+                        date: r.date,
+                        total: parseFloat(r.total)
+                }))
+        }
 }
