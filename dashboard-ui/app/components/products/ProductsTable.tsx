@@ -1,10 +1,11 @@
 'use client';
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Button from '@/ui/Button/Button'
 import ProductDetails from './ProductDetails'
 import ProductForm from './ProductForm'
 import { ProductService } from '@/services/product/product.service'
 import { IProduct } from '@/shared/interfaces/product.interface'
+import { useFilter } from '@/providers/filter-provider/filter-provider'
 
 const ProductsTable = () => {
   const [products, setProducts] = useState<IProduct[]>([])
@@ -17,13 +18,27 @@ const ProductsTable = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [sortField, setSortField] = useState<'name' | 'remains' | 'salePrice'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const abortRef = useRef<AbortController | null>(null)
+  const { notifyFiltersChanged, subscribe } = useFilter()
+
+  useEffect(() => {
+    const unsub = subscribe(() => {
+      abortRef.current?.abort()
+    })
+    return unsub
+  }, [subscribe])
 
   const fetchProducts = () => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
     setIsLoading(true)
     setError(null)
-    ProductService.getAll()
+    ProductService.getAll(controller.signal)
       .then(setProducts)
-      .catch(e => setError(e.message))
+      .catch(e => {
+        if (e.name !== 'CanceledError') setError(e.message)
+      })
       .finally(() => setIsLoading(false))
   }
 
@@ -34,9 +49,16 @@ const ProductsTable = () => {
 
   // Обновляем значение поиска с задержкой
   useEffect(() => {
-    const handler = setTimeout(() => setSearch(searchTerm), 400)
+    const handler = setTimeout(() => {
+      setSearch(searchTerm)
+      notifyFiltersChanged()
+    }, 400)
     return () => clearTimeout(handler)
-  }, [searchTerm])
+  }, [searchTerm, notifyFiltersChanged])
+
+  useEffect(() => {
+    notifyFiltersChanged()
+  }, [searchMode, sortField, sortOrder, notifyFiltersChanged])
 
   const filtered = products.filter(p => {
     const term = search.toLowerCase()
@@ -56,9 +78,14 @@ const ProductsTable = () => {
   const isLow = (balance: number) => balance <= 5
 
   const selectProduct = (id: number) => {
-    ProductService.getById(id)
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+    ProductService.getById(id, controller.signal)
       .then(setSelected)
-      .catch(e => setError(e.message))
+      .catch(e => {
+        if (e.name !== 'CanceledError') setError(e.message)
+      })
   }
 
   const handleDelete = async (id: number) => {

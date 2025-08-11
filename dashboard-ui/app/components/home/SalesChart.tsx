@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
+import { useFilter } from "@/providers/filter-provider/filter-provider";
 
 const periods = [
   { label: "1 неделя", value: 7 },
@@ -12,6 +13,7 @@ const periods = [
 ];
 
 const SalesChart = () => {
+  const { notifyFiltersChanged } = useFilter();
   const [period, setPeriod] = useState(7);
   const { data, isFetching } = useQuery({
     queryKey: ["sales", period],
@@ -29,7 +31,10 @@ const SalesChart = () => {
         <select
           className="border border-neutral-300 rounded p-1 text-sm"
           value={period}
-          onChange={(e) => setPeriod(parseInt(e.target.value))}
+          onChange={(e) => {
+            notifyFiltersChanged(["sales"]);
+            setPeriod(parseInt(e.target.value));
+          }}
         >
           {periods.map((p) => (
             <option key={p.value} value={p.value}>

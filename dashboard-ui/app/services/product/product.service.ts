@@ -10,8 +10,8 @@ export const ProductService = {
    * GET /products
    * Получение всех продуктов со склада.
    */
-  async getAll() {
-    const response = await axios.get<IProduct[]>('/products')
+  async getAll(signal?: AbortSignal) {
+    const response = await axios.get<IProduct[]>('/products', { signal })
     return response.data
   },
 
@@ -19,8 +19,8 @@ export const ProductService = {
    * GET /products/:id
    * Получение одного продукта по ID.
    */
-  async getById(id: number) {
-    const response = await axios.get<IProduct>(`/products/${id}`)
+  async getById(id: number, signal?: AbortSignal) {
+    const response = await axios.get<IProduct>(`/products/${id}`, { signal })
     return response.data
   },
 
