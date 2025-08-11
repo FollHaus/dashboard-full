@@ -13,11 +13,20 @@ import { ICategory } from './category.interface'
 export interface IProduct {
   id: number
   name: string
-  categoryId: number
   articleNumber: string
   purchasePrice: number
   salePrice: number
   remains: number
   // Связанная категория может приходить из бэкенда
   category?: ICategory
+}
+
+// Данные для создания или обновления продукта
+export interface IProductCreate {
+  name: string
+  categoryName: string
+  articleNumber: string
+  purchasePrice: number
+  salePrice: number
+  remains: number
 }
