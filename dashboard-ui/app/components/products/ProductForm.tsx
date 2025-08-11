@@ -51,48 +51,48 @@ const ProductForm = ({ product, onSuccess, onCancel }: Props) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-md">
       <Field
-        {...register('name', { required: 'Enter name' })}
-        placeholder="Name"
-        label="Name"
+        {...register('name', { required: 'Введите название' })}
+        placeholder="Название"
+        label="Название"
         error={errors.name}
       />
       <Field
         type="number"
         {...register('categoryId', { valueAsNumber: true })}
-        placeholder="Category ID"
-        label="Category ID"
+        placeholder="ID категории"
+        label="ID категории"
         error={errors.categoryId}
       />
       <Field
-        {...register('articleNumber', { required: 'Enter article number' })}
-        placeholder="Article number"
-        label="Article number"
+        {...register('articleNumber', { required: 'Введите артикул' })}
+        placeholder="Артикул"
+        label="Артикул"
         error={errors.articleNumber}
       />
       <Field
         type="number"
         {...register('purchasePrice', { valueAsNumber: true })}
-        placeholder="Purchase price"
-        label="Purchase price"
+        placeholder="Закупочная цена"
+        label="Закупочная цена"
         error={errors.purchasePrice}
       />
       <Field
         type="number"
         {...register('salePrice', { valueAsNumber: true })}
-        placeholder="Sale price"
-        label="Sale price"
+        placeholder="Цена продажи"
+        label="Цена продажи"
         error={errors.salePrice}
       />
       <Field
         type="number"
         {...register('remains', { valueAsNumber: true })}
-        placeholder="Remains"
-        label="Remains"
+        placeholder="Остаток"
+        label="Остаток"
         error={errors.remains}
       />
       <div className="flex space-x-2">
         <Button type="submit" className="bg-primary-500 text-white px-4 py-1">
-          Save
+          Сохранить
         </Button>
         {onCancel && (
           <Button
@@ -100,7 +100,7 @@ const ProductForm = ({ product, onSuccess, onCancel }: Props) => {
             onClick={onCancel}
             className="bg-secondary-500 text-white px-4 py-1"
           >
-            Cancel
+            Отмена
           </Button>
         )}
       </div>

@@ -3,7 +3,7 @@ import ProductsTable from '@/components/products/ProductsTable'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Warehouse'
+  title: 'Склад'
 }
 
 export default function ProductsPage() {

@@ -16,15 +16,15 @@ const ProductDetails: FC<Props> = ({ product, onClose }) => {
           onClick={onClose}
           className="bg-secondary-500 text-white px-2 py-1"
         >
-          Close
+          Закрыть
         </Button>
       </div>
       <div className="space-y-1 text-sm">
-        <p>Article: {product.articleNumber}</p>
-        <p>Category ID: {product.categoryId}</p>
-        <p>Purchase price: ${product.purchasePrice}</p>
-        <p>Sale price: ${product.salePrice}</p>
-        <p>Remains: {product.remains}</p>
+        <p>Артикул: {product.articleNumber}</p>
+        <p>ID категории: {product.categoryId}</p>
+        <p>Закупочная цена: ${product.purchasePrice}</p>
+        <p>Цена продажи: ${product.salePrice}</p>
+        <p>Остаток: {product.remains}</p>
       </div>
     </div>
   )
