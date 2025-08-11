@@ -4,10 +4,32 @@ import { ISalesStat } from '@/shared/interfaces/sales-stat.interface'
 import { ITurnover } from '@/shared/interfaces/turnover.interface'
 
 export const AnalyticsService = {
-  async getTopProducts(limit?: number) {
+  async getTopProducts(
+    limit?: number,
+    startDate?: string,
+    endDate?: string,
+    categories?: number[]
+  ) {
     const params: any = {}
     if (limit) params.limit = limit
+    if (startDate) params.startDate = startDate
+    if (endDate) params.endDate = endDate
+    if (categories && categories.length) params.categories = categories.join(',')
     const res = await axios.get<ITopProduct[]>('/analytics/top-products', { params })
+    return res.data
+  },
+  async getDailyRevenue(
+    startDate?: string,
+    endDate?: string,
+    categories?: number[]
+  ) {
+    const params: any = {}
+    if (startDate) params.startDate = startDate
+    if (endDate) params.endDate = endDate
+    if (categories && categories.length) params.categories = categories.join(',')
+    const res = await axios.get<ISalesStat[]>(`/analytics/daily-revenue`, {
+      params,
+    })
     return res.data
   },
   async getSales(period: number) {
