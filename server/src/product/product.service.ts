@@ -94,22 +94,19 @@ export class ProductService {
                 const updateData: any = { ...dto }
 
                 if (dto.categoryId || dto.categoryName) {
-                        let categoryId: number
-
                         if (dto.categoryId) {
                                 const cat = await this.categoryRepo.findByPk(dto.categoryId)
                                 if (!cat)
                                         throw new NotFoundException('Категория с таким ID не найдена')
-                                categoryId = dto.categoryId
+                                updateData.categoryId = dto.categoryId
                         } else if (dto.categoryName) {
                                 const [cat] = await this.categoryRepo.findOrCreate({
                                         where: { name: dto.categoryName.trim() },
                                         defaults: { name: dto.categoryName.trim() }
                                 })
-                                categoryId = cat.id
+                                updateData.categoryId = cat.id
                         }
 
-                        updateData.categoryId = categoryId
                         delete updateData.categoryName
                 }
 
