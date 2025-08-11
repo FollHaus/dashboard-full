@@ -5,6 +5,7 @@ import Metrics from "@/components/home/Metrics";
 import SalesChart from "@/components/home/SalesChart";
 import Notifications from "@/components/home/Notifications";
 import TopProducts from "@/components/home/TopProducts";
+import TaskList from "@/components/home/TaskList";
 
 export const metadata: Metadata = {
   title: "Главная",
@@ -18,6 +19,7 @@ export default function Home() {
                 <Metrics/>
                 <SalesChart/>
                 <TopProducts/>
+                <TaskList/>
                 <Notifications/>
             </div>
         </Layout>
