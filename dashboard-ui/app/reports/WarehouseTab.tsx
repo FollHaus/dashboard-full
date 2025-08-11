@@ -11,16 +11,19 @@ interface Stats {
 
 interface MovementItem {
   date: string
-  arrival: number
-  departure: number
+  direction: 'arrival' | 'departure'
+  product: string
+  article: string
+  quantity: number
+  reason: string
 }
 
 interface WarehouseTabProps {
   stats: Stats
-  movement: MovementItem[]
+  movements: MovementItem[]
 }
 
-const WarehouseTab: FC<WarehouseTabProps> = ({ stats, movement }) => {
+const WarehouseTab: FC<WarehouseTabProps> = ({ stats, movements }) => {
   return (
     <div className='space-y-6'>
       <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
@@ -54,20 +57,36 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ stats, movement }) => {
         </div>
       </div>
 
-      <div
-        className='p-4 bg-white rounded shadow cursor-pointer'
-        onClick={() => alert('Открыть движение товара')}
-      >
+      <div className='p-4 bg-white rounded shadow overflow-x-auto'>
         <div className='font-medium mb-2'>Движение товара</div>
-        <div className='flex items-end space-x-2 h-32'>
-          {movement.map(m => (
-            <div key={m.date} className='flex-1 flex flex-col justify-end'>
-              <div className='bg-green-500' style={{ height: `${m.arrival}px` }} />
-              <div className='bg-red-500' style={{ height: `${m.departure}px` }} />
-              <span className='text-xs text-center'>{new Date(m.date).getDate()}</span>
-            </div>
-          ))}
-        </div>
+        <table className='w-full text-sm'>
+          <thead>
+            <tr className='text-left'>
+              <th className='py-1 pr-2'>Дата</th>
+              <th className='py-1 pr-2'>Товар</th>
+              <th className='py-1 pr-2'>Артикул</th>
+              <th className='py-1 pr-2 text-right'>Приход</th>
+              <th className='py-1 pr-2 text-right'>Расход</th>
+              <th className='py-1 pr-2'>Причина</th>
+            </tr>
+          </thead>
+          <tbody>
+            {movements.map(m => (
+              <tr key={`${m.date}-${m.article}`} className='border-t'>
+                <td className='py-1 pr-2'>{m.date}</td>
+                <td className='py-1 pr-2'>{m.product}</td>
+                <td className='py-1 pr-2'>{m.article}</td>
+                <td className='py-1 pr-2 text-right text-green-600'>
+                  {m.direction === 'arrival' ? m.quantity : ''}
+                </td>
+                <td className='py-1 pr-2 text-right text-red-600'>
+                  {m.direction === 'departure' ? m.quantity : ''}
+                </td>
+                <td className='py-1 pr-2'>{m.reason}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )

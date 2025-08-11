@@ -26,11 +26,11 @@ export class AnalyticsService {
 	 * @param categoryIds - Массив ID категорий для фильтрации
 	 * @returns Промис с числом — суммарной выручкой
 	 */
-	async getRevenue(
-		startDate?: string,
-		endDate?: string,
-		categoryIds?: number[]
-	): Promise<number> {
+        async getRevenue(
+                startDate?: string,
+                endDate?: string,
+                categoryIds?: number[]
+        ): Promise<number> {
 		const where: any = {}
 		if (startDate || endDate) {
 			if (startDate && endDate) {
@@ -52,8 +52,52 @@ export class AnalyticsService {
 					? [{ model: ProductModel, attributes: [] }]
 					: undefined
 		})
-		return parseFloat(String(revenue)) || 0
-	}
+                return parseFloat(String(revenue)) || 0
+        }
+
+        /**
+         * Возвращает сумму продаж по дням за указанный диапазон дат с учётом
+         * выбранных категорий.
+         */
+        async getDailyRevenue(
+                startDate?: string,
+                endDate?: string,
+                categoryIds?: number[]
+        ): Promise<{ date: string; total: number }[]> {
+                const where: any = {}
+                if (startDate || endDate) {
+                        if (startDate && endDate) {
+                                where.saleDate = { [Op.between]: [startDate, endDate] }
+                        } else if (startDate) {
+                                where.saleDate = { [Op.gte]: startDate }
+                        } else if (endDate) {
+                                where.saleDate = { [Op.lte]: endDate }
+                        }
+                }
+                if (categoryIds && categoryIds.length) {
+                        where['$product.category_id$'] = { [Op.in]: categoryIds }
+                }
+
+                const rows = await this.saleRepo.findAll({
+                        attributes: [
+                                [col('sale_date'), 'date'],
+                                [fn('SUM', col('total_price')), 'total']
+                        ],
+                        where,
+                        include:
+                                categoryIds && categoryIds.length
+                                        ? [{ model: ProductModel, attributes: [] }]
+                                        : undefined,
+                        group: [col('sale_date')],
+                        order: [[col('sale_date'), 'ASC']],
+                        raw: true
+                })
+
+                return rows.map((r: any) => ({
+                        date: r.date,
+                        total: parseFloat(r.total)
+                }))
+        }
 
 	/**
 	 * Получает данные о продажах по категориям за определённый период.

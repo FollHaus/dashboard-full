@@ -30,6 +30,18 @@ export class AnalyticsController {
         }
 
         /**
+         * Возвращает суммы продаж по дням за выбранный диапазон.
+         */
+        @Get('daily-revenue')
+        getDailyRevenue(
+                @Query(new ValidationPipe({ transform: true }))
+                query: AnalyticsQueryDto
+        ) {
+                const { startDate, endDate, categories } = query
+                return this.analyticsService.getDailyRevenue(startDate, endDate, categories)
+        }
+
+        /**
          * Возвращает оборот за день, неделю, месяц, год и всё время.
          */
         @Get('turnover')

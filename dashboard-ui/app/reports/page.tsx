@@ -6,6 +6,9 @@ import Layout from '@/ui/Layout'
 import SalesTab from './SalesTab'
 import WarehouseTab from './WarehouseTab'
 import TasksTab from './TasksTab'
+import { CategoryService } from '@/services/category/category.service'
+import { AnalyticsService } from '@/services/analytics/analytics.service'
+import { ICategory } from '@/shared/interfaces/category.interface'
 
 const tabs = [
   { key: 'sales', label: 'Продажи' },
@@ -15,81 +18,8 @@ const tabs = [
 
 type TabKey = (typeof tabs)[number]['key']
 
-const categories = [
-  { id: 1, name: 'Электроника' },
-  { id: 2, name: 'Одежда' },
-  { id: 3, name: 'Дом' },
-]
-
-interface SaleRecord {
-  date: string
-  categoryId: number
-  orders: number
-  units: number
-  revenue: number
-  cost: number
-}
-
-const salesRecords: SaleRecord[] = [
-  { date: '2025-08-01', categoryId: 1, orders: 5, units: 7, revenue: 700, cost: 400 },
-  { date: '2025-08-02', categoryId: 2, orders: 3, units: 4, revenue: 400, cost: 250 },
-  { date: '2025-08-03', categoryId: 1, orders: 6, units: 9, revenue: 900, cost: 500 },
-  { date: '2025-08-04', categoryId: 3, orders: 2, units: 3, revenue: 300, cost: 150 },
-  { date: '2025-08-05', categoryId: 2, orders: 4, units: 5, revenue: 500, cost: 260 },
-  { date: '2025-08-06', categoryId: 1, orders: 7, units: 10, revenue: 1000, cost: 600 },
-  { date: '2025-08-07', categoryId: 3, orders: 3, units: 4, revenue: 350, cost: 180 },
-  { date: '2025-08-08', categoryId: 1, orders: 5, units: 7, revenue: 750, cost: 420 },
-  { date: '2025-08-09', categoryId: 2, orders: 6, units: 8, revenue: 800, cost: 450 },
-  { date: '2025-08-10', categoryId: 3, orders: 4, units: 6, revenue: 600, cost: 300 },
-  { date: '2025-08-11', categoryId: 1, orders: 8, units: 11, revenue: 1100, cost: 650 },
-]
-
-const salesRecordsPrev: SaleRecord[] = [
-  { date: '2025-07-25', categoryId: 1, orders: 4, units: 6, revenue: 600, cost: 350 },
-  { date: '2025-07-26', categoryId: 2, orders: 2, units: 3, revenue: 300, cost: 180 },
-  { date: '2025-07-27', categoryId: 1, orders: 5, units: 8, revenue: 800, cost: 450 },
-  { date: '2025-07-28', categoryId: 3, orders: 1, units: 2, revenue: 200, cost: 100 },
-  { date: '2025-07-29', categoryId: 2, orders: 3, units: 4, revenue: 450, cost: 230 },
-  { date: '2025-07-30', categoryId: 1, orders: 6, units: 9, revenue: 900, cost: 520 },
-  { date: '2025-07-31', categoryId: 3, orders: 2, units: 3, revenue: 280, cost: 140 },
-  { date: '2025-08-01', categoryId: 1, orders: 4, units: 6, revenue: 650, cost: 380 },
-  { date: '2025-08-02', categoryId: 2, orders: 5, units: 7, revenue: 700, cost: 390 },
-  { date: '2025-08-03', categoryId: 3, orders: 3, units: 4, revenue: 330, cost: 170 },
-  { date: '2025-08-04', categoryId: 1, orders: 5, units: 7, revenue: 780, cost: 430 },
-]
-
-const productSales = [
-  { name: 'Ноутбук', categoryId: 1, revenue: 3000 },
-  { name: 'Телефон', categoryId: 1, revenue: 2500 },
-  { name: 'Джинсы', categoryId: 2, revenue: 1800 },
-  { name: 'Рубашка', categoryId: 2, revenue: 1600 },
-  { name: 'Диван', categoryId: 3, revenue: 1400 },
-  { name: 'Лампа', categoryId: 3, revenue: 1200 },
-  { name: 'Наушники', categoryId: 1, revenue: 1100 },
-  { name: 'Куртка', categoryId: 2, revenue: 1000 },
-  { name: 'Стол', categoryId: 3, revenue: 900 },
-  { name: 'Часы', categoryId: 1, revenue: 800 },
-]
-
-const warehouseStats = { initial: 1200, arrival: 300, departure: 200, final: 1300 }
-const warehouseMovement = [
-  { date: '2025-08-05', arrival: 30, departure: 20 },
-  { date: '2025-08-06', arrival: 50, departure: 40 },
-  { date: '2025-08-07', arrival: 20, departure: 35 },
-  { date: '2025-08-08', arrival: 40, departure: 30 },
-  { date: '2025-08-09', arrival: 60, departure: 45 },
-]
-
-const tasksStats = { current: 42, previous: 35 }
-
 function formatDate(d: Date) {
   return d.toISOString().split('T')[0]
-}
-
-function shiftDate(dateStr: string, days: number) {
-  const d = new Date(dateStr)
-  d.setDate(d.getDate() + days)
-  return formatDate(d)
 }
 
 function toCsv(rows: any[]): string {
@@ -102,36 +32,81 @@ function toCsv(rows: any[]): string {
   return csv.join('\n')
 }
 
+const warehouseStats = { initial: 1200, arrival: 300, departure: 200, final: 1300 }
+const warehouseMovement = [
+  {
+    date: '2025-08-05',
+    direction: 'arrival' as const,
+    product: 'Ноутбук',
+    article: 'NB-01',
+    quantity: 30,
+    reason: 'Поставка',
+  },
+  {
+    date: '2025-08-06',
+    direction: 'departure' as const,
+    product: 'Телефон',
+    article: 'PH-02',
+    quantity: 12,
+    reason: 'Продажа',
+  },
+  {
+    date: '2025-08-07',
+    direction: 'arrival' as const,
+    product: 'Стол',
+    article: 'ST-01',
+    quantity: 5,
+    reason: 'Возврат',
+  },
+  {
+    date: '2025-08-08',
+    direction: 'departure' as const,
+    product: 'Диван',
+    article: 'DV-05',
+    quantity: 2,
+    reason: 'Списание',
+  },
+  {
+    date: '2025-08-09',
+    direction: 'arrival' as const,
+    product: 'Куртка',
+    article: 'KT-03',
+    quantity: 20,
+    reason: 'Поставка',
+  },
+]
+
+const tasksStats = { current: 42, previous: 35 }
+
 export default function ReportsPage() {
   const [active, setActive] = useState<TabKey>('sales')
-  const [period, setPeriod] = useState<'today' | '7d' | '30d' | 'month' | 'custom'>('7d')
+  const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'custom'>('week')
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
-  const [selectedCategories, setSelectedCategories] = useState<number[]>(
-    categories.map(c => c.id)
-  )
+  const [categories, setCategories] = useState<ICategory[]>([])
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([])
+  const [revenueData, setRevenueData] = useState<{ date: string; value: number }[]>([])
+  const [topProducts, setTopProducts] = useState<{ name: string; revenue: number }[]>([])
+
+  useEffect(() => {
+    CategoryService.getAll().then(data => {
+      setCategories(data)
+      setSelectedCategories(data.map(c => c.id))
+    })
+  }, [])
 
   useEffect(() => {
     const today = new Date()
-    let s = ''
-    let e = ''
-    if (period === 'today') {
-      s = e = formatDate(today)
-    } else if (period === '7d') {
-      e = formatDate(today)
+    let s = formatDate(today)
+    let e = formatDate(today)
+    if (period === 'week') {
       const sDate = new Date(today)
       sDate.setDate(sDate.getDate() - 6)
       s = formatDate(sDate)
-    } else if (period === '30d') {
-      e = formatDate(today)
+    } else if (period === 'month') {
       const sDate = new Date(today)
       sDate.setDate(sDate.getDate() - 29)
       s = formatDate(sDate)
-    } else if (period === 'month') {
-      const startMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-      const endMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0)
-      s = formatDate(startMonth)
-      e = formatDate(endMonth)
     }
     if (period !== 'custom') {
       setStart(s)
@@ -139,100 +114,31 @@ export default function ReportsPage() {
     }
   }, [period])
 
-  const categoryIds = selectedCategories.length
-    ? selectedCategories
-    : categories.map(c => c.id)
-
-  const filteredRecords = useMemo(
-    () =>
-      salesRecords.filter(
-        r =>
-          (!start || r.date >= start) &&
-          (!end || r.date <= end) &&
-          categoryIds.includes(r.categoryId)
-      ),
-    [start, end, categoryIds]
-  )
-
-  const filteredPrevRecords = useMemo(() => {
-    if (!start || !end) return [] as SaleRecord[]
-    const days =
-      Math.ceil(
-        (new Date(end).getTime() - new Date(start).getTime()) / 86400000
-      ) + 1
-    const prevEnd = shiftDate(start, -1)
-    const prevStart = shiftDate(prevEnd, -(days - 1))
-    return salesRecordsPrev.filter(
-      r =>
-        r.date >= prevStart &&
-        r.date <= prevEnd &&
-        categoryIds.includes(r.categoryId)
-    )
-  }, [start, end, categoryIds])
-
-  const metrics = useMemo(() => {
-    const sum = (arr: SaleRecord[], key: 'revenue' | 'orders' | 'units' | 'cost') =>
-      arr.reduce((s, r) => s + r[key], 0)
-
-    const revenue = sum(filteredRecords, 'revenue')
-    const prevRevenue = sum(filteredPrevRecords, 'revenue')
-    const orders = sum(filteredRecords, 'orders')
-    const prevOrders = sum(filteredPrevRecords, 'orders')
-    const units = sum(filteredRecords, 'units')
-    const prevUnits = sum(filteredPrevRecords, 'units')
-    const margin = revenue - sum(filteredRecords, 'cost')
-    const prevMargin = prevRevenue - sum(filteredPrevRecords, 'cost')
-    const avgReceipt = orders ? revenue / orders : 0
-    const prevAvgReceipt = prevOrders ? prevRevenue / prevOrders : 0
-
-    return {
-      revenue,
-      revenueChange: prevRevenue ? ((revenue - prevRevenue) / prevRevenue) * 100 : 0,
-      orders,
-      ordersChange: prevOrders ? ((orders - prevOrders) / prevOrders) * 100 : 0,
-      units,
-      unitsChange: prevUnits ? ((units - prevUnits) / prevUnits) * 100 : 0,
-      avgReceipt,
-      avgReceiptChange: prevAvgReceipt
-        ? ((avgReceipt - prevAvgReceipt) / prevAvgReceipt) * 100
-        : 0,
-      marginValue: margin,
-      marginPercent: revenue ? (margin / revenue) * 100 : 0,
-      marginChange: prevMargin ? ((margin - prevMargin) / prevMargin) * 100 : 0,
-    }
-  }, [filteredRecords, filteredPrevRecords])
-
-  const topProducts = useMemo(
-    () =>
-      productSales
-        .filter(p => categoryIds.includes(p.categoryId))
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 10),
-    [categoryIds]
-  )
-
-  const revenueData = useMemo(() => {
-    const map: Record<string, number> = {}
-    filteredRecords.forEach(r => {
-      map[r.date] = (map[r.date] || 0) + r.revenue
+  useEffect(() => {
+    if (!start || !end) return
+    AnalyticsService.getDailyRevenue(start, end, selectedCategories).then(data => {
+      setRevenueData(data.map(r => ({ date: r.date, value: r.total })))
     })
-    return Object.entries(map)
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([date, value]) => ({ date, value }))
-  }, [filteredRecords])
+    AnalyticsService.getTopProducts(10, start, end, selectedCategories).then(data => {
+      setTopProducts(data.map(p => ({ name: p.productName, revenue: p.totalRevenue })))
+    })
+  }, [start, end, selectedCategories])
 
-  const handleCategoryToggle = (id: number) => {
-    setSelectedCategories(prev =>
-      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
-    )
+  const totalRevenue = useMemo(
+    () => revenueData.reduce((s, r) => s + r.value, 0),
+    [revenueData]
+  )
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const values = Array.from(e.target.selectedOptions).map(o => Number(o.value))
+    setSelectedCategories(values)
   }
 
   const handleExport = () => {
     let data: any[] = []
     if (active === 'sales') data = revenueData
     else if (active === 'warehouse') data = warehouseMovement
-    else if (active === 'tasks')
-      data = [{ date: start, completed: tasksStats.current }]
+    else if (active === 'tasks') data = [{ date: start, completed: tasksStats.current }]
 
     const csv = toCsv(data)
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
@@ -245,31 +151,7 @@ export default function ReportsPage() {
   }
 
   const kpis = [
-    { label: 'Выручка (₽)', value: metrics.revenue, change: metrics.revenueChange },
-    {
-      label: 'Количество заказов',
-      value: metrics.orders,
-      change: metrics.ordersChange,
-    },
-    { label: 'Проданные единицы', value: metrics.units, change: metrics.unitsChange },
-    {
-      label: 'Средний чек (₽)',
-      value: metrics.avgReceipt,
-      change: metrics.avgReceiptChange,
-    },
-    {
-      label: 'Маржа (₽)',
-      value: metrics.marginValue,
-      change: metrics.marginChange,
-      extra: `${metrics.marginPercent.toFixed(1)}%`,
-    },
-    {
-      label: 'Выполненные задачи (шт.)',
-      value: tasksStats.current,
-      change: tasksStats.previous
-        ? ((tasksStats.current - tasksStats.previous) / tasksStats.previous) * 100
-        : 0,
-    },
+    { label: 'Выручка (₽)', value: totalRevenue, change: 0 },
   ]
 
   return (
@@ -283,10 +165,9 @@ export default function ReportsPage() {
               onChange={e => setPeriod(e.target.value as any)}
               className='border border-neutral-300 rounded px-2 py-1'
             >
-              <option value='today'>Сегодня</option>
-              <option value='7d'>7 дней</option>
-              <option value='30d'>30 дней</option>
-              <option value='month'>Этот месяц</option>
+              <option value='day'>День</option>
+              <option value='week'>Неделя</option>
+              <option value='month'>Месяц</option>
               <option value='custom'>Произвольный</option>
             </select>
           </div>
@@ -314,18 +195,18 @@ export default function ReportsPage() {
           )}
           <div className='flex flex-col'>
             <span className='text-sm'>Категории</span>
-            <div className='flex flex-wrap gap-2'>
+            <select
+              multiple
+              value={selectedCategories.map(String)}
+              onChange={handleCategoryChange}
+              className='border border-neutral-300 rounded px-2 py-1 min-w-[200px] h-24'
+            >
               {categories.map(c => (
-                <label key={c.id} className='flex items-center space-x-1'>
-                  <input
-                    type='checkbox'
-                    checked={categoryIds.includes(c.id)}
-                    onChange={() => handleCategoryToggle(c.id)}
-                  />
-                  <span className='text-sm'>{c.name}</span>
-                </label>
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
               ))}
-            </div>
+            </select>
           </div>
           <button
             onClick={handleExport}
@@ -348,7 +229,6 @@ export default function ReportsPage() {
                 className={`text-sm ${k.change >= 0 ? 'text-green-600' : 'text-red-600'}`}
               >
                 {k.change >= 0 ? '+' : ''}{k.change.toFixed(1)}%
-                {k.extra && <span className='text-neutral-500 ml-1'>{k.extra}</span>}
               </div>
             </div>
           ))}
@@ -372,11 +252,11 @@ export default function ReportsPage() {
           <SalesTab
             revenueData={revenueData}
             topProducts={topProducts}
-            totalRevenue={metrics.revenue}
+            totalRevenue={totalRevenue}
           />
         )}
         {active === 'warehouse' && (
-          <WarehouseTab stats={warehouseStats} movement={warehouseMovement} />
+          <WarehouseTab stats={warehouseStats} movements={warehouseMovement} />
         )}
         {active === 'tasks' && (
           <TasksTab
