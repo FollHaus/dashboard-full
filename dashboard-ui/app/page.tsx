@@ -5,6 +5,7 @@ import Metrics from "@/components/home/Metrics";
 import SalesChart from "@/components/home/SalesChart";
 import Notifications from "@/components/home/Notifications";
 import QuickActions from "@/components/home/QuickActions";
+import TopProducts from "@/components/home/TopProducts";
 
 export const metadata: Metadata = {
   title: "Главная",
@@ -17,6 +18,7 @@ export default function Home() {
             <div className="space-y-8">
                 <Metrics/>
                 <SalesChart/>
+                <TopProducts/>
                 <Notifications/>
                 <QuickActions/>
             </div>
