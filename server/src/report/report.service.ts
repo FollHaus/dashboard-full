@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 import { ReportModel } from './report.model'
 import { GenerateReportDto } from './dto/generate-report.dto'
+import { AnalyticsService } from '../analytics/analytics.service'
 
 @Injectable()
 export class ReportService {
         constructor(
                 @InjectModel(ReportModel)
-                private reportRepo: typeof ReportModel
+                private reportRepo: typeof ReportModel,
+                private readonly analyticsService: AnalyticsService
         ) {}
 
         getAvailable() {
@@ -19,10 +21,15 @@ export class ReportService {
         }
 
         async generate({ type, params }: GenerateReportDto) {
+                const data = await this.analyticsService.getKpis(
+                        params.startDate,
+                        params.endDate,
+                        params.categories
+                )
                 return this.reportRepo.create({
                         type,
                         params,
-                        data: { message: `data for ${type}` }
+                        data
                 })
         }
 

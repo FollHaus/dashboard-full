@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
-import { col, fn, Op } from 'sequelize'
+import { col, fn, Op, literal } from 'sequelize'
 import { DateTime } from 'luxon'
 import { SaleModel } from '../sale/sale.model'
 import { ProductModel } from '../product/product.model'
@@ -275,6 +275,80 @@ export class AnalyticsService {
                 return this.taskRepo.count({
                         where: { status: { [Op.ne]: TaskStatus.Completed } },
                 })
+        }
+
+        /**
+         * Рассчитывает ключевые показатели (KPI) продаж за период
+         * с возможностью фильтрации по категориям.
+         */
+        async getKpis(
+                startDate?: string,
+                endDate?: string,
+                categoryIds?: number[]
+        ): Promise<{
+                revenue: number
+                orders: number
+                unitsSold: number
+                avgCheck: number
+                margin: number
+                completedTasks: number
+        }> {
+                const whereSales: any = {}
+                if (startDate || endDate) {
+                        if (startDate && endDate) {
+                                whereSales.saleDate = { [Op.between]: [startDate, endDate] }
+                        } else if (startDate) {
+                                whereSales.saleDate = { [Op.gte]: startDate }
+                        } else if (endDate) {
+                                whereSales.saleDate = { [Op.lte]: endDate }
+                        }
+                }
+
+                const includeProduct: any = { model: ProductModel, attributes: [] }
+                if (categoryIds && categoryIds.length) {
+                        includeProduct.where = { categoryId: { [Op.in]: categoryIds } }
+                }
+
+                const kpiRow: any = await this.saleRepo.findOne({
+                        attributes: [
+                                [fn('SUM', col('total_price')), 'revenue'],
+                                [fn('COUNT', col('id')), 'orders'],
+                                [fn('SUM', col('quantity_sold')), 'unitsSold'],
+                                [
+                                        fn(
+                                                'SUM',
+                                                literal(
+                                                        '(product.sale_price - product.purchase_price) * quantity_sold'
+                                                )
+                                        ),
+                                        'margin'
+                                ]
+                        ],
+                        where: whereSales,
+                        include: [includeProduct],
+                        raw: true
+                })
+
+                const revenue = parseFloat(kpiRow?.revenue) || 0
+                const orders = parseInt(kpiRow?.orders) || 0
+                const unitsSold = parseInt(kpiRow?.unitsSold) || 0
+                const margin = parseFloat(kpiRow?.margin) || 0
+                const avgCheck = orders > 0 ? revenue / orders : 0
+
+                const whereTasks: any = { status: TaskStatus.Completed }
+                if (startDate || endDate) {
+                        if (startDate && endDate) {
+                                whereTasks.deadline = { [Op.between]: [startDate, endDate] }
+                        } else if (startDate) {
+                                whereTasks.deadline = { [Op.gte]: startDate }
+                        } else if (endDate) {
+                                whereTasks.deadline = { [Op.lte]: endDate }
+                        }
+                }
+
+                const completedTasks = await this.taskRepo.count({ where: whereTasks })
+
+                return { revenue, orders, unitsSold, avgCheck, margin, completedTasks }
         }
 
         /**
