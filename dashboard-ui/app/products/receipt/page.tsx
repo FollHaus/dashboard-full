@@ -2,7 +2,7 @@ import Layout from '@/ui/Layout'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Product Receipt',
+  title: 'Приход товара',
 }
 
 export default function ProductReceiptPage() {

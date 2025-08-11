@@ -12,6 +12,8 @@ const ProductsTable = () => {
   const [selected, setSelected] = useState<IProduct | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [sortField, setSortField] = useState<'name' | 'remains' | 'salePrice'>('name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
   // Загружаем список продуктов при монтировании
   useEffect(() => {
@@ -29,6 +31,14 @@ const ProductsTable = () => {
     (!category || p.category?.name === category)
   )
 
+  const sorted = [...filtered].sort((a, b) => {
+    const aValue = a[sortField]
+    const bValue = b[sortField]
+    if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1
+    if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1
+    return 0
+  })
+
   const isLow = (balance: number) => balance <= 5
 
   const selectProduct = (id: number) => {
@@ -43,7 +53,16 @@ const ProductsTable = () => {
       setProducts(prev => prev.filter(p => p.id !== id))
       if (selected?.id === id) setSelected(null)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Error deleting product')
+      setError(e instanceof Error ? e.message : 'Ошибка удаления товара')
+    }
+  }
+
+  const handleSort = (field: 'name' | 'remains' | 'salePrice') => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortOrder('asc')
     }
   }
 
@@ -53,7 +72,7 @@ const ProductsTable = () => {
         <div className="flex space-x-2">
           <input
             type="text"
-            placeholder="Search products"
+            placeholder="Поиск товаров"
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="border border-neutral-300 rounded px-2 py-1"
@@ -63,7 +82,7 @@ const ProductsTable = () => {
             onChange={e => setCategory(e.target.value)}
             className="border border-neutral-300 rounded px-2 py-1"
           >
-            <option value="">All categories</option>
+            <option value="">Все категории</option>
             {categories
               .filter(Boolean)
               .map(c => (
@@ -78,24 +97,40 @@ const ProductsTable = () => {
             className="bg-primary-500 text-white px-4 py-1"
             onClick={() => setIsCreating(true)}
           >
-            Add product
+            Добавить товар
           </Button>
-          <Button className="bg-primary-500 text-white px-4 py-1">Import/Export list</Button>
+          <Button className="bg-primary-500 text-white px-4 py-1">Импорт/экспорт списка</Button>
         </div>
       </div>
 
       <table className="min-w-full bg-neutral-100 rounded shadow-md">
         <thead>
           <tr className="text-left border-b border-neutral-300">
-            <th className="p-2">Name</th>
-            <th className="p-2">Category</th>
-            <th className="p-2">Balance</th>
-            <th className="p-2">Price</th>
-            <th className="p-2">Actions</th>
+            <th
+              className="p-2 cursor-pointer"
+              onClick={() => handleSort('name')}
+            >
+              Название {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </th>
+            <th className="p-2">Категория</th>
+            <th className="p-2">Артикул</th>
+            <th
+              className="p-2 cursor-pointer"
+              onClick={() => handleSort('remains')}
+            >
+              Остаток {sortField === 'remains' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </th>
+            <th
+              className="p-2 cursor-pointer"
+              onClick={() => handleSort('salePrice')}
+            >
+              Цена продажи {sortField === 'salePrice' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </th>
+            <th className="p-2">Действия</th>
           </tr>
         </thead>
         <tbody>
-          {filtered.map(prod => (
+          {sorted.map(prod => (
             <tr
               key={prod.id}
               onClick={() => selectProduct(prod.id)}
@@ -103,6 +138,7 @@ const ProductsTable = () => {
             >
               <td className="p-2">{prod.name}</td>
               <td className="p-2">{prod.category?.name || '-'}</td>
+              <td className="p-2">{prod.articleNumber}</td>
               <td className="p-2">
                 {prod.remains}
                 {isLow(prod.remains) && (
@@ -118,7 +154,7 @@ const ProductsTable = () => {
                     handleDelete(prod.id)
                   }}
                 >
-                  Delete
+                  Удалить
                 </Button>
               </td>
             </tr>
