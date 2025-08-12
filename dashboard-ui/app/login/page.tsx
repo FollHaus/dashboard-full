@@ -17,7 +17,7 @@ export default function LoginPage() {
   return (
     <motion.div
       {...FADE_IN}
-      className='grid min-h-screen w-screen place-items-center bg-gradient-to-br from-primary-100 to-secondary-100 bg-fixed'
+      className='grid min-h-screen place-items-center from-primary-100 to-secondary-100 bg-fixed'
     >
       <LoginForm inPage />
     </motion.div>
