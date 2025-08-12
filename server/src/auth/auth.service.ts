@@ -142,24 +142,41 @@ export class AuthService {
                 }
         }
 
-        private async sendConfirmationEmail(email: string, token: string) {
-                const transporter = nodemailer.createTransport({
-                        host: process.env.MAIL_HOST,
-                        port: Number(process.env.MAIL_PORT) || 587,
-                        secure: false,
-                        auth: {
-                                user: process.env.MAIL_USER,
-                                pass: process.env.MAIL_PASSWORD
-                        }
-                })
+private async sendConfirmationEmail(email: string, token: string) {
+if (
+!process.env.MAIL_HOST ||
+!process.env.MAIL_USER ||
+!process.env.MAIL_PASSWORD
+) {
+console.warn(
+'Mail service is not configured. Skipping confirmation email.'
+)
+return
+}
 
-                const confirmUrl = `${process.env.SERVER_URL || 'http://localhost:4000'}/auth/confirm/${token}`
+const transporter = nodemailer.createTransport({
+host: process.env.MAIL_HOST,
+port: Number(process.env.MAIL_PORT) || 587,
+secure: false,
+auth: {
+user: process.env.MAIL_USER,
+pass: process.env.MAIL_PASSWORD
+}
+})
 
-                await transporter.sendMail({
-                        to: email,
-                        from: process.env.MAIL_FROM,
-                        subject: 'Подтверждение регистрации',
-                        html: `<a href="${confirmUrl}">Подтвердить email</a>`
-                })
-        }
+const confirmUrl = `${
+process.env.SERVER_URL || 'http://localhost:4000'
+}/auth/confirm/${token}`
+
+try {
+await transporter.sendMail({
+to: email,
+from: process.env.MAIL_FROM,
+subject: 'Подтверждение регистрации',
+html: `<a href="${confirmUrl}">Подтвердить email</a>`
+})
+} catch (err) {
+console.error('Failed to send confirmation email', err)
+}
+}
 }
