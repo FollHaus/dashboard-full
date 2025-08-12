@@ -44,6 +44,8 @@ $ yarn run start:dev
 $ yarn run start:prod
 ```
 
+The server listens on port `4000` by default. Set the `PORT` environment variable to use a different port.
+
 ## Run tests
 
 ```bash
