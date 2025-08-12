@@ -4,22 +4,19 @@
   @apply relative inline-flex;
 
   .form {
-    @apply p-3 absolute right-0.5 w-88 z-20 rounded-lg bg-neutral-500 shadow-md;
+    @apply absolute right-0.5 w-88 z-20 p-6 bg-neutral-50 rounded-lg shadow-lg;
     top: calc(100% + 1.1rem);
   }
 
   .login {
-    @apply p-2 mt-6 mb-2 text-xl font-medium text-white bg-primary-500 rounded-lg text-center;
+    @apply p-2 mt-6 mb-2 text-xl font-medium text-white bg-primary-500 rounded-lg text-center transition-colors duration-200 hover:bg-primary-400;
     @include shadow('md');
   }
-
 
   .register {
-    @apply p-2 text-secondary-700 text-xl font-medium bg-primary-100 rounded-lg text-center w-full;
+    @apply p-2 text-secondary-700 text-xl font-medium bg-primary-100 rounded-lg text-center w-full transition-colors duration-200 hover:bg-primary-200;
     @include shadow('md');
   }
-
-
 
   .button {
     @apply shadow-icon;
@@ -31,5 +28,5 @@
 }
 
 .formPage {
-  @apply p-3 w-full max-w-sm z-20 rounded-lg bg-neutral-500 shadow-md;
+  @apply w-full max-w-sm z-20 p-8 bg-neutral-50 rounded-lg shadow-lg;
 }
