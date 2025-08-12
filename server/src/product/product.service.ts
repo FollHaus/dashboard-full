@@ -35,8 +35,11 @@ export class ProductService {
 
 		if (dto.categoryId) {
 			// 1) Если передан ID — проверяем наличие
-			const cat = await this.categoryRepo.findByPk(dto.categoryId)
-			if (!cat) throw new NotFoundException('Категория с таким ID не найдена')
+                        const cat = await this.categoryRepo.findByPk(dto.categoryId)
+                        if (!cat)
+                                throw new NotFoundException(
+                                        'Категория с указанным ID не найдена.'
+                                )
 			categoryId = dto.categoryId
 		} else if (dto.categoryName) {
 			// 2) Если передано имя — ищем или создаем
@@ -46,7 +49,9 @@ export class ProductService {
 			})
 			categoryId = cat.id
 		} else {
-			throw new BadRequestException('Укажите categoryId или categoryName')
+                        throw new BadRequestException(
+                                'Пожалуйста, укажите categoryId или categoryName.'
+                        )
 		}
 
 		// 3) Создаем продукт
@@ -77,9 +82,9 @@ export class ProductService {
 			include: ['category', 'sales'],
 			transaction: trx
 		})
-		if (!prod) {
-			throw new NotFoundException(`Product #${id} не найден`)
-		}
+                if (!prod) {
+                        throw new NotFoundException(`Товар с ID ${id} не найден.`)
+                }
 		return prod
 	}
 
@@ -97,7 +102,9 @@ export class ProductService {
                         if (dto.categoryId) {
                                 const cat = await this.categoryRepo.findByPk(dto.categoryId)
                                 if (!cat)
-                                        throw new NotFoundException('Категория с таким ID не найдена')
+                                        throw new NotFoundException(
+                                                'Категория с указанным ID не найдена.'
+                                        )
                                 updateData.categoryId = dto.categoryId
                         } else if (dto.categoryName) {
                                 const [cat] = await this.categoryRepo.findOrCreate({
@@ -158,9 +165,9 @@ export class ProductService {
 	): Promise<void> {
 		const operation = async (t: Transaction) => {
 			const product = await this.findOne(productId, t)
-			if (product.remains < qty) {
-				throw new BadRequestException('Недостаточно остатков')
-			}
+                        if (product.remains < qty) {
+                                throw new BadRequestException('Недостаточно товара на складе.')
+                        }
 			await this.productRepo.decrement(
 				{ remains: qty },
 				{ where: { id: productId }, transaction: t }

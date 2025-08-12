@@ -41,7 +41,7 @@ export class AuthService {
 
                 if (oldUser)
                         throw new BadRequestException(
-                                'Пользователь с таким email уже существует'
+                                'Такой email уже зарегистрирован. Пожалуйста, используйте другой.'
                         )
 
                 const salt = await genSalt(10)
@@ -67,12 +67,17 @@ export class AuthService {
                         attributes: ['id', 'email', 'password', 'name']
                 })
 
-                if (!user) throw new UnauthorizedException('Пользователь не найден')
+                if (!user)
+                        throw new UnauthorizedException(
+                                'Пользователь с таким email не найден.'
+                        )
 
                 const isValidPassword = await compare(dto.password, user.get().password)
 
                 if (!isValidPassword)
-                        throw new UnauthorizedException('Некорректные email или пароль')
+                        throw new UnauthorizedException(
+                                'Неверный email или пароль. Пожалуйста, попробуйте снова.'
+                        )
 
                 return user
         }

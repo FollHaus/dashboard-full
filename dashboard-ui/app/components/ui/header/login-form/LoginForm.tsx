@@ -25,7 +25,6 @@ const LoginForm: FC<Props> = ({ inPage = false }) => {
   const { ref, isShow, setIsShow } = useOutside<HTMLDivElement>(false)
   const [type, setType] = useState<'login' | 'register'>('login')
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
 
   const {
     register,
@@ -57,13 +56,13 @@ const LoginForm: FC<Props> = ({ inPage = false }) => {
     mutationFn: (data: IAuthFields) =>
       AuthService.register(data.email, data.password),
     onSuccess: data => {
-      setMessage(data.message)
-      setError(null)
+      if (setUser) setUser(data.user)
       reset()
+      setIsShow(false)
+      router.replace(redirect)
     },
     onError: (e: any) => {
       setError(e.message)
-      setMessage(null)
     },
   })
 
@@ -118,10 +117,10 @@ const LoginForm: FC<Props> = ({ inPage = false }) => {
               />
               <Field
                 {...register('password', {
-                  required: 'Введите password',
+                  required: 'Введите пароль',
                   minLength: {
                     value: 8,
-                    message: 'Минимальная длина пароля 8 символов',
+                    message: 'Минимальная длина пароля — 8 символов',
                   },
                 })}
                 placeholder="Введите пароль"
@@ -143,7 +142,6 @@ const LoginForm: FC<Props> = ({ inPage = false }) => {
                 Регистрация
               </Button>
               {error && <p className="text-error text-sm mt-2">{error}</p>}
-              {message && <p className="text-success text-sm mt-2">{message}</p>}
             </form>
           )}
         </motion.div>
