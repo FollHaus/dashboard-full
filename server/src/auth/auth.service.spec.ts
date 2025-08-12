@@ -85,7 +85,9 @@ describe('AuthService', () => {
     userModel.findOne.mockResolvedValue(mockUser)
     await expect(
       service.register({ email: 'test@example.com', password: '12345678' })
-    ).rejects.toThrow('Пользователь с таким email уже существует')
+    ).rejects.toThrow(
+      'Такой email уже зарегистрирован. Пожалуйста, используйте другой.'
+    )
   })
 
 

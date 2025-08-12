@@ -20,9 +20,9 @@ export class TaskService {
 
 	async findOne(id: number): Promise<TaskModel> {
 		const task = await this.taskRepo.findByPk(id)
-		if (!task) {
-			throw new NotFoundException(`Task #${id} не найдена`)
-		}
+                if (!task) {
+                        throw new NotFoundException(`Задача с ID ${id} не найдена.`)
+                }
 		return task
 	}
 

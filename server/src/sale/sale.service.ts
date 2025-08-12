@@ -64,7 +64,7 @@ export class SaleService {
 	async findOne(id: number): Promise<SaleModel> {
 		const sale = await this.saleRepo.findByPk(id, { include: ['product'] })
 		if (!sale) {
-			throw new NotFoundException(`Sale #${id} не найдена`)
+                        throw new NotFoundException(`Продажа с ID ${id} не найдена.`)
 		}
 		return sale
 	}
@@ -84,7 +84,7 @@ export class SaleService {
 				transaction: trx
 			})
 			if (!sale) {
-				throw new NotFoundException(`Sale #${id} не найдена`)
+                                throw new NotFoundException(`Продажа с ID ${id} не найдена.`)
 			}
 
 			// 2) Корректируем запасы и цену
@@ -144,7 +144,7 @@ export class SaleService {
 			// 1) Читаем sale внутри trx
 			const sale = await this.saleRepo.findByPk(id, { transaction: trx })
 			if (!sale) {
-				throw new NotFoundException(`Sale #${id} не найдена`)
+                                throw new NotFoundException(`Продажа с ID ${id} не найдена.`)
 			}
 
 			// 2) Возвращаем запасы в контексте trx

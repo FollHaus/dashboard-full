@@ -24,7 +24,7 @@ export const AuthService = {
 
   /**
    * POST /auth/register
-   * Регистрирует нового пользователя.
+   * Регистрирует нового пользователя и сохраняет токен для входа.
    */
   async register(email: string, password: string) {
     const respone = await axiosClassic.post<IAuthResponse>('/auth/register', {

@@ -48,9 +48,9 @@ export class CategoryService {
 		const category = await this.categoryRepo.findByPk(id, {
 			include: [ProductModel]
 		})
-		if (!category) {
-			throw new NotFoundException(`Категория с id=${id} не найдена`)
-		}
+                if (!category) {
+                        throw new NotFoundException(`Категория с ID ${id} не найдена.`)
+                }
 		return category
 	}
 
@@ -73,9 +73,9 @@ export class CategoryService {
 	 * @throws NotFoundException - Если категория не найдена
 	 */
 	async remove(id: number): Promise<void> {
-		const deletedCount = await this.categoryRepo.destroy({ where: { id } })
-		if (!deletedCount) {
-			throw new NotFoundException(`Категория с id=${id} не найдена`)
-		}
+                const deletedCount = await this.categoryRepo.destroy({ where: { id } })
+                if (!deletedCount) {
+                        throw new NotFoundException(`Категория с ID ${id} не найдена.`)
+                }
 	}
 }
