@@ -34,6 +34,16 @@ axiosClassic.interceptors.request.use(config => {
   return config
 })
 
+// Обработка ответов для axiosClassic, чтобы показывать понятные сообщения об ошибках
+axiosClassic.interceptors.response.use(
+  response => response,
+  error => {
+    // Если сервер вернул сообщение об ошибке — используем его, иначе стандартное сообщение
+    const message = error?.response?.data?.message || error.message
+    return Promise.reject(new Error(message))
+  }
+)
+
 /**
  * Основной экземпляр Axios.
  * Поддерживает автоматическое добавление токена в заголовки запроса.
