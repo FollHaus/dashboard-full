@@ -28,10 +28,11 @@ async function bootstrap() {
         app.useGlobalPipes(
                 new ValidationPipe({
                         whitelist: true, // убирает лишние поля
-                        forbidNonWhitelisted: true, // бросает ошибку при лишних полях
+                        // Не блокируем запросы с неизвестными полями,
+                        // просто удаляем их через `whitelist`
                         transform: true // автоматически приводит типы
                 })
-	)
+        )
 	console.log('> BOOTSTRAP: перед listen')
 	await app.listen(4000)
 	console.log('> BOOTSTRAP: после listen')
