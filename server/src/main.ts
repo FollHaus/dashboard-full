@@ -34,9 +34,10 @@ async function bootstrap() {
                         transform: true // автоматически приводит типы
                 })
         )
-	console.log('> BOOTSTRAP: перед listen')
-	await app.listen(4000)
-	console.log('> BOOTSTRAP: после listen')
+        console.log('> BOOTSTRAP: перед listen')
+        const port = config.get<number>('PORT') || 4000
+        await app.listen(port)
+        console.log(`> BOOTSTRAP: после listen на порту ${port}`)
 }
 
 bootstrap()
