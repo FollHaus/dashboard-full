@@ -41,7 +41,10 @@ export class AuthService {
                         where: { email: dto.email }
                 })
 
-                if (oldUser) throw new BadRequestException('Некорректные email или пароль')
+                if (oldUser)
+                        throw new BadRequestException(
+                                'Пользователь с таким email уже существует'
+                        )
 
                 const salt = await genSalt(10)
                 const token = randomUUID()
