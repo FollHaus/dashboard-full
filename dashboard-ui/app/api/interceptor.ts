@@ -17,7 +17,7 @@ export const getContentType = () => ({
  * знал адрес бекенда при сборке.
  * Пример: http://localhost:4000/api
  */
-export const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api`
+export const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/`
 
 /**
  * Экземпляр Axios без авторизации.
@@ -26,6 +26,12 @@ export const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4
 export const axiosClassic = axios.create({
   baseURL: API_URL,
   headers: getContentType(), // Установка заголовков по умолчанию
+})
+
+// Убираем начальный слэш, чтобы базовый URL корректно дополнялся `/api`
+axiosClassic.interceptors.request.use(config => {
+  if (config.url?.startsWith('/')) config.url = config.url.slice(1)
+  return config
 })
 
 /**
@@ -42,6 +48,9 @@ const instance = axios.create({
  * Перехватывает каждый запрос перед его отправкой.
  */
 instance.interceptors.request.use(config => {
+  // Удаляем начальный слэш, чтобы не терялся префикс `/api`
+  if (config.url?.startsWith('/')) config.url = config.url.slice(1)
+
   // Получаем access token из cookies
   const accessToken = Cookies.get('accessToken')
 
