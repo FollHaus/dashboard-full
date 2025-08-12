@@ -128,18 +128,16 @@ const LoginForm: FC<Props> = ({ inPage = false }) => {
                 error={errors.password}
                 type={'password'}
               />
-              <div className={styles.login}>
-                <Button
-                  className={'w-full'}
-                  type="submit"
-                  onClick={() => setType('login')}
-                >
-                  Войти
-                </Button>
-              </div>
+              <Button
+                className={styles.login}
+                type='submit'
+                onClick={() => setType('login')}
+              >
+                Войти
+              </Button>
               <Button
                 className={styles.register}
-                type="submit"
+                type='submit'
                 onClick={() => setType('register')}
               >
                 Регистрация
