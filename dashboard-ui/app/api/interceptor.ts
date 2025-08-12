@@ -17,7 +17,10 @@ export const getContentType = () => ({
  * знал адрес бекенда при сборке.
  * Пример: http://localhost:4000/api
  */
-export const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/`
+// Базовый URL API. Переменная окружения должна содержать полный путь до API,
+// например: http://localhost:4000/api
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'
+export const API_URL = rawApiUrl.endsWith('/') ? rawApiUrl : `${rawApiUrl}/`
 
 /**
  * Экземпляр Axios без авторизации.
@@ -26,6 +29,7 @@ export const API_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4
 export const axiosClassic = axios.create({
   baseURL: API_URL,
   headers: getContentType(), // Установка заголовков по умолчанию
+  withCredentials: true,
 })
 
 // Убираем начальный слэш, чтобы базовый URL корректно дополнялся `/api`
@@ -51,6 +55,7 @@ axiosClassic.interceptors.response.use(
 const instance = axios.create({
   baseURL: API_URL,
   headers: getContentType(),
+  withCredentials: true,
 })
 
 /**
