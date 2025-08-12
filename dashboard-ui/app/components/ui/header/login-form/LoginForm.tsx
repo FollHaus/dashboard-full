@@ -6,7 +6,7 @@ import { SubmitHandler, useForm } from 'react-hook-form'
 import { IAuthFields } from '@/ui/header/login-form/login-form.interface'
 import { useAuth } from '@/hooks/useAuth'
 import styles from './LoginForm.module.scss'
-import { FaRegUserCircle } from 'react-icons/fa'
+import { FaRegUserCircle, FaUserCircle } from 'react-icons/fa'
 import Field from '@/ui/Field/Field'
 import Button from '@/ui/Button/Button'
 import { FADE_IN } from '@/utils/animations/fade'
@@ -19,6 +19,7 @@ const LoginForm: FC = () => {
   const { ref, isShow, setIsShow } = useOutside<HTMLDivElement>(false)
   const [type, setType] = useState<'login' | 'register'>('login')
   const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
 
   const {
     register,
@@ -46,11 +47,14 @@ const LoginForm: FC = () => {
     mutationFn: (data: IAuthFields) =>
       AuthService.register(data.email, data.password),
     onSuccess: data => {
-      if (setUser) setUser(data.user)
+      setMessage(data.message)
+      setError(null)
       reset()
-      setIsShow(false)
     },
-    onError: (e: any) => setError(e.message),
+    onError: (e: any) => {
+      setError(e.message)
+      setMessage(null)
+    },
   })
 
   const loginSync = loginMutation.mutate
@@ -64,7 +68,7 @@ const LoginForm: FC = () => {
   return (
     <div className={styles.wrapper} ref={ref}>
       <Button className={styles.button} onClick={() => setIsShow(!isShow)}>
-        <FaRegUserCircle />
+        {user ? <FaUserCircle /> : <FaRegUserCircle />}
       </Button>
 
       {isShow && (
@@ -110,6 +114,7 @@ const LoginForm: FC = () => {
               Регистрация
             </Button>
             {error && <p className="text-error text-sm mt-2">{error}</p>}
+            {message && <p className="text-success text-sm mt-2">{message}</p>}
           </form>
         </motion.div>
       )}

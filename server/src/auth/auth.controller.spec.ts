@@ -12,7 +12,9 @@ describe('AuthController', () => {
   let app: INestApplication
   const service = {
     login: jest.fn(),
-    register: jest.fn()
+    register: jest.fn(),
+    confirmEmail: jest.fn(),
+    resendConfirmation: jest.fn()
   }
 
   beforeAll(async () => {
@@ -52,7 +54,7 @@ describe('AuthController', () => {
 
   it('/auth/register POST', async () => {
     const dto = { name: 'A', email: 'a@test.com', password: 'password' }
-    const result = { token: 't' }
+    const result = { message: 'ok' }
     service.register.mockResolvedValue(result)
     await request(app.getHttpServer())
       .post('/auth/register')
@@ -64,5 +66,27 @@ describe('AuthController', () => {
 
   it('/auth/register POST 400', async () => {
     await request(app.getHttpServer()).post('/auth/register').send({}).expect(400)
+  })
+
+  it('/auth/confirm GET', async () => {
+    const result = { message: 'done' }
+    service.confirmEmail.mockResolvedValue(result)
+    await request(app.getHttpServer())
+      .get('/auth/confirm/token123')
+      .expect(200)
+      .expect(result)
+    expect(service.confirmEmail).toHaveBeenCalledWith('token123')
+  })
+
+  it('/auth/resend POST', async () => {
+    const dto = { email: 'a@test.com' }
+    const result = { message: 'sent' }
+    service.resendConfirmation.mockResolvedValue(result)
+    await request(app.getHttpServer())
+      .post('/auth/resend')
+      .send(dto)
+      .expect(200)
+      .expect(result)
+    expect(service.resendConfirmation).toHaveBeenCalledWith(dto.email)
   })
 })

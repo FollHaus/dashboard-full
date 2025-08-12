@@ -1,13 +1,16 @@
 import {
-	Body,
-	Controller,
-	HttpCode,
-	Post,
-	UsePipes,
-	ValidationPipe
+        Body,
+        Controller,
+        Get,
+        HttpCode,
+        Param,
+        Post,
+        UsePipes,
+        ValidationPipe
 } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { AuthDto } from './dto/auth.dto'
+import { EmailDto } from './dto/email.dto'
 
 /**
  * Контроллер для авторизации и регистрации пользователей.
@@ -33,8 +36,21 @@ export class AuthController {
 	 */
 	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
-	@Post('register')
-	async register(@Body() dto: AuthDto) {
-		return this.authService.register(dto)
-	}
+        @Post('register')
+        async register(@Body() dto: AuthDto) {
+                return this.authService.register(dto)
+        }
+
+        @HttpCode(200)
+        @Get('confirm/:token')
+        async confirm(@Param('token') token: string) {
+                return this.authService.confirmEmail(token)
+        }
+
+        @UsePipes(new ValidationPipe())
+        @HttpCode(200)
+        @Post('resend')
+        async resend(@Body() dto: EmailDto) {
+                return this.authService.resendConfirmation(dto.email)
+        }
 }

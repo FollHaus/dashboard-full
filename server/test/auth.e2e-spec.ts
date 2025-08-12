@@ -13,7 +13,9 @@ describe('Auth (e2e)', () => {
   let app: INestApplication
   const service = {
     login: jest.fn(),
-    register: jest.fn()
+    register: jest.fn(),
+    confirmEmail: jest.fn(),
+    resendConfirmation: jest.fn()
   }
 
   beforeAll(async () => {
@@ -58,12 +60,12 @@ describe('Auth (e2e)', () => {
   })
 
   it('/auth/register (POST)', async () => {
-    service.register.mockResolvedValue({ id: 1 })
+    service.register.mockResolvedValue({ message: 'ok' })
     await request(app.getHttpServer())
       .post('/auth/register')
       .send({ email: 'a@a.com', password: '12345678' })
       .expect(200)
-      .expect({ id: 1 })
+      .expect({ message: 'ok' })
     expect(service.register).toHaveBeenCalledWith({ email: 'a@a.com', password: '12345678' })
   })
 
@@ -73,6 +75,25 @@ describe('Auth (e2e)', () => {
       .post('/auth/register')
       .send({ email: 'a@a.com', password: '12345678' })
       .expect(400)
+  })
+
+  it('/auth/confirm (GET)', async () => {
+    service.confirmEmail.mockResolvedValue({ message: 'done' })
+    await request(app.getHttpServer())
+      .get('/auth/confirm/token123')
+      .expect(200)
+      .expect({ message: 'done' })
+    expect(service.confirmEmail).toHaveBeenCalledWith('token123')
+  })
+
+  it('/auth/resend (POST)', async () => {
+    service.resendConfirmation.mockResolvedValue({ message: 'sent' })
+    await request(app.getHttpServer())
+      .post('/auth/resend')
+      .send({ email: 'a@a.com' })
+      .expect(200)
+      .expect({ message: 'sent' })
+    expect(service.resendConfirmation).toHaveBeenCalledWith('a@a.com')
   })
 })
 
