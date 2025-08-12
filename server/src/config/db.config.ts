@@ -29,6 +29,9 @@ export function getSequelizeConfig(
                 dialectOptions: { connectTimeout: 5000 }, // 5 сек таймаут
                 retryAttempts: 1,
                 retryDelay: 2000,
-                logging: false
+                logging: false,
+                define: {
+                        underscored: true
+                }
         }
 }
