@@ -10,6 +10,7 @@ import { FaRegUserCircle, FaUserCircle } from 'react-icons/fa'
 import Field from '@/ui/Field/Field'
 import Button from '@/ui/Button/Button'
 import { FADE_IN } from '@/utils/animations/fade'
+import cn from 'classnames'
 
 import { motion } from 'framer-motion'
 import { useMutation } from '@tanstack/react-query'
@@ -83,7 +84,10 @@ const LoginForm: FC<Props> = ({ inPage = false }) => {
   const isVisible = inPage || isShow
 
   return (
-    <div className={styles.wrapper} ref={ref}>
+    <div
+      className={cn(inPage ? styles.wrapperPage : styles.wrapper)}
+      ref={ref}
+    >
       {!inPage && (
         <Button className={styles.button} onClick={() => setIsShow(!isShow)}>
           {user ? <FaUserCircle /> : <FaRegUserCircle />}
@@ -97,7 +101,10 @@ const LoginForm: FC<Props> = ({ inPage = false }) => {
               Выйти
             </Button>
           ) : (
-            <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+            <form
+              className={cn(inPage ? styles.formPage : styles.form)}
+              onSubmit={handleSubmit(onSubmit)}
+            >
               <Field
                 {...register('email', {
                   required: 'Введите email',

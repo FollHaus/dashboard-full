@@ -25,3 +25,11 @@
     @apply shadow-icon;
   }
 }
+
+.wrapperPage {
+  @apply relative flex;
+}
+
+.formPage {
+  @apply p-3 w-full max-w-sm z-20 rounded-lg bg-neutral-500 shadow-md;
+}
