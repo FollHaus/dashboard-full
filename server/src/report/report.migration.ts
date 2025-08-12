@@ -19,12 +19,13 @@ export async function up(queryInterface: QueryInterface): Promise<void> {
                         type: DataTypes.JSONB,
                         allowNull: true
                 },
-                created_at: {
+                // Standard timestamp columns
+                createdAt: {
                         type: DataTypes.DATE,
                         allowNull: false,
                         defaultValue: DataTypes.NOW
                 },
-                updated_at: {
+                updatedAt: {
                         type: DataTypes.DATE,
                         allowNull: false,
                         defaultValue: DataTypes.NOW

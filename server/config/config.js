@@ -10,7 +10,8 @@ module.exports = {
     host: process.env.DB_HOST || '127.0.0.1',
     port: Number(process.env.DB_PORT) || 5432,
     dialect: 'postgres',
-    define: { underscored: true }
+    // Use camelCase column names to align with existing schema
+    define: { underscored: false }
   },
   production: {
     username: process.env.DB_USERNAME,
@@ -19,6 +20,7 @@ module.exports = {
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT) || 5432,
     dialect: 'postgres',
-    define: { underscored: true }
+    // Use camelCase column names to align with existing schema
+    define: { underscored: false }
   }
 };
