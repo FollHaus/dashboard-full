@@ -24,23 +24,16 @@ export const AuthService = {
 
   /**
    * POST /auth/register
-   * Регистрирует нового пользователя и отправляет письмо подтверждения.
+   * Регистрирует нового пользователя.
    */
   async register(email: string, password: string) {
-    const respone = await axiosClassic.post<{ message: string }>('/auth/register', {
+    const respone = await axiosClassic.post<IAuthResponse>('/auth/register', {
       email,
       password,
     })
 
-    return respone.data
-  },
+    if (respone.data.accessToken) saveToStorage(respone.data)
 
-  /**
-   * POST /auth/resend
-   * Повторная отправка письма подтверждения.
-   */
-  async resend(email: string) {
-    const respone = await axiosClassic.post<{ message: string }>('/auth/resend', { email })
     return respone.data
   },
 

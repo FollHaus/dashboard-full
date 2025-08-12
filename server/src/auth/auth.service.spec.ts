@@ -3,7 +3,7 @@ import { AuthService } from './auth.service'
 import { JwtService } from '@nestjs/jwt'
 import { getModelToken } from '@nestjs/sequelize'
 import { UserModel } from './user.model'
-import { BadRequestException, UnauthorizedException } from '@nestjs/common'
+import { UnauthorizedException } from '@nestjs/common'
 import { AuthDto } from './dto/auth.dto'
 import { compare, genSalt, hash } from 'bcryptjs'
 
@@ -14,7 +14,6 @@ const mockUser = {
   email: 'test@example.com',
   password: 'hashed',
   name: 'Test',
-  isConfirmed: true,
   get: function() { return this }
 }
 
@@ -73,12 +72,13 @@ describe('AuthService', () => {
   it('register success', async () => {
     userModel.findOne.mockResolvedValue(null)
     userModel.create.mockResolvedValue(mockUser)
-    ;(service as any).sendConfirmationEmail = jest.fn()
     const dto: AuthDto = { email: 'test@example.com', password: '12345678' }
     const res = await service.register(dto)
-    expect(res).toEqual({ message: 'Письмо для подтверждения отправлено' })
+    expect(res).toEqual({
+      user: { id: 1, email: 'test@example.com', name: 'Test' },
+      accessToken: 'token'
+    })
     expect(hash).toHaveBeenCalled()
-    expect((service as any).sendConfirmationEmail).toHaveBeenCalled()
   })
 
   it('register conflict', async () => {
@@ -88,29 +88,6 @@ describe('AuthService', () => {
     ).rejects.toThrow('Пользователь с таким email уже существует')
   })
 
-  it('resendConfirmation', async () => {
-    const user = { ...mockUser, isConfirmed: false, save: jest.fn().mockResolvedValue(null) }
-    userModel.findOne.mockResolvedValue(user)
-    ;(service as any).sendConfirmationEmail = jest.fn()
-    const res = await service.resendConfirmation('test@example.com')
-    expect(res).toEqual({ message: 'Письмо отправлено повторно' })
-    expect((service as any).sendConfirmationEmail).toHaveBeenCalled()
-    expect(user.save).toHaveBeenCalled()
-  })
-
-  it('confirmEmail success', async () => {
-    const user = {
-      ...mockUser,
-      isConfirmed: false,
-      confirmationToken: 't',
-      confirmationTokenExpires: new Date(Date.now() + 1000),
-      save: jest.fn().mockResolvedValue(null)
-    }
-    userModel.findOne.mockResolvedValue(user)
-    const res = await service.confirmEmail('t')
-    expect(res).toEqual({ message: 'Email подтверждён' })
-    expect(user.save).toHaveBeenCalled()
-  })
 
   it('issueAccessToken', async () => {
     const token = await service.issueAccessToken('1')

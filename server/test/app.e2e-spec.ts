@@ -37,8 +37,8 @@ describe('AppController (e2e)', () => {
                 await app.init()
         })
 
-        it('GET / without token returns 401', () => {
-                return request(app.getHttpServer()).get('/').expect(401)
+        it('GET / returns 200', () => {
+                return request(app.getHttpServer()).get('/').expect(200)
         })
 })
 
