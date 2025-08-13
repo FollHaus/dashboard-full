@@ -171,108 +171,110 @@ const ProductsTable = () => {
         </div>
       </div>
 
-      <table className="min-w-full bg-neutral-100 rounded shadow-md">
-        <thead>
-          <tr className="text-left border-b border-neutral-300">
-            <th
-              className="p-2 cursor-pointer"
-              onClick={() => handleSort('name')}
-            >
-              Название {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-            </th>
-            <th className="p-2">Категория</th>
-            <th className="p-2">Артикул</th>
-            <th
-              className="p-2 cursor-pointer"
-              onClick={() => handleSort('remains')}
-            >
-              Остаток {sortField === 'remains' && (sortOrder === 'asc' ? '↑' : '↓')}
-            </th>
-            <th
-              className="p-2 cursor-pointer"
-              onClick={() => handleSort('salePrice')}
-            >
-              Цена продажи {sortField === 'salePrice' && (sortOrder === 'asc' ? '↑' : '↓')}
-            </th>
-            <th className="p-2">Действия</th>
-          </tr>
-        </thead>
-        <tbody>
-          {isLoading &&
-            Array.from({ length: 5 }).map((_, idx) => (
-              <tr key={idx} className="animate-pulse border-b border-neutral-200">
-                {Array.from({ length: 6 }).map((__, i) => (
-                  <td key={i} className="p-2">
-                    <div className="h-4 bg-neutral-300 rounded" />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          {!isLoading && error && (
-            <tr>
-              <td colSpan={6} className="p-2 text-center text-error">
-                {error}
-                <Button
-                  className="ml-2 bg-primary-500 text-white px-4 py-1"
-                  onClick={fetchProducts}
-                >
-                  Обновить
-                </Button>
-              </td>
-            </tr>
-          )}
-          {!isLoading && !error && sorted.length === 0 && (
-            <tr>
-              <td colSpan={6} className="p-2 text-center">
-                Nothing found
-              </td>
-            </tr>
-          )}
-          {!isLoading && !error &&
-            sorted.map(prod => (
-              <tr
-                key={prod.id}
-                onClick={() => selectProduct(prod.id)}
-                className={`cursor-pointer border-b border-neutral-200 hover:bg-neutral-200 ${isLow(prod.remains) ? 'bg-warning/20' : ''}`}
-              >
-                <td className="p-2">{prod.name}</td>
-                <td className="p-2">{prod.category?.name || '-'}</td>
-                <td className="p-2">{prod.articleNumber}</td>
-                <td className="p-2">
-                  {prod.remains}
-                  {isLow(prod.remains) && (
-                    <span className="text-error ml-1">(!)</span>
-                  )}
-                </td>
-                <td className="p-2">${prod.salePrice}</td>
-                <td className="p-2">
-                  <Button
-                    className="bg-error text-white px-4 py-1"
-                    onClick={e => {
-                      e.stopPropagation()
-                      handleDelete(prod.id)
-                    }}
-                  >
-                    Удалить
-                  </Button>
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
-      {selected && (
-        <ProductDetails product={selected} onClose={() => setSelected(null)} />
-      )}
-      {isCreating && (
-        <div className="mt-4">
-          <ProductForm
-            onSuccess={() => {
-              fetchProducts()
-              setIsCreating(false)
-            }}
-            onCancel={() => setIsCreating(false)}
-          />
+      {isLoading && (
+        <div className="flex justify-center py-10">
+          <div className="h-8 w-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
         </div>
+      )}
+
+      {!isLoading && error && (
+        <div className="text-center text-error py-4">
+          {error}
+          <Button
+            className="ml-2 bg-primary-500 text-white px-4 py-1"
+            onClick={fetchProducts}
+          >
+            Обновить
+          </Button>
+        </div>
+      )}
+
+      {!isLoading && !error && (
+        <>
+          <table className="min-w-full bg-neutral-100 rounded shadow-md">
+            <thead>
+              <tr className="text-left border-b border-neutral-300">
+                <th
+                  className="p-2 cursor-pointer"
+                  onClick={() => handleSort('name')}
+                >
+                  Название {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                </th>
+                <th className="p-2">Категория</th>
+                <th className="p-2">Артикул</th>
+                <th
+                  className="p-2 cursor-pointer"
+                  onClick={() => handleSort('remains')}
+                >
+                  Остаток {sortField === 'remains' && (sortOrder === 'asc' ? '↑' : '↓')}
+                </th>
+                <th
+                  className="p-2 cursor-pointer"
+                  onClick={() => handleSort('salePrice')}
+                >
+                  Цена продажи {sortField === 'salePrice' && (sortOrder === 'asc' ? '↑' : '↓')}
+                </th>
+                <th className="p-2">Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-2 text-center">
+                    Nothing found
+                  </td>
+                </tr>
+              )}
+              {sorted.map(prod => (
+                <tr
+                  key={prod.id}
+                  onClick={() => selectProduct(prod.id)}
+                  className={`cursor-pointer border-b border-neutral-200 hover:bg-neutral-200 ${isLow(prod.remains) ? 'bg-warning/20' : ''}`}
+                >
+                  <td className="p-2">{prod.name}</td>
+                  <td className="p-2">{prod.category?.name || '-'}</td>
+                  <td className="p-2">{prod.articleNumber}</td>
+                  <td className="p-2">
+                    {prod.remains}
+                    {isLow(prod.remains) && (
+                      <span className="text-error ml-1">(!)</span>
+                    )}
+                  </td>
+                  <td className="p-2">${prod.salePrice}</td>
+                  <td className="p-2">
+                    <Button
+                      className="bg-error text-white px-4 py-1"
+                      onClick={e => {
+                        e.stopPropagation()
+                        handleDelete(prod.id)
+                      }}
+                    >
+                      Удалить
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {selected && (
+            <ProductDetails
+              product={selected}
+              onClose={() => setSelected(null)}
+            />
+          )}
+          {isCreating && (
+            <div className="mt-4">
+              <ProductForm
+                onSuccess={() => {
+                  fetchProducts()
+                  setIsCreating(false)
+                }}
+                onCancel={() => setIsCreating(false)}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   )
