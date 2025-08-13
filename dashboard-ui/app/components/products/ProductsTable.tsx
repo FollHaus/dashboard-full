@@ -52,6 +52,22 @@ const ProductsTable = () => {
     fetchProducts()
   }, [fetchProducts])
 
+  // Если загрузка завершилась ошибкой, пытаемся повторить
+  // автоматически: разово через небольшой интервал и
+  // при восстановлении соединения
+  useEffect(() => {
+    if (!error) return
+
+    const retry = () => fetchProducts()
+    const timer = setTimeout(retry, 5000)
+    window.addEventListener('online', retry)
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('online', retry)
+    }
+  }, [error, fetchProducts])
+
   // Обновляем значение поиска с задержкой
   useEffect(() => {
     if (firstSearch.current) {
