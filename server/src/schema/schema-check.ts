@@ -123,9 +123,22 @@ function writeMigration(
 ): string {
         const migrationsDir = path.resolve(__dirname, '../..', 'migrations')
         if (!fs.existsSync(migrationsDir)) fs.mkdirSync(migrationsDir, { recursive: true })
-        const file = `${timestamp()}-${table}-${action}.ts`
+        const file = `${timestamp()}-${table}-${action}.js`
         const fullPath = path.join(migrationsDir, file)
-        const content = `import { QueryInterface, DataTypes } from 'sequelize'\n\nmodule.exports = {\n  up: async (queryInterface: QueryInterface) => {\n    await queryInterface.sequelize.transaction(async (transaction) => {\n      ${upBody}\n    })\n  },\n  down: async (queryInterface: QueryInterface) => {\n    await queryInterface.sequelize.transaction(async (transaction) => {\n      ${downBody}\n    })\n  }\n}`
+        const content = `const { DataTypes } = require('sequelize')
+
+module.exports = {
+  async up(queryInterface) {
+    await queryInterface.sequelize.transaction(async (transaction) => {
+      ${upBody}
+    })
+  },
+  async down(queryInterface) {
+    await queryInterface.sequelize.transaction(async (transaction) => {
+      ${downBody}
+    })
+  }
+}`
         fs.writeFileSync(fullPath, content)
         return file
 }
