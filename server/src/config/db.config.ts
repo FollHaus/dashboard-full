@@ -30,6 +30,7 @@ export function getSequelizeConfig(
                 retryAttempts: 1,
                 retryDelay: 2000,
                 logging: false,
+								sync: { force: true },
                 // Use camelCase column names for automatically managed timestamps
                 // to match the existing database schema
                 define: {
