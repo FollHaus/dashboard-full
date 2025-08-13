@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import Button from '@/ui/Button/Button'
 import ProductDetails from './ProductDetails'
 import ProductForm from './ProductForm'
@@ -20,6 +20,8 @@ const ProductsTable = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const abortRef = useRef<AbortController | null>(null)
   const { notifyFiltersChanged, subscribe } = useFilter()
+  const firstSearch = useRef(true)
+  const firstFilters = useRef(true)
 
   useEffect(() => {
     const unsub = subscribe(() => {
@@ -28,7 +30,7 @@ const ProductsTable = () => {
     return unsub
   }, [subscribe])
 
-  const fetchProducts = () => {
+  const fetchProducts = useCallback(() => {
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
@@ -43,15 +45,19 @@ const ProductsTable = () => {
         }
       })
       .finally(() => setIsLoading(false))
-  }
+  }, [])
 
   // Загружаем список продуктов при монтировании
   useEffect(() => {
     fetchProducts()
-  }, [])
+  }, [fetchProducts])
 
   // Обновляем значение поиска с задержкой
   useEffect(() => {
+    if (firstSearch.current) {
+      firstSearch.current = false
+      return
+    }
     const handler = setTimeout(() => {
       setSearch(searchTerm)
       notifyFiltersChanged()
@@ -60,6 +66,10 @@ const ProductsTable = () => {
   }, [searchTerm, notifyFiltersChanged])
 
   useEffect(() => {
+    if (firstFilters.current) {
+      firstFilters.current = false
+      return
+    }
     notifyFiltersChanged()
   }, [searchMode, sortField, sortOrder, notifyFiltersChanged])
 
