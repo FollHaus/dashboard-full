@@ -1,11 +1,12 @@
 'use client';
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Button from '@/ui/Button/Button'
 import ProductDetails from './ProductDetails'
 import ProductForm from './ProductForm'
 import { ProductService } from '@/services/product/product.service'
 import { IProduct } from '@/shared/interfaces/product.interface'
 import { useFilter } from '@/providers/filter-provider/filter-provider'
+import useWarehouseData from '@/hooks/useWarehouseData'
 
 const ProductsTable = () => {
   const [products, setProducts] = useState<IProduct[]>([])
@@ -15,65 +16,26 @@ const ProductsTable = () => {
   const [selected, setSelected] = useState<IProduct | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [sortField, setSortField] = useState<'name' | 'remains' | 'salePrice'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const abortRef = useRef<AbortController | null>(null)
-  const { notifyFiltersChanged, subscribe } = useFilter()
+  const { notifyFiltersChanged } = useFilter()
+  const { data: productsData = [], status, error: queryError, refetch } =
+    useWarehouseData()
   const firstSearch = useRef(true)
   const firstFilters = useRef(true)
 
   useEffect(() => {
-    const unsub = subscribe(() => {
-      abortRef.current?.abort()
-    })
-    return unsub
-  }, [subscribe])
+    if (status === 'success') {
+      setProducts(productsData)
+    }
+  }, [status, productsData])
 
-  const fetchProducts = useCallback(() => {
-    abortRef.current?.abort()
-    const controller = new AbortController()
-    abortRef.current = controller
-    setStatus('loading')
-    setError(null)
-    ProductService.getAll(controller.signal)
-      .then(data => {
-        if (abortRef.current !== controller) return
-        setProducts(data)
-        setStatus('success')
-      })
-      .catch(e => {
-        if (e.name === 'CanceledError' || e.name === 'AbortError') return
-        if (abortRef.current !== controller) return
-        console.error(e)
-        setError('Не удалось загрузить товары')
-        setStatus('error')
-      })
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort()
+    }
   }, [])
-
-  // Загружаем список продуктов при монтировании
-  useEffect(() => {
-    fetchProducts()
-    return () => {
-      abortRef.current?.abort()
-    }
-  }, [fetchProducts])
-
-  // Если загрузка завершилась ошибкой, пытаемся повторить
-  // автоматически: разово через небольшой интервал и
-  // при восстановлении соединения
-  useEffect(() => {
-    if (status !== 'error') return
-
-    const retry = () => fetchProducts()
-    const timer = setTimeout(retry, 5000)
-    window.addEventListener('online', retry)
-
-    return () => {
-      clearTimeout(timer)
-      window.removeEventListener('online', retry)
-    }
-  }, [status, fetchProducts])
 
   // Обновляем значение поиска с задержкой
   useEffect(() => {
@@ -83,7 +45,7 @@ const ProductsTable = () => {
     }
     const handler = setTimeout(() => {
       setSearch(searchTerm)
-      notifyFiltersChanged()
+      notifyFiltersChanged(['warehouse'])
     }, 400)
     return () => clearTimeout(handler)
   }, [searchTerm, notifyFiltersChanged])
@@ -93,7 +55,7 @@ const ProductsTable = () => {
       firstFilters.current = false
       return
     }
-    notifyFiltersChanged()
+    notifyFiltersChanged(['warehouse'])
   }, [searchMode, sortField, sortOrder, notifyFiltersChanged])
 
   const filtered = products.filter(p => {
@@ -117,13 +79,12 @@ const ProductsTable = () => {
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
-      ProductService.getById(id, controller.signal)
-        .then(setSelected)
-        .catch(e => {
-          if (e.name === 'CanceledError' || e.name === 'AbortError') return
-          setError(e.message)
-          setStatus('error')
-        })
+    ProductService.getById(id, controller.signal)
+      .then(setSelected)
+      .catch(e => {
+        if (e.name === 'CanceledError' || e.name === 'AbortError') return
+        setError(e.message)
+      })
   }
 
   const handleDelete = async (id: number) => {
@@ -133,7 +94,6 @@ const ProductsTable = () => {
       if (selected?.id === id) setSelected(null)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Ошибка удаления товара')
-      setStatus('error')
     }
   }
 
@@ -181,24 +141,24 @@ const ProductsTable = () => {
         </div>
       </div>
 
-        {(status === 'loading' || status === 'idle') && (
-          <div className="flex justify-center py-10">
-            <div className="h-8 w-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-      {status === 'error' && (
+      {status === 'pending' && (
+        <div className="flex justify-center py-10">
+          <div className="h-8 w-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+      {status === 'error' && products.length === 0 && (
         <div className="text-center text-error py-4">
-          {error}
+          {queryError?.message || 'Не удалось загрузить товары'}
           <Button
             className="ml-2 bg-primary-500 text-white px-4 py-1"
-            onClick={fetchProducts}
+            onClick={() => refetch()}
           >
             Обновить
           </Button>
         </div>
       )}
 
-      {status === 'success' && (
+      {(status === 'success' || products.length > 0) && (
         <>
           <table className="min-w-full bg-neutral-100 rounded shadow-md">
             <thead>
@@ -266,27 +226,28 @@ const ProductsTable = () => {
             </tbody>
           </table>
 
-          {selected && (
-            <ProductDetails
-              product={selected}
-              onClose={() => setSelected(null)}
-            />
-          )}
-          {isCreating && (
-            <div className="mt-4">
-              <ProductForm
-                onSuccess={() => {
-                  fetchProducts()
-                  setIsCreating(false)
-                }}
-                onCancel={() => setIsCreating(false)}
+            {selected && (
+              <ProductDetails
+                product={selected}
+                onClose={() => setSelected(null)}
               />
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  )
-}
+            )}
+            {isCreating && (
+              <div className="mt-4">
+                <ProductForm
+                  onSuccess={() => {
+                    refetch()
+                    setIsCreating(false)
+                  }}
+                  onCancel={() => setIsCreating(false)}
+                />
+              </div>
+            )}
+            {error && <p className="text-error mt-2">{error}</p>}
+          </>
+        )}
+      </div>
+    )
+  }
 
-export default ProductsTable
+  export default ProductsTable
