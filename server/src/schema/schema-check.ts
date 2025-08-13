@@ -1,4 +1,4 @@
-import { Sequelize, Model } from 'sequelize-typescript'
+import { Sequelize } from 'sequelize-typescript'
 import { ConfigService } from '@nestjs/config'
 import { getSequelizeConfig } from '../config/db.config'
 import { config as loadEnv } from 'dotenv'
@@ -115,7 +115,7 @@ function writeMigration(
 
 async function checkModel(
         queryInterface: QueryInterface,
-        model: typeof Model
+        model: any
 ): Promise<MigrationInfo[]> {
         const tableName = model.getTableName() as string
         const issues: MigrationInfo[] = []
@@ -222,14 +222,16 @@ async function checkModel(
         }
 
         // indexes
-        const modelIndexes = model.options.indexes || []
-        const dbIndexes = await queryInterface.showIndex(tableName)
+        const modelIndexes = (model.options.indexes || []) as any[]
+        const dbIndexes = (await queryInterface.showIndex(tableName)) as any[]
         for (const idx of modelIndexes) {
-                const fields = idx.fields.map((f: any) =>
+                const fields = (idx.fields || []).map((f: any) =>
                         typeof f === 'string' ? f : f.name
                 )
                 const found = dbIndexes.some((d: any) => {
-                        const dbFields = d.fields.map((f: any) => f.attribute || f.name)
+                        const dbFields = (d.fields || []).map(
+                                (f: any) => f.attribute || f.name
+                        )
                         return (
                                 fields.length === dbFields.length &&
                                 fields.every((f: string, i: number) => f === dbFields[i]) &&
@@ -259,7 +261,9 @@ async function checkModel(
         }
 
         // foreign keys
-        const foreignKeys = await queryInterface.getForeignKeyReferencesForTable(tableName)
+        const foreignKeys = (await queryInterface.getForeignKeyReferencesForTable(
+                tableName
+        )) as any[]
         for (const [attrName, attr] of Object.entries(attrs) as [string, any][]) {
                 if (attr.references) {
                         const columnName = attr.field || attrName
@@ -302,7 +306,10 @@ async function checkModel(
                 }
         }
         if (model.options.paranoid) {
-                const deletedName = model.options.deletedAt || 'deletedAt'
+                const deletedName =
+                        typeof model.options.deletedAt === 'string'
+                                ? model.options.deletedAt
+                                : 'deletedAt'
                 if (!tableDesc[deletedName]) {
                         const up = `await queryInterface.addColumn('${tableName}', '${deletedName}', { type: DataTypes.DATE }, { transaction })`
                         const down = `await queryInterface.removeColumn('${tableName}', '${deletedName}', { transaction })`
