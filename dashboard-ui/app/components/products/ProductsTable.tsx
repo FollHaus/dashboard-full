@@ -15,7 +15,7 @@ const ProductsTable = () => {
   const [selected, setSelected] = useState<IProduct | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [sortField, setSortField] = useState<'name' | 'remains' | 'salePrice'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const abortRef = useRef<AbortController | null>(null)
@@ -34,19 +34,22 @@ const ProductsTable = () => {
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
-    setIsLoading(true)
+    setStatus('loading')
     setError(null)
     ProductService.getAll(controller.signal)
       .then(data => {
-        if (abortRef.current === controller) setProducts(data)
+        if (abortRef.current === controller) {
+          setProducts(data)
+          setStatus('success')
+        }
       })
       .catch(e => {
         if (e.name === 'CanceledError' || e.name === 'AbortError') return
         console.error(e)
-        if (abortRef.current === controller) setError('Не удалось загрузить товары')
-      })
-      .finally(() => {
-        if (abortRef.current === controller) setIsLoading(false)
+        if (abortRef.current === controller) {
+          setError('Не удалось загрузить товары')
+          setStatus('error')
+        }
       })
   }, [])
 
@@ -59,7 +62,7 @@ const ProductsTable = () => {
   // автоматически: разово через небольшой интервал и
   // при восстановлении соединения
   useEffect(() => {
-    if (!error) return
+    if (status !== 'error') return
 
     const retry = () => fetchProducts()
     const timer = setTimeout(retry, 5000)
@@ -69,7 +72,7 @@ const ProductsTable = () => {
       clearTimeout(timer)
       window.removeEventListener('online', retry)
     }
-  }, [error, fetchProducts])
+  }, [status, fetchProducts])
 
   // Обновляем значение поиска с задержкой
   useEffect(() => {
@@ -116,7 +119,10 @@ const ProductsTable = () => {
     ProductService.getById(id, controller.signal)
       .then(setSelected)
       .catch(e => {
-        if (e.name !== 'CanceledError') setError(e.message)
+        if (e.name !== 'CanceledError') {
+          setError(e.message)
+          setStatus('error')
+        }
       })
   }
 
@@ -127,6 +133,7 @@ const ProductsTable = () => {
       if (selected?.id === id) setSelected(null)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Ошибка удаления товара')
+      setStatus('error')
     }
   }
 
@@ -174,13 +181,12 @@ const ProductsTable = () => {
         </div>
       </div>
 
-      {isLoading && (
+      {status === 'loading' && (
         <div className="flex justify-center py-10">
           <div className="h-8 w-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
-
-      {!isLoading && error && (
+      {status === 'error' && (
         <div className="text-center text-error py-4">
           {error}
           <Button
@@ -192,7 +198,7 @@ const ProductsTable = () => {
         </div>
       )}
 
-      {!isLoading && !error && (
+      {status === 'success' && (
         <>
           <table className="min-w-full bg-neutral-100 rounded shadow-md">
             <thead>
