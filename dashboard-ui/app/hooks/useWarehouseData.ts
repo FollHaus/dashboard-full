@@ -7,7 +7,7 @@ import { IProduct } from '@/shared/interfaces/product.interface'
 export const useWarehouseData = () => {
   return useQuery<IProduct[], Error>({
     queryKey: ['warehouse'],
-    queryFn: ({ signal }) => ProductService.getAll(signal),
+    queryFn: ({ signal }) => ProductService.getAll(undefined, signal),
     retry: 1,
     refetchOnWindowFocus: false,
   })

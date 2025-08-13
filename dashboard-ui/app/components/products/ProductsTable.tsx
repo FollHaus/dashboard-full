@@ -1,103 +1,38 @@
-'use client';
-import { useEffect, useState, useRef } from 'react'
+'use client'
+
+import { useEffect, useState } from 'react'
 import Button from '@/ui/Button/Button'
-import ProductDetails from './ProductDetails'
-import ProductForm from './ProductForm'
 import { ProductService } from '@/services/product/product.service'
-import { IProduct } from '@/shared/interfaces/product.interface'
-import { useFilter } from '@/providers/filter-provider/filter-provider'
-import useWarehouseData from '@/hooks/useWarehouseData'
+import ProductForm from './ProductForm'
+import ProductDetails from './ProductDetails'
+import { useInventoryList } from '@/hooks/useInventoryList'
+import { IInventory } from '@/shared/interfaces/inventory.interface'
 
 const ProductsTable = () => {
-  const [products, setProducts] = useState<IProduct[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize] = useState(10)
   const [search, setSearch] = useState('')
-  const [searchMode, setSearchMode] = useState<'name' | 'category'>('name')
-  const [selected, setSelected] = useState<IProduct | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [sortField, setSortField] = useState<'name' | 'remains' | 'salePrice'>('name')
+  const [sortField, setSortField] = useState<'name' | 'quantity' | 'price'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
-  const abortRef = useRef<AbortController | null>(null)
-  const { notifyFiltersChanged } = useFilter()
-  const { data: productsData = [], status, error: queryError, refetch } =
-    useWarehouseData()
-  const firstSearch = useRef(true)
-  const firstFilters = useRef(true)
+  const [selected, setSelected] = useState<IInventory | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
+  const [products, setProducts] = useState<IInventory[]>([])
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (status === 'success') {
-      setProducts(productsData)
-    }
-  }, [status, productsData])
-
-  useEffect(() => {
-    return () => {
-      abortRef.current?.abort()
-    }
-  }, [])
-
-  // Обновляем значение поиска с задержкой
-  useEffect(() => {
-    if (firstSearch.current) {
-      firstSearch.current = false
-      return
-    }
-    const handler = setTimeout(() => {
-      setSearch(searchTerm)
-      notifyFiltersChanged(['warehouse'])
-    }, 400)
-    return () => clearTimeout(handler)
-  }, [searchTerm, notifyFiltersChanged])
-
-  useEffect(() => {
-    if (firstFilters.current) {
-      firstFilters.current = false
-      return
-    }
-    notifyFiltersChanged(['warehouse'])
-  }, [searchMode, sortField, sortOrder, notifyFiltersChanged])
-
-  const filtered = products.filter(p => {
-    const term = search.toLowerCase()
-    if (!term) return true
-    if (searchMode === 'name') return p.name.toLowerCase().includes(term)
-    return p.category?.name?.toLowerCase().includes(term)
+  const { data, status, error: queryError, refetch } = useInventoryList({
+    page,
+    pageSize,
+    search,
+    sort: `${sortField}:${sortOrder}`,
   })
 
-  const sorted = [...filtered].sort((a, b) => {
-    const aValue = a[sortField]
-    const bValue = b[sortField]
-    if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1
-    if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1
-    return 0
-  })
-
-  const isLow = (balance: number) => balance <= 5
-
-  const selectProduct = (id: number) => {
-    abortRef.current?.abort()
-    const controller = new AbortController()
-    abortRef.current = controller
-    ProductService.getById(id, controller.signal)
-      .then(setSelected)
-      .catch(e => {
-        if (e.name === 'CanceledError' || e.name === 'AbortError') return
-        setError(e.message)
-      })
-  }
-
-  const handleDelete = async (id: number) => {
-    try {
-      await ProductService.delete(id)
-      setProducts(prev => prev.filter(p => p.id !== id))
-      if (selected?.id === id) setSelected(null)
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Ошибка удаления товара')
+  useEffect(() => {
+    if (status === 'success' && data) {
+      setProducts(data.items)
     }
-  }
+  }, [status, data])
 
-  const handleSort = (field: 'name' | 'remains' | 'salePrice') => {
+  const handleSort = (field: 'name' | 'quantity' | 'price') => {
     if (sortField === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
     } else {
@@ -106,39 +41,33 @@ const ProductsTable = () => {
     }
   }
 
+  const handleDelete = async (id: number) => {
+    try {
+      await ProductService.delete(id)
+      setProducts(prev => prev.filter(p => p.id !== id))
+    } catch (e: any) {
+      setError(e.message)
+    }
+  }
+
+  const totalPages = data ? Math.ceil(data.total / pageSize) : 1
+
   return (
     <div>
       <div className="flex justify-between mb-4">
-        <div className="flex space-x-2">
-          <select
-            value={searchMode}
-            onChange={e => setSearchMode(e.target.value as 'name' | 'category')}
-            className="border border-neutral-300 rounded px-2 py-1"
-          >
-            <option value="name">Name</option>
-            <option value="category">Category</option>
-          </select>
-          <input
-            type="text"
-            placeholder={
-              searchMode === 'name'
-                ? 'Search by name...'
-                : 'Search by category...'
-            }
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="border border-neutral-300 rounded px-2 py-1"
-          />
-        </div>
-        <div className="flex space-x-2">
-          <Button
-            className="bg-primary-500 text-white px-4 py-1"
-            onClick={() => setIsCreating(true)}
-          >
-            Добавить товар
-          </Button>
-          <Button className="bg-primary-500 text-white px-4 py-1">Импорт/экспорт списка</Button>
-        </div>
+        <input
+          type="text"
+          placeholder="Search by name..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="border border-neutral-300 rounded px-2 py-1"
+        />
+        <Button
+          className="bg-primary-500 text-white px-4 py-1"
+          onClick={() => setIsCreating(true)}
+        >
+          Добавить товар
+        </Button>
       </div>
 
       {status === 'pending' && (
@@ -173,50 +102,41 @@ const ProductsTable = () => {
                 <th className="p-2">Артикул</th>
                 <th
                   className="p-2 cursor-pointer"
-                  onClick={() => handleSort('remains')}
+                  onClick={() => handleSort('quantity')}
                 >
-                  Остаток {sortField === 'remains' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  Остаток {sortField === 'quantity' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </th>
                 <th
                   className="p-2 cursor-pointer"
-                  onClick={() => handleSort('salePrice')}
+                  onClick={() => handleSort('price')}
                 >
-                  Цена продажи {sortField === 'salePrice' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  Цена продажи {sortField === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </th>
                 <th className="p-2">Действия</th>
               </tr>
             </thead>
             <tbody>
-              {sorted.length === 0 && (
+              {products.length === 0 && (
                 <tr>
                   <td colSpan={6} className="p-2 text-center">
                     Nothing found
                   </td>
                 </tr>
               )}
-              {sorted.map(prod => (
+              {products.map(prod => (
                 <tr
                   key={prod.id}
-                  onClick={() => selectProduct(prod.id)}
-                  className={`cursor-pointer border-b border-neutral-200 hover:bg-neutral-200 ${isLow(prod.remains) ? 'bg-warning/20' : ''}`}
+                  className="border-b border-neutral-200 hover:bg-neutral-200"
                 >
                   <td className="p-2">{prod.name}</td>
                   <td className="p-2">{prod.category?.name || '-'}</td>
-                  <td className="p-2">{prod.articleNumber}</td>
-                  <td className="p-2">
-                    {prod.remains}
-                    {isLow(prod.remains) && (
-                      <span className="text-error ml-1">(!)</span>
-                    )}
-                  </td>
-                  <td className="p-2">${prod.salePrice}</td>
+                  <td className="p-2">{prod.code}</td>
+                  <td className="p-2">{prod.quantity}</td>
+                  <td className="p-2">${prod.price}</td>
                   <td className="p-2">
                     <Button
                       className="bg-error text-white px-4 py-1"
-                      onClick={e => {
-                        e.stopPropagation()
-                        handleDelete(prod.id)
-                      }}
+                      onClick={() => handleDelete(prod.id)}
                     >
                       Удалить
                     </Button>
@@ -226,28 +146,43 @@ const ProductsTable = () => {
             </tbody>
           </table>
 
-            {selected && (
-              <ProductDetails
-                product={selected}
-                onClose={() => setSelected(null)}
-              />
-            )}
-            {isCreating && (
-              <div className="mt-4">
-                <ProductForm
-                  onSuccess={() => {
-                    refetch()
-                    setIsCreating(false)
-                  }}
-                  onCancel={() => setIsCreating(false)}
-                />
-              </div>
-            )}
-            {error && <p className="text-error mt-2">{error}</p>}
-          </>
-        )}
-      </div>
-    )
-  }
+          <div className="flex justify-center mt-4 space-x-2">
+            <Button
+              className="px-3 py-1 bg-neutral-200"
+              disabled={page === 1}
+              onClick={() => setPage(p => p - 1)}
+            >
+              Prev
+            </Button>
+            <span>{page} / {totalPages}</span>
+            <Button
+              className="px-3 py-1 bg-neutral-200"
+              disabled={page === totalPages}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
 
-  export default ProductsTable
+          {selected && (
+            <ProductDetails product={selected} onClose={() => setSelected(null)} />
+          )}
+          {isCreating && (
+            <div className="mt-4">
+              <ProductForm
+                onSuccess={() => {
+                  refetch()
+                  setIsCreating(false)
+                }}
+                onCancel={() => setIsCreating(false)}
+              />
+            </div>
+          )}
+          {error && <p className="text-error mt-2">{error}</p>}
+        </>
+      )}
+    </div>
+  )
+}
+
+export default ProductsTable
