@@ -37,7 +37,10 @@ const ProductsTable = () => {
     ProductService.getAll(controller.signal)
       .then(setProducts)
       .catch(e => {
-        if (e.name !== 'CanceledError') setError(e.message)
+        if (e.name !== 'CanceledError') {
+          console.error(e)
+          setError('Не удалось загрузить товары')
+        }
       })
       .finally(() => setIsLoading(false))
   }
@@ -187,7 +190,7 @@ const ProductsTable = () => {
                   className="ml-2 bg-primary-500 text-white px-4 py-1"
                   onClick={fetchProducts}
                 >
-                  Repeat
+                  Обновить
                 </Button>
               </td>
             </tr>

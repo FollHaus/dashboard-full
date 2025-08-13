@@ -76,7 +76,7 @@ export default function Select({
                   className='text-blue-500 underline'
                   onClick={onRetry}
                 >
-                  Repeat
+                  Обновить
                 </button>
               )}
             </div>
