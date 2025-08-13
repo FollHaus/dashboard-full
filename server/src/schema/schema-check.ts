@@ -5,6 +5,12 @@ import { config as loadEnv } from 'dotenv'
 import path from 'node:path'
 import { QueryInterface, DataTypes } from 'sequelize'
 import fs from 'node:fs'
+import { CategoryModel } from '../category/category.model'
+import { ProductModel } from '../product/product.model'
+import { SaleModel } from '../sale/sale.model'
+import { TaskModel } from '../task/task.model'
+import { ReportModel } from '../report/report.model'
+import { UserModel } from '../auth/user.model'
 
 loadEnv()
 
@@ -14,9 +20,20 @@ const sequelizeConfig = getSequelizeConfig(configService)
 const sequelize = new Sequelize({ ...sequelizeConfig, logging: false })
 
 async function loadModels() {
-        const modelsPath = path.resolve(__dirname, '..')
-        const pattern = path.join(modelsPath, '**/*.model.{ts,js}')
-        sequelize.addModels([pattern])
+        const models = [
+                CategoryModel,
+                ProductModel,
+                SaleModel,
+                TaskModel,
+                ReportModel,
+                UserModel
+        ]
+        sequelize.addModels(models)
+        const loaded = sequelize.modelManager.models.map((m) => m.name)
+        console.log(`Loaded ${loaded.length} models: ${loaded.join(', ')}`)
+        if (loaded.length === 0) {
+                throw new Error('No models were loaded')
+        }
 }
 
 interface MigrationInfo {
