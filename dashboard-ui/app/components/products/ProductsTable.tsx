@@ -15,7 +15,7 @@ const ProductsTable = () => {
   const [selected, setSelected] = useState<IProduct | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [sortField, setSortField] = useState<'name' | 'remains' | 'salePrice'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const abortRef = useRef<AbortController | null>(null)
@@ -37,14 +37,17 @@ const ProductsTable = () => {
     setIsLoading(true)
     setError(null)
     ProductService.getAll(controller.signal)
-      .then(setProducts)
-      .catch(e => {
-        if (e.name !== 'CanceledError') {
-          console.error(e)
-          setError('Не удалось загрузить товары')
-        }
+      .then(data => {
+        if (abortRef.current === controller) setProducts(data)
       })
-      .finally(() => setIsLoading(false))
+      .catch(e => {
+        if (e.name === 'CanceledError' || e.name === 'AbortError') return
+        console.error(e)
+        if (abortRef.current === controller) setError('Не удалось загрузить товары')
+      })
+      .finally(() => {
+        if (abortRef.current === controller) setIsLoading(false)
+      })
   }, [])
 
   // Загружаем список продуктов при монтировании
