@@ -10,8 +10,14 @@ export const ProductService = {
    * GET /products
    * Получение всех продуктов со склада.
    */
-  async getAll(signal?: AbortSignal) {
-    const response = await axios.get<IProduct[]>('/products', { signal })
+  async getAll(
+    params?: Record<string, any>,
+    signal?: AbortSignal
+  ) {
+    const response = await axios.get<IProduct[]>('/products', {
+      params,
+      signal,
+    })
     return response.data
   },
 
