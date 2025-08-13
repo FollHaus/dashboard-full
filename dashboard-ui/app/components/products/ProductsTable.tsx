@@ -15,7 +15,7 @@ const ProductsTable = () => {
   const [selected, setSelected] = useState<IProduct | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [sortField, setSortField] = useState<'name' | 'remains' | 'salePrice'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const abortRef = useRef<AbortController | null>(null)
@@ -38,24 +38,25 @@ const ProductsTable = () => {
     setError(null)
     ProductService.getAll(controller.signal)
       .then(data => {
-        if (abortRef.current === controller) {
-          setProducts(data)
-          setStatus('success')
-        }
+        if (abortRef.current !== controller) return
+        setProducts(data)
+        setStatus('success')
       })
       .catch(e => {
         if (e.name === 'CanceledError' || e.name === 'AbortError') return
+        if (abortRef.current !== controller) return
         console.error(e)
-        if (abortRef.current === controller) {
-          setError('Не удалось загрузить товары')
-          setStatus('error')
-        }
+        setError('Не удалось загрузить товары')
+        setStatus('error')
       })
   }, [])
 
   // Загружаем список продуктов при монтировании
   useEffect(() => {
     fetchProducts()
+    return () => {
+      abortRef.current?.abort()
+    }
   }, [fetchProducts])
 
   // Если загрузка завершилась ошибкой, пытаемся повторить
@@ -116,14 +117,13 @@ const ProductsTable = () => {
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
-    ProductService.getById(id, controller.signal)
-      .then(setSelected)
-      .catch(e => {
-        if (e.name !== 'CanceledError') {
+      ProductService.getById(id, controller.signal)
+        .then(setSelected)
+        .catch(e => {
+          if (e.name === 'CanceledError' || e.name === 'AbortError') return
           setError(e.message)
           setStatus('error')
-        }
-      })
+        })
   }
 
   const handleDelete = async (id: number) => {
@@ -181,11 +181,11 @@ const ProductsTable = () => {
         </div>
       </div>
 
-      {status === 'loading' && (
-        <div className="flex justify-center py-10">
-          <div className="h-8 w-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
+        {(status === 'loading' || status === 'idle') && (
+          <div className="flex justify-center py-10">
+            <div className="h-8 w-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
       {status === 'error' && (
         <div className="text-center text-error py-4">
           {error}
