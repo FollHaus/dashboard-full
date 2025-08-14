@@ -70,3 +70,14 @@ button {
   font: inherit;
 }
 
+/* Remove spinners from number inputs in Add Product modal */
+.add-product-modal input[type='number']::-webkit-outer-spin-button,
+.add-product-modal input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.add-product-modal input[type='number'] {
+  -moz-appearance: textfield;
+}
+
