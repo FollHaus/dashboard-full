@@ -2,8 +2,15 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { vi } from 'vitest'
 import ProductsTable from './ProductsTable'
 import { server } from '@/tests/mocks/server'
+
+const replace = vi.fn()
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace }),
+  useSearchParams: () => new URLSearchParams(),
+}))
 
 const renderTable = () => {
   const queryClient = new QueryClient()
@@ -26,7 +33,7 @@ describe('ProductsTable', () => {
     )
     renderTable()
     expect(
-      await screen.findByText(/error/i, {}, { timeout: 3000 })
+      await screen.findByText('Ошибка загрузки', {}, { timeout: 3000 })
     ).toBeInTheDocument()
   })
 
@@ -35,16 +42,24 @@ describe('ProductsTable', () => {
       http.get('http://localhost:4000/api/products', () => HttpResponse.json([]))
     )
     renderTable()
-    expect(
-      await screen.findByText('Nothing found')
-    ).toBeInTheDocument()
+    expect(await screen.findByText('Нет данных')).toBeInTheDocument()
   })
 
   it('filters by name', async () => {
     renderTable()
     await screen.findByText('Product 1')
-    const input = screen.getByPlaceholderText('Search by name...')
+    const input = screen.getByLabelText('Название')
     await userEvent.type(input, 'Second')
+    await waitFor(() => {
+      expect(screen.getByText('Second')).toBeInTheDocument()
+    })
+  })
+
+  it('filters by sku', async () => {
+    renderTable()
+    await screen.findByText('Product 1')
+    const input = screen.getByLabelText('Артикул')
+    await userEvent.type(input, 'B2')
     await waitFor(() => {
       expect(screen.getByText('Second')).toBeInTheDocument()
     })

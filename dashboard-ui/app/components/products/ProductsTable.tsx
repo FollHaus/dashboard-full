@@ -1,17 +1,27 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Button from '@/ui/Button/Button'
 import { ProductService } from '@/services/product/product.service'
 import ProductForm from './ProductForm'
 import ProductDetails from './ProductDetails'
 import { useInventoryList } from '@/hooks/useInventoryList'
 import { IInventory } from '@/shared/interfaces/inventory.interface'
+import useDebounce from '@/hooks/useDebounce'
 
 const ProductsTable = () => {
-  const [page, setPage] = useState(1)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const initialPage = Number(searchParams.get('page') || '1')
+  const initialName = searchParams.get('searchName') || ''
+  const initialSku = searchParams.get('searchSku') || ''
+
+  const [page, setPage] = useState(initialPage)
   const [pageSize] = useState(10)
-  const [search, setSearch] = useState('')
+  const [searchName, setSearchName] = useState(initialName)
+  const [searchSku, setSearchSku] = useState(initialSku)
   const [sortField, setSortField] = useState<'name' | 'quantity' | 'price'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [selected, setSelected] = useState<IInventory | null>(null)
@@ -19,10 +29,26 @@ const ProductsTable = () => {
   const [products, setProducts] = useState<IInventory[]>([])
   const [error, setError] = useState<string | null>(null)
 
-  const { data, status, error: queryError, refetch } = useInventoryList({
+  const debouncedName = useDebounce(searchName, 300)
+  const debouncedSku = useDebounce(searchSku, 300)
+
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (page > 1) params.set('page', String(page))
+    if (searchName) params.set('searchName', searchName)
+    if (searchSku) params.set('searchSku', searchSku)
+    router.replace(`?${params.toString()}`)
+  }, [page, searchName, searchSku, router])
+
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedName, debouncedSku])
+
+  const { data, status, refetch } = useInventoryList({
     page,
     pageSize,
-    search,
+    searchName: debouncedName,
+    searchSku: debouncedSku,
     sort: `${sortField}:${sortOrder}`,
   })
 
@@ -50,20 +76,46 @@ const ProductsTable = () => {
     }
   }
 
-  const totalPages = data ? Math.ceil(data.total / pageSize) : 1
+  const handleReset = () => {
+    setSearchName('')
+    setSearchSku('')
+  }
+
+  const totalPages = data ? Math.ceil(data.total / data.pageSize) : 1
 
   return (
     <div>
-      <div className="flex justify-between mb-4">
-        <input
-          type="text"
-          placeholder="Search by name..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="border border-neutral-300 rounded px-2 py-1"
-        />
+      <div className="flex flex-wrap gap-2 mb-4 items-end">
+        <div className="flex flex-col">
+          <label htmlFor="searchName" className="mb-1">Название</label>
+          <input
+            id="searchName"
+            type="text"
+            placeholder="Поиск"
+            value={searchName}
+            onChange={e => setSearchName(e.target.value)}
+            className="border border-neutral-300 rounded px-2 py-1"
+          />
+        </div>
+        <div className="flex flex-col">
+          <label htmlFor="searchSku" className="mb-1">Артикул</label>
+          <input
+            id="searchSku"
+            type="text"
+            placeholder="Поиск"
+            value={searchSku}
+            onChange={e => setSearchSku(e.target.value)}
+            className="border border-neutral-300 rounded px-2 py-1"
+          />
+        </div>
         <Button
-          className="bg-primary-500 text-white px-4 py-1"
+          className="bg-neutral-200 px-4 py-1"
+          onClick={handleReset}
+        >
+          Сброс
+        </Button>
+        <Button
+          className="ml-auto bg-primary-500 text-white px-4 py-1"
           onClick={() => setIsCreating(true)}
         >
           Добавить товар
@@ -71,18 +123,21 @@ const ProductsTable = () => {
       </div>
 
       {status === 'pending' && (
-        <div className="flex justify-center py-10">
-          <div className="h-8 w-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        <div className="py-10 text-center animate-pulse">
+          <div className="h-4 bg-neutral-200 rounded mb-2" />
+          <div className="h-4 bg-neutral-200 rounded mb-2" />
+          <div className="h-4 bg-neutral-200 rounded" />
+          <p className="mt-4">Загрузка...</p>
         </div>
       )}
       {status === 'error' && products.length === 0 && (
         <div className="text-center text-error py-4">
-          {queryError?.message || 'Не удалось загрузить товары'}
+          Ошибка загрузки
           <Button
             className="ml-2 bg-primary-500 text-white px-4 py-1"
             onClick={() => refetch()}
           >
-            Обновить
+            Повторить
           </Button>
         </div>
       )}
@@ -119,7 +174,7 @@ const ProductsTable = () => {
               {products.length === 0 && (
                 <tr>
                   <td colSpan={6} className="p-2 text-center">
-                    Nothing found
+                    Нет данных
                   </td>
                 </tr>
               )}
@@ -146,23 +201,27 @@ const ProductsTable = () => {
             </tbody>
           </table>
 
-          <div className="flex justify-center mt-4 space-x-2">
-            <Button
-              className="px-3 py-1 bg-neutral-200"
-              disabled={page === 1}
-              onClick={() => setPage(p => p - 1)}
-            >
-              Prev
-            </Button>
-            <span>{page} / {totalPages}</span>
-            <Button
-              className="px-3 py-1 bg-neutral-200"
-              disabled={page === totalPages}
-              onClick={() => setPage(p => p + 1)}
-            >
-              Next
-            </Button>
-          </div>
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-4 space-x-2">
+              <Button
+                className="px-3 py-1 bg-neutral-200"
+                disabled={page <= 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+              >
+                Предыдущая
+              </Button>
+              <span>
+                {page} / {totalPages}
+              </span>
+              <Button
+                className="px-3 py-1 bg-neutral-200"
+                disabled={page >= totalPages}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              >
+                Следующая
+              </Button>
+            </div>
+          )}
 
           {selected && (
             <ProductDetails product={selected} onClose={() => setSelected(null)} />
