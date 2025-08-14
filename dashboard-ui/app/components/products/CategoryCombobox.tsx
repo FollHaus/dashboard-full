@@ -131,7 +131,6 @@ const CategoryCombobox = ({ value, onChange, error }: Props) => {
           }}
           onKeyDown={handleKey}
           onFocus={() => setOpen(true)}
-          disabled={loading}
         />
         {query && !loading && (
           <button
