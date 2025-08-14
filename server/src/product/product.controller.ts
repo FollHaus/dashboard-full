@@ -5,6 +5,7 @@ import {
         Get,
         Param,
         ParseIntPipe,
+        Query,
         Post,
         Put,
         UseGuards
@@ -32,10 +33,13 @@ export class ProductController {
 	/**
 	 * Получение списка всех продуктов
 	 */
-	@Get()
-	async findAll(): Promise<ProductModel[]> {
-		return this.productService.findAll()
-	}
+        @Get()
+        async findAll(
+                @Query('searchName') searchName?: string,
+                @Query('searchSku') searchSku?: string
+        ): Promise<ProductModel[]> {
+                return this.productService.findAll({ searchName, searchSku })
+        }
 
 	/**
 	 * Получение одного продукта по ID

@@ -4,7 +4,7 @@ import {
 	NotFoundException
 } from '@nestjs/common'
 import { InjectConnection, InjectModel } from '@nestjs/sequelize'
-import { Sequelize, Transaction } from 'sequelize'
+import { Op, Sequelize, Transaction } from 'sequelize'
 import { ProductModel } from './product.model'
 import { CreateProductDto } from './dto/product.dto'
 import { UpdateProductDto } from './dto/update.product.dto'
@@ -68,9 +68,24 @@ export class ProductService {
 	/**
 	 * 2) Возвращает все продукты с категориями и продажами.
 	 */
-	async findAll(): Promise<ProductModel[]> {
-		return this.productRepo.findAll({ include: ['category', 'sales'] })
-	}
+        async findAll(params?: {
+                searchName?: string
+                searchSku?: string
+        }): Promise<ProductModel[]> {
+                const where: any = {}
+                if (params?.searchName) {
+                        where.name = { [Op.iLike]: `%${params.searchName}%` }
+                }
+                if (params?.searchSku) {
+                        where.articleNumber = {
+                                [Op.iLike]: `%${params.searchSku}%`,
+                        }
+                }
+                return this.productRepo.findAll({
+                        where,
+                        include: ['category', 'sales'],
+                })
+        }
 
 	/**
 	 * 3) Возвращает один продукт по ID.

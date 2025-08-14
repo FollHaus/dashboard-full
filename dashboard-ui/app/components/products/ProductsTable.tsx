@@ -17,11 +17,13 @@ const ProductsTable = () => {
   const initialPage = Number(searchParams.get('page') || '1')
   const initialName = searchParams.get('searchName') || ''
   const initialSku = searchParams.get('searchSku') || ''
+  const initialField: 'name' | 'sku' = initialSku ? 'sku' : 'name'
+  const initialTerm = initialField === 'sku' ? initialSku : initialName
 
   const [page, setPage] = useState(initialPage)
   const [pageSize] = useState(10)
-  const [searchName, setSearchName] = useState(initialName)
-  const [searchSku, setSearchSku] = useState(initialSku)
+  const [searchTerm, setSearchTerm] = useState(initialTerm)
+  const [searchField, setSearchField] = useState<'name' | 'sku'>(initialField)
   const [sortField, setSortField] = useState<'name' | 'quantity' | 'price'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [selected, setSelected] = useState<IInventory | null>(null)
@@ -29,26 +31,28 @@ const ProductsTable = () => {
   const [products, setProducts] = useState<IInventory[]>([])
   const [error, setError] = useState<string | null>(null)
 
-  const debouncedName = useDebounce(searchName, 300)
-  const debouncedSku = useDebounce(searchSku, 300)
+  const debouncedTerm = useDebounce(searchTerm, 300)
+  const debouncedField = useDebounce(searchField, 300)
 
   useEffect(() => {
     const params = new URLSearchParams()
     if (page > 1) params.set('page', String(page))
-    if (searchName) params.set('searchName', searchName)
-    if (searchSku) params.set('searchSku', searchSku)
+    if (searchTerm) {
+      if (searchField === 'name') params.set('searchName', searchTerm)
+      else params.set('searchSku', searchTerm)
+    }
     router.replace(`?${params.toString()}`)
-  }, [page, searchName, searchSku, router])
+  }, [page, searchTerm, searchField, router])
 
   useEffect(() => {
     setPage(1)
-  }, [debouncedName, debouncedSku])
+  }, [debouncedTerm, debouncedField])
 
   const { data, status, refetch } = useInventoryList({
     page,
     pageSize,
-    searchName: debouncedName,
-    searchSku: debouncedSku,
+    searchName: debouncedField === 'name' ? debouncedTerm : undefined,
+    searchSku: debouncedField === 'sku' ? debouncedTerm : undefined,
     sort: `${sortField}:${sortOrder}`,
   })
 
@@ -77,8 +81,7 @@ const ProductsTable = () => {
   }
 
   const handleReset = () => {
-    setSearchName('')
-    setSearchSku('')
+    setSearchTerm('')
   }
 
   const totalPages = data ? Math.ceil(data.total / data.pageSize) : 1
@@ -86,32 +89,24 @@ const ProductsTable = () => {
   return (
     <div>
       <div className="flex flex-wrap gap-2 mb-4 items-end">
-        <div className="flex flex-col">
-          <label htmlFor="searchName" className="mb-1">Название</label>
+        <div className="flex border border-neutral-300 rounded overflow-hidden">
           <input
-            id="searchName"
             type="text"
-            placeholder="Поиск"
-            value={searchName}
-            onChange={e => setSearchName(e.target.value)}
-            className="border border-neutral-300 rounded px-2 py-1"
+            placeholder="Поиск..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="px-2 py-1 outline-none"
           />
+          <select
+            value={searchField}
+            onChange={e => setSearchField(e.target.value as 'name' | 'sku')}
+            className="px-2 py-1 bg-neutral-100 border-l border-neutral-300"
+          >
+            <option value="name">Название</option>
+            <option value="sku">Артикул</option>
+          </select>
         </div>
-        <div className="flex flex-col">
-          <label htmlFor="searchSku" className="mb-1">Артикул</label>
-          <input
-            id="searchSku"
-            type="text"
-            placeholder="Поиск"
-            value={searchSku}
-            onChange={e => setSearchSku(e.target.value)}
-            className="border border-neutral-300 rounded px-2 py-1"
-          />
-        </div>
-        <Button
-          className="bg-neutral-200 px-4 py-1"
-          onClick={handleReset}
-        >
+        <Button className="bg-neutral-200 px-4 py-1" onClick={handleReset}>
           Сброс
         </Button>
         <Button
