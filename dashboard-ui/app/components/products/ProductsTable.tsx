@@ -11,6 +11,7 @@ import { useInventoryList } from '@/hooks/useInventoryList'
 import { IInventory } from '@/shared/interfaces/inventory.interface'
 import useDebounce from '@/hooks/useDebounce'
 import { formatCurrency } from '@/utils/formatCurrency'
+import './ProductsTable.css'
 
 const ProductsTable = () => {
   const router = useRouter()
@@ -24,6 +25,7 @@ const ProductsTable = () => {
 
   const [page, setPage] = useState(initialPage)
   const [pageSize] = useState(10)
+  const ROW_HEIGHT = 44
   const [searchTerm, setSearchTerm] = useState(initialTerm)
   const [searchField, setSearchField] = useState<'name' | 'sku'>(initialField)
   const [sortField, setSortField] = useState<'name' | 'quantity' | 'price'>('name')
@@ -50,7 +52,7 @@ const ProductsTable = () => {
     setPage(1)
   }, [debouncedTerm, debouncedField])
 
-  const { data, status, refetch } = useInventoryList({
+  const { data, status, isFetching, isError, refetch } = useInventoryList({
     page,
     pageSize,
     searchName: debouncedField === 'name' ? debouncedTerm : undefined,
@@ -82,6 +84,7 @@ const ProductsTable = () => {
     }
   }
 
+  const isInitialLoading = status === 'pending' && !data
   const totalPages = data ? Math.ceil(data.total / data.pageSize) : 1
 
   return (
@@ -112,15 +115,7 @@ const ProductsTable = () => {
         </Button>
       </div>
 
-      {status === 'pending' && (
-        <div className="py-10 text-center animate-pulse">
-          <div className="h-4 bg-neutral-200 rounded mb-2" />
-          <div className="h-4 bg-neutral-200 rounded mb-2" />
-          <div className="h-4 bg-neutral-200 rounded" />
-          <p className="mt-4">Загрузка...</p>
-        </div>
-      )}
-      {status === 'error' && products.length === 0 && (
+      {isError && products.length === 0 && (
         <div className="text-center text-error py-4">
           Ошибка загрузки
           <Button
@@ -131,47 +126,50 @@ const ProductsTable = () => {
           </Button>
         </div>
       )}
-
-      {(status === 'success' || products.length > 0) && (
-        <>
-          <table className="min-w-full bg-neutral-100 rounded shadow-md">
-            <thead>
-              <tr className="text-left border-b border-neutral-300">
-                <th
-                  className="p-2 cursor-pointer"
-                  onClick={() => handleSort('name')}
-                >
-                  Название {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-                </th>
-                <th className="p-2">Категория</th>
-                <th className="p-2">Артикул</th>
-                <th
-                  className="p-2 cursor-pointer"
-                  onClick={() => handleSort('quantity')}
-                >
-                  Остаток {sortField === 'quantity' && (sortOrder === 'asc' ? '↑' : '↓')}
-                </th>
-                <th
-                  className="p-2 cursor-pointer"
-                  onClick={() => handleSort('price')}
-                >
-                  Цена продажи {sortField === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
-                </th>
-                <th className="p-2">Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="p-2 text-center">
-                    Нет данных
+      <div
+        className={`inventory-table ${
+          isFetching && !isInitialLoading ? 'loading' : ''
+        }`}
+        style={{ minHeight: pageSize * ROW_HEIGHT }}
+      >
+        <table className="min-w-full bg-neutral-100 rounded shadow-md">
+          <thead>
+            <tr className="text-left border-b border-neutral-300">
+              <th className="p-2 cursor-pointer" onClick={() => handleSort('name')}>
+                Название {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </th>
+              <th className="p-2">Категория</th>
+              <th className="p-2">Артикул</th>
+              <th className="p-2 cursor-pointer" onClick={() => handleSort('quantity')}>
+                Остаток {sortField === 'quantity' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </th>
+              <th className="p-2 cursor-pointer" onClick={() => handleSort('price')}>
+                Цена продажи {sortField === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </th>
+              <th className="p-2">Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isInitialLoading &&
+              Array.from({ length: pageSize }).map((_, i) => (
+                <tr key={i} className="row animate-pulse">
+                  <td colSpan={6} className="p-2">
+                    <div className="h-4 bg-neutral-200 rounded" />
                   </td>
                 </tr>
-              )}
-              {products.map(prod => (
+              ))}
+            {!isInitialLoading && products.length === 0 && (
+              <tr className="row">
+                <td colSpan={6} className="p-2 text-center">
+                  Нет данных
+                </td>
+              </tr>
+            )}
+            {!isInitialLoading &&
+              products.map(prod => (
                 <tr
                   key={prod.id}
-                  className="border-b border-neutral-200 hover:bg-neutral-200"
+                  className="row border-b border-neutral-200 hover:bg-neutral-200"
                 >
                   <td className="p-2">{prod.name}</td>
                   <td className="p-2">{prod.category?.name || '-'}</td>
@@ -188,50 +186,49 @@ const ProductsTable = () => {
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
+          </tbody>
+        </table>
+      </div>
 
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-4 space-x-2">
-              <Button
-                className="px-3 py-1 bg-neutral-200"
-                disabled={page <= 1}
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-              >
-                Предыдущая
-              </Button>
-              <span>
-                {page} / {totalPages}
-              </span>
-              <Button
-                className="px-3 py-1 bg-neutral-200"
-                disabled={page >= totalPages}
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              >
-                Следующая
-              </Button>
-            </div>
-          )}
-
-          {selected && (
-            <ProductDetails product={selected} onClose={() => setSelected(null)} />
-          )}
-          {isCreating && (
-            <Modal isOpen={isCreating} onClose={() => setIsCreating(false)}>
-              <div className="add-product-modal">
-                <ProductForm
-                  onSuccess={() => {
-                    refetch()
-                    setIsCreating(false)
-                  }}
-                  onCancel={() => setIsCreating(false)}
-                />
-              </div>
-            </Modal>
-          )}
-          {error && <p className="text-error mt-2">{error}</p>}
-        </>
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-4 space-x-2">
+          <Button
+            className="px-3 py-1 bg-neutral-200"
+            disabled={page <= 1}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+          >
+            Предыдущая
+          </Button>
+          <span>
+            {page} / {totalPages}
+          </span>
+          <Button
+            className="px-3 py-1 bg-neutral-200"
+            disabled={page >= totalPages}
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+          >
+            Следующая
+          </Button>
+        </div>
       )}
+
+      {selected && (
+        <ProductDetails product={selected} onClose={() => setSelected(null)} />
+      )}
+      {isCreating && (
+        <Modal isOpen={isCreating} onClose={() => setIsCreating(false)}>
+          <div className="add-product-modal">
+            <ProductForm
+              onSuccess={() => {
+                refetch()
+                setIsCreating(false)
+              }}
+              onCancel={() => setIsCreating(false)}
+            />
+          </div>
+        </Modal>
+      )}
+      {error && <p className="text-error mt-2">{error}</p>}
     </div>
   )
 }
