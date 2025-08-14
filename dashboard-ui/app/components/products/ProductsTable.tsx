@@ -6,6 +6,7 @@ import Button from '@/ui/Button/Button'
 import { ProductService } from '@/services/product/product.service'
 import ProductForm from './ProductForm'
 import ProductDetails from './ProductDetails'
+import Modal from '@/ui/Modal/Modal'
 import { useInventoryList } from '@/hooks/useInventoryList'
 import { IInventory } from '@/shared/interfaces/inventory.interface'
 import useDebounce from '@/hooks/useDebounce'
@@ -215,7 +216,7 @@ const ProductsTable = () => {
             <ProductDetails product={selected} onClose={() => setSelected(null)} />
           )}
           {isCreating && (
-            <div className="mt-4">
+            <Modal isOpen={isCreating} onClose={() => setIsCreating(false)}>
               <ProductForm
                 onSuccess={() => {
                   refetch()
@@ -223,7 +224,7 @@ const ProductsTable = () => {
                 }}
                 onCancel={() => setIsCreating(false)}
               />
-            </div>
+            </Modal>
           )}
           {error && <p className="text-error mt-2">{error}</p>}
         </>
