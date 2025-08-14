@@ -1,27 +1,30 @@
 import Layout from "@/ui/Layout";
-import React from "react";
+import React, { useState } from "react";
 import type { Metadata } from "next";
-import Metrics from "@/components/home/Metrics";
-import SalesChart from "@/components/home/SalesChart";
-import Notifications from "@/components/home/Notifications";
-import TopProducts from "@/components/home/TopProducts";
-import TaskList from "@/components/home/TaskList";
+import DashboardControls, { Period } from "@/components/dashboard/DashboardControls";
+import KpiCards from "@/components/dashboard/KpiCards";
+import SalesChart from "@/components/dashboard/SalesChart";
+import InventorySnapshot from "@/components/dashboard/InventorySnapshot";
+import TopProducts from "@/components/dashboard/TopProducts";
+import WeeklyTasks from "@/components/dashboard/WeeklyTasks";
 
 export const metadata: Metadata = {
   title: "Главная",
 };
 
-
 export default function Home() {
-    return (
-        <Layout>
-            <div className="space-y-8">
-                <Metrics/>
-                <SalesChart/>
-                <TopProducts/>
-                <TaskList/>
-                <Notifications/>
-            </div>
-        </Layout>
-    );
+  const [period, setPeriod] = useState<Period>("day");
+
+  return (
+    <Layout>
+      <div className="space-y-8">
+        <DashboardControls period={period} onPeriodChange={setPeriod} />
+        <KpiCards period={period} />
+        <SalesChart period={period} />
+        <InventorySnapshot />
+        <TopProducts />
+        <WeeklyTasks />
+      </div>
+    </Layout>
+  );
 }
