@@ -10,7 +10,8 @@ import {
 export interface InventoryListParams {
   page?: number
   pageSize?: number
-  search?: string
+  searchName?: string
+  searchSku?: string
   sort?: string
   filters?: Record<string, string>
 }
@@ -19,7 +20,15 @@ export const useInventoryList = (params: InventoryListParams) => {
   return useQuery<InventoryList, Error>({
     queryKey: ['inventory', params],
     queryFn: ({ signal }) =>
-      ProductService.getAll(undefined, signal).then(products => {
+      ProductService.getAll(
+        {
+          page: params.page,
+          pageSize: params.pageSize,
+          searchName: params.searchName,
+          searchSku: params.searchSku,
+        },
+        signal
+      ).then(products => {
         const items: IInventory[] = products.map(p => ({
           id: p.id,
           name: p.name,
@@ -32,13 +41,13 @@ export const useInventoryList = (params: InventoryListParams) => {
         }))
 
         let filtered = items
-        if (params.search) {
-          const q = params.search.toLowerCase()
-          filtered = filtered.filter(
-            it =>
-              it.name.toLowerCase().includes(q) ||
-              it.code.toLowerCase().includes(q)
-          )
+        if (params.searchName) {
+          const q = params.searchName.toLowerCase()
+          filtered = filtered.filter(it => it.name.toLowerCase().includes(q))
+        }
+        if (params.searchSku) {
+          const q = params.searchSku.toLowerCase()
+          filtered = filtered.filter(it => it.code.toLowerCase().includes(q))
         }
 
         if (params.sort) {
