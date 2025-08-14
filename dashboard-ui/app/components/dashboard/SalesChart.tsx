@@ -10,8 +10,8 @@ interface Props {
 }
 
 const metricOptions = [
-  { value: "revenue", label: "выручка" },
-  { value: "sales", label: "количество продаж" },
+  { value: "revenue", label: "Выручка" },
+  { value: "sales", label: "Количество" },
 ] as const;
 
 const daysMap: Record<Period, number> = {

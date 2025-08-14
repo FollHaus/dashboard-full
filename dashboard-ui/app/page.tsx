@@ -1,3 +1,4 @@
+'use client'
 import Layout from "@/ui/Layout";
 import React, { useState } from "react";
 import type { Metadata } from "next";
@@ -8,7 +9,7 @@ import InventorySnapshot from "@/components/dashboard/InventorySnapshot";
 import TopProducts from "@/components/dashboard/TopProducts";
 import WeeklyTasks from "@/components/dashboard/WeeklyTasks";
 
-export const metadata: Metadata = {
+const metadata: Metadata = {
   title: "Главная",
 };
 

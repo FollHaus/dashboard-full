@@ -86,7 +86,7 @@ const WeeklyTasks = () => {
           <li className="grid grid-cols-3 py-1 text-xs text-neutral-600">
             <span>Название</span>
             <span>Ответственный</span>
-            <span>Дедлайн</span>
+            <span>Срок</span>
           </li>
           {tasks.map((t) => {
             const deadline = new Date(t.deadline);
@@ -107,15 +107,15 @@ const WeeklyTasks = () => {
 
             let rowBg = "";
             if (!isOverdue) {
-              if (daysLeft <= 3) rowBg = "bg-red-50";
-              else if (daysLeft <= 7) rowBg = "bg-yellow-50";
+              if (daysLeft <= 3) rowBg = "bg-red-100";
+              else if (daysLeft <= 7) rowBg = "bg-yellow-100";
             }
 
             return (
               <li key={t.id}>
                 <Link
                   href={`/tasks/${t.id}`}
-                  className={`grid grid-cols-3 py-2 hover:bg-neutral-200 rounded ${
+                  className={`grid grid-cols-3 p-2 hover:bg-primary-200 rounded transition duration-350 ease-in-out ${
                     isOverdue ? "text-error" : ""
                   } ${rowBg}`}
                 >
@@ -124,7 +124,7 @@ const WeeklyTasks = () => {
                   <span className="flex items-center gap-2">
                     {deadline.toLocaleDateString("ru-RU")}
                     {isOverdue ? (
-                      <span className="text-error text-xs">просрочено</span>
+                      <span className="text-error text-xs">Просрочено</span>
                     ) : (
                       badge && (
                         <span className="bg-primary-100 text-primary-700 text-xs px-2 py-0.5 rounded">
