@@ -17,6 +17,7 @@ export interface IProduct {
   purchasePrice: number
   salePrice: number
   remains: number
+  minStock?: number
   // Связанная категория может приходить из бэкенда
   category?: ICategory
 }
@@ -30,4 +31,5 @@ export interface IProductCreate {
   purchasePrice: number
   salePrice: number
   remains: number
+  minStock?: number
 }

@@ -22,6 +22,7 @@ export const mockProducts: IProduct[] = [
     purchasePrice: 10,
     salePrice: 20,
     remains: 5,
+    minStock: 5,
   },
   {
     id: 2,
@@ -30,6 +31,7 @@ export const mockProducts: IProduct[] = [
     purchasePrice: 8,
     salePrice: 15,
     remains: 2,
+    minStock: 3,
   },
 ]
 
