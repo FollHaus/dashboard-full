@@ -71,6 +71,7 @@ export const useInventoryList = (params: InventoryListParams) => {
       }),
     keepPreviousData: true,
     placeholderData: prev => prev,
+    staleTime: 30000,
     retry: 1,
     refetchOnWindowFocus: false,
   })
