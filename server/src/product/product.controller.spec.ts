@@ -62,7 +62,10 @@ describe('ProductController', () => {
     const data = [{ id: 1 }]
     service.findAll.mockResolvedValue(data)
     await request(app.getHttpServer()).get('/products').expect(200).expect(data)
-    expect(service.findAll).toHaveBeenCalled()
+    expect(service.findAll).toHaveBeenCalledWith({
+      searchName: undefined,
+      searchSku: undefined,
+    })
   })
 
   it('/products/:id GET', async () => {
