@@ -7,6 +7,7 @@ import {
         ParseIntPipe,
         Post,
         Put,
+        Query,
         UseGuards
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
@@ -25,10 +26,13 @@ export class TaskController {
 		return this.taskService.create(dto)
 	}
 
-	@Get()
-	async findAll(): Promise<TaskModel[]> {
-		return this.taskService.findAll()
-	}
+        @Get()
+        async findAll(
+                @Query('start') start?: string,
+                @Query('end') end?: string
+        ): Promise<TaskModel[]> {
+                return this.taskService.findAll(start, end)
+        }
 
 	@Get(':id')
 	async findOne(@Param('id', ParseIntPipe) id: number): Promise<TaskModel> {

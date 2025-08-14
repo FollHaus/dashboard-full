@@ -54,7 +54,18 @@ describe('TaskController', () => {
     const data = [{ id: 1 }]
     service.findAll.mockResolvedValue(data)
     await request(app.getHttpServer()).get('/task').expect(200).expect(data)
-    expect(service.findAll).toHaveBeenCalled()
+    expect(service.findAll).toHaveBeenCalledWith(undefined, undefined)
+  })
+
+  it('/task GET with range', async () => {
+    const data = [{ id: 1 }]
+    service.findAll.mockResolvedValue(data)
+    await request(app.getHttpServer())
+      .get('/task')
+      .query({ start: '2024-01-01', end: '2024-01-07' })
+      .expect(200)
+      .expect(data)
+    expect(service.findAll).toHaveBeenCalledWith('2024-01-01', '2024-01-07')
   })
 
   it('/task/:id GET', async () => {

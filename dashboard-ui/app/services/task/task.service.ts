@@ -6,8 +6,8 @@ export const TaskService = {
    * GET /task
    * Получение всех задач.
    */
-  async getAll() {
-    const response = await axios.get<ITask[]>('/task')
+  async getAll(params?: { start?: string; end?: string }) {
+    const response = await axios.get<ITask[]>('/task', { params })
     return response.data
   },
 

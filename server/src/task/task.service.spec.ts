@@ -3,6 +3,7 @@ import { TaskService } from './task.service'
 import { getModelToken } from '@nestjs/sequelize'
 import { TaskModel } from './task.model'
 import { NotFoundException } from '@nestjs/common'
+import { Op } from 'sequelize'
 
 const mockTask = { id: 1, title: 'Test', update: jest.fn(), destroy: jest.fn() }
 
@@ -38,10 +39,17 @@ describe('TaskService', () => {
     expect(repo.create).toHaveBeenCalledWith({ ...dto })
   })
 
-  it('findAll', async () => {
+  it('findAll without params', async () => {
     const res = await service.findAll()
     expect(res).toEqual([mockTask])
-    expect(repo.findAll).toHaveBeenCalled()
+    expect(repo.findAll).toHaveBeenCalledWith({ where: {} })
+  })
+
+  it('findAll with range', async () => {
+    await service.findAll('2024-01-01', '2024-01-07')
+    expect(repo.findAll).toHaveBeenCalledWith({
+      where: { deadline: { [Op.between]: [new Date('2024-01-01'), new Date('2024-01-07')] } }
+    })
   })
 
   it('findOne success', async () => {
