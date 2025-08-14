@@ -3,21 +3,48 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
-import { useFilter } from "@/providers/filter-provider/filter-provider";
+import { Period } from "./DashboardControls";
 
-const periods = [
-  { label: "1 неделя", value: 7 },
-  { label: "2 недели", value: 14 },
-  { label: "1 месяц", value: 30 },
-  { label: "1 год", value: 365 },
-];
+interface Props {
+  period: Period;
+}
 
-const SalesChart = () => {
-  const { notifyFiltersChanged } = useFilter();
-  const [period, setPeriod] = useState(7);
+const metricOptions = [
+  { value: "revenue", label: "выручка" },
+  { value: "sales", label: "количество продаж" },
+] as const;
+
+const daysMap: Record<Period, number> = {
+  day: 1,
+  week: 7,
+  month: 30,
+  year: 365,
+};
+
+const getDates = (period: Period) => {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - daysMap[period] + 1);
+  return {
+    start: start.toISOString().slice(0, 10),
+    end: end.toISOString().slice(0, 10),
+  };
+};
+
+const SalesChart: React.FC<Props> = ({ period }) => {
+  const [metric, setMetric] = useState<(typeof metricOptions)[number]["value"]>(
+    "revenue"
+  );
+
   const { data, isFetching } = useQuery({
-    queryKey: ["sales", period],
-    queryFn: () => AnalyticsService.getSales(period),
+    queryKey: ["sales-chart", period, metric],
+    queryFn: async () => {
+      if (metric === "revenue") {
+        const { start, end } = getDates(period);
+        return AnalyticsService.getDailyRevenue(start, end);
+      }
+      return AnalyticsService.getSales(daysMap[period]);
+    },
     keepPreviousData: true,
   });
 
@@ -26,22 +53,23 @@ const SalesChart = () => {
 
   return (
     <div className="bg-neutral-100 p-4 rounded-card shadow-card">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
         <h3 className="text-lg font-semibold">Продажи</h3>
-        <select
-          className="border border-neutral-300 rounded p-1 text-sm"
-          value={period}
-          onChange={(e) => {
-            notifyFiltersChanged(["sales"]);
-            setPeriod(parseInt(e.target.value));
-          }}
-        >
-          {periods.map((p) => (
-            <option key={p.value} value={p.value}>
-              {p.label}
-            </option>
+        <div className="flex gap-2">
+          {metricOptions.map((m) => (
+            <button
+              key={m.value}
+              className={`px-2 py-1 text-sm rounded border ${
+                metric === m.value
+                  ? "bg-primary-500 text-white border-primary-500"
+                  : "border-neutral-300"
+              }`}
+              onClick={() => setMetric(m.value)}
+            >
+              {m.label}
+            </button>
           ))}
-        </select>
+        </div>
       </div>
       <div className="relative flex items-end space-x-2 h-40">
         {data
@@ -50,7 +78,7 @@ const SalesChart = () => {
                 <div
                   className="bg-primary-500 w-full rounded-t"
                   style={{ height: max ? `${(item.total / max) * 100}%` : 0 }}
-                ></div>
+                />
                 <span className="mt-2 text-xs text-neutral-800">
                   {new Date(item.date).toLocaleDateString("ru-RU", {
                     day: "numeric",
@@ -59,7 +87,7 @@ const SalesChart = () => {
                 </span>
               </div>
             ))
-          : Array.from({ length: period }).map((_, idx) => (
+          : Array.from({ length: daysMap[period] }).map((_, idx) => (
               <div
                 key={idx}
                 className="flex flex-col items-center flex-1 animate-pulse"
