@@ -10,6 +10,7 @@ import Modal from '@/ui/Modal/Modal'
 import { useInventoryList } from '@/hooks/useInventoryList'
 import { IInventory } from '@/shared/interfaces/inventory.interface'
 import useDebounce from '@/hooks/useDebounce'
+import { formatCurrency } from '@/utils/formatCurrency'
 
 const ProductsTable = () => {
   const router = useRouter()
@@ -176,7 +177,7 @@ const ProductsTable = () => {
                   <td className="p-2">{prod.category?.name || '-'}</td>
                   <td className="p-2">{prod.code}</td>
                   <td className="p-2">{prod.quantity}</td>
-                  <td className="p-2">${prod.price}</td>
+                  <td className="p-2">{formatCurrency(prod.price)}</td>
                   <td className="p-2">
                     <Button
                       className="bg-error text-white px-4 py-1"

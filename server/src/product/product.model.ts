@@ -34,11 +34,11 @@ export class ProductModel extends Model {
 	@Column({ unique: true, field: 'article_number', type: DataType.STRING })
 	articleNumber: string // Артикул
 
-	@Column({ field: 'purchase_price', type: DataType.DECIMAL(10, 2) })
-	purchasePrice: number // Закупочная цена
+        @Column({ field: 'purchase_price', type: DataType.DECIMAL(12, 2) })
+        purchasePrice: number // Закупочная цена
 
-	@Column({ field: 'sale_price', type: DataType.DECIMAL(10, 2) })
-	salePrice: number // Продажная цена
+        @Column({ field: 'sale_price', type: DataType.DECIMAL(12, 2) })
+        salePrice: number // Продажная цена
 
 	@Column(DataType.INTEGER)
 	remains: number // Остаток

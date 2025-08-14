@@ -34,7 +34,7 @@ export const useInventoryList = (params: InventoryListParams) => {
           name: p.name,
           code: p.articleNumber,
           quantity: p.remains,
-          price: p.salePrice,
+          price: Number(p.salePrice),
           status: p.remains > 0 ? 'in_stock' : 'out_of_stock',
           updatedAt: (p as any).updatedAt,
           category: (p as any).category,

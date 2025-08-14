@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { AnalyticsService } from '@/services/analytics/analytics.service'
 import { ITurnover } from '@/shared/interfaces/turnover.interface'
+import { formatCurrency } from '@/utils/formatCurrency'
 
 const periods = [
   { key: 'day', label: 'День' },
@@ -52,7 +53,7 @@ const Metrics = () => {
           ))}
         </select>
         {turnoverError && <p className="text-error text-sm mb-1">{turnoverError}</p>}
-        <p className="text-2xl font-bold">{format(value)} ₽</p>
+        <p className="text-2xl font-bold">{formatCurrency(value)}</p>
       </div>
       <div className="bg-neutral-100 p-4 rounded-card shadow-card">
         <h3 className="text-lg font-semibold mb-2">Товары на складе</h3>

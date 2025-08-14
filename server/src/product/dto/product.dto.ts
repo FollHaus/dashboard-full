@@ -1,11 +1,12 @@
 import {
-	IsNotEmpty,
-	IsNumber,
-	IsOptional,
-	IsString,
-	Min,
-	ValidateIf
+        IsNotEmpty,
+        IsNumber,
+        IsOptional,
+        IsString,
+        Min,
+        ValidateIf
 } from 'class-validator'
+import { Transform } from 'class-transformer'
 
 export class CreateProductDto {
 	@IsString()
@@ -16,11 +17,17 @@ export class CreateProductDto {
 	@IsNotEmpty()
 	articleNumber: string
 
-	@IsNumber({ maxDecimalPlaces: 2 })
-	purchasePrice: number
+        @Transform(({ value }) =>
+                typeof value === 'string' ? parseFloat(value) : value
+        )
+        @IsNumber({ maxDecimalPlaces: 2 })
+        purchasePrice: number
 
-	@IsNumber({ maxDecimalPlaces: 2 })
-	salePrice: number
+        @Transform(({ value }) =>
+                typeof value === 'string' ? parseFloat(value) : value
+        )
+        @IsNumber({ maxDecimalPlaces: 2 })
+        salePrice: number
 
 	@IsNumber() @Min(0) @IsOptional() remains?: number
 

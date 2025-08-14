@@ -6,6 +6,7 @@ import Layout from '@/ui/Layout'
 import SalesTab from './SalesTab'
 import WarehouseTab from './WarehouseTab'
 import TasksTab from './TasksTab'
+import { formatCurrency } from '@/utils/formatCurrency'
 import { CategoryService } from '@/services/category/category.service'
 import { AnalyticsService } from '@/services/analytics/analytics.service'
 import { ICategory } from '@/shared/interfaces/category.interface'
@@ -157,7 +158,7 @@ export default function ReportsPage() {
   }
 
   const kpis = [
-    { label: 'Выручка (₽)', value: totalRevenue, change: 0 },
+    { label: 'Выручка', value: totalRevenue, change: 0, currency: true },
   ]
 
   return (
@@ -224,9 +225,9 @@ export default function ReportsPage() {
             <div key={k.label} className='p-4 bg-white rounded shadow'>
               <div className='text-sm'>{k.label}</div>
               <div className='text-2xl font-semibold'>
-                {k.value.toLocaleString(undefined, {
-                  maximumFractionDigits: 2,
-                })}
+                {k.currency
+                  ? formatCurrency(k.value)
+                  : k.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}
               </div>
               <div
                 className={`text-sm ${k.change >= 0 ? 'text-green-600' : 'text-red-600'}`}
