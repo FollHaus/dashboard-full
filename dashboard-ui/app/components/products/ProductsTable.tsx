@@ -41,12 +41,15 @@ const ProductsTable = () => {
   useEffect(() => {
     const params = new URLSearchParams()
     if (page > 1) params.set('page', String(page))
-    if (searchTerm) {
-      if (searchField === 'name') params.set('searchName', searchTerm)
-      else params.set('searchSku', searchTerm)
+    if (debouncedTerm) {
+      if (debouncedField === 'name') params.set('searchName', debouncedTerm)
+      else params.set('searchSku', debouncedTerm)
     }
-    router.replace(`?${params.toString()}`)
-  }, [page, searchTerm, searchField, router])
+    const newQuery = params.toString()
+    if (newQuery !== searchParams.toString()) {
+      router.replace(`?${newQuery}`)
+    }
+  }, [page, debouncedTerm, debouncedField, router, searchParams])
 
   useEffect(() => {
     setPage(1)
@@ -136,15 +139,30 @@ const ProductsTable = () => {
           <thead>
             <tr className="text-left border-b border-neutral-300">
               <th className="p-2 cursor-pointer" onClick={() => handleSort('name')}>
-                Название {sortField === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                <span className="inline-flex items-center">
+                  Название
+                  <span className="ml-1 inline-block w-4">
+                    {sortField === 'name' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                  </span>
+                </span>
               </th>
               <th className="p-2">Категория</th>
               <th className="p-2">Артикул</th>
               <th className="p-2 cursor-pointer" onClick={() => handleSort('quantity')}>
-                Остаток {sortField === 'quantity' && (sortOrder === 'asc' ? '↑' : '↓')}
+                <span className="inline-flex items-center">
+                  Остаток
+                  <span className="ml-1 inline-block w-4">
+                    {sortField === 'quantity' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                  </span>
+                </span>
               </th>
               <th className="p-2 cursor-pointer" onClick={() => handleSort('price')}>
-                Цена продажи {sortField === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+                <span className="inline-flex items-center">
+                  Цена продажи
+                  <span className="ml-1 inline-block w-4">
+                    {sortField === 'price' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                  </span>
+                </span>
               </th>
               <th className="p-2">Действия</th>
             </tr>
