@@ -43,7 +43,7 @@ const InventorySnapshot: React.FC = () => {
   const lowStock = data.filter((p) => p.remains > 0 && p.remains < 5).length;
 
   const counters = [
-    { label: "Всего SKU", value: totalSkus.toLocaleString("ru-RU") },
+    { label: "Всего", value: totalSkus.toLocaleString("ru-RU") },
     { label: "Стоимость", value: currency.format(stockValue) },
     { label: "Нет в наличии", value: outOfStock.toLocaleString("ru-RU") },
     { label: "Мало на складе", value: lowStock.toLocaleString("ru-RU") },
