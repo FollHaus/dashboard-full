@@ -80,10 +80,6 @@ const ProductsTable = () => {
     }
   }
 
-  const handleReset = () => {
-    setSearchTerm('')
-  }
-
   const totalPages = data ? Math.ceil(data.total / data.pageSize) : 1
 
   return (
@@ -106,9 +102,6 @@ const ProductsTable = () => {
             <option value="sku">Артикул</option>
           </select>
         </div>
-        <Button className="bg-neutral-200 px-4 py-1" onClick={handleReset}>
-          Сброс
-        </Button>
         <Button
           className="ml-auto bg-primary-500 text-white px-4 py-1"
           onClick={() => setIsCreating(true)}
