@@ -171,8 +171,23 @@ const ProductsTable = () => {
             {isInitialLoading &&
               Array.from({ length: pageSize }).map((_, i) => (
                 <tr key={i} className="row animate-pulse">
-                  <td colSpan={6} className="p-2">
-                    <div className="h-4 bg-neutral-200 rounded" />
+                  <td className="p-2">
+                    <div className="h-4 bg-neutral-200 rounded w-3/4" />
+                  </td>
+                  <td className="p-2">
+                    <div className="h-4 bg-neutral-200 rounded w-1/2" />
+                  </td>
+                  <td className="p-2">
+                    <div className="h-4 bg-neutral-200 rounded w-1/3" />
+                  </td>
+                  <td className="p-2">
+                    <div className="h-4 bg-neutral-200 rounded w-1/4 ml-auto" />
+                  </td>
+                  <td className="p-2">
+                    <div className="h-4 bg-neutral-200 rounded w-1/4 ml-auto" />
+                  </td>
+                  <td className="p-2">
+                    <div className="h-4 bg-neutral-200 rounded w-1/2 ml-auto" />
                   </td>
                 </tr>
               ))}
