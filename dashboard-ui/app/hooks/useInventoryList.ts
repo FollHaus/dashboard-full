@@ -70,6 +70,7 @@ export const useInventoryList = (params: InventoryListParams) => {
         return { items: paginated, total, page, pageSize }
       }),
     keepPreviousData: true,
+    placeholderData: prev => prev,
     retry: 1,
     refetchOnWindowFocus: false,
   })
