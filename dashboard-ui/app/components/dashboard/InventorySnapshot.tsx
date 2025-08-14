@@ -40,7 +40,9 @@ const InventorySnapshot: React.FC = () => {
     0
   );
   const outOfStock = data.filter((p) => p.remains === 0).length;
-  const lowStock = data.filter((p) => p.remains > 0 && p.remains < 5).length;
+  const lowStock = data.filter(
+    (p) => p.remains > 0 && p.remains <= (p.minStock ?? 0)
+  ).length;
 
   const counters = [
     { label: "Всего", value: totalSkus.toLocaleString("ru-RU") },
@@ -50,13 +52,16 @@ const InventorySnapshot: React.FC = () => {
   ];
 
   return (
-    <div className="bg-neutral-100 p-4 rounded-card shadow-card grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-      {counters.map((c) => (
-        <div key={c.label} className="flex flex-col">
-          <span className="text-sm text-neutral-600">{c.label}</span>
-          <span className="text-lg font-semibold">{c.value}</span>
-        </div>
-      ))}
+    <div className="bg-neutral-100 p-4 rounded-card shadow-card">
+      <h3 className="text-lg font-semibold mb-4">Склад</h3>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+        {counters.map((c) => (
+          <div key={c.label} className="flex flex-col">
+            <span className="text-sm text-neutral-600">{c.label}</span>
+            <span className="text-lg font-semibold">{c.value}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
