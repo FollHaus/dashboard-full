@@ -1,6 +1,7 @@
 'use client'
 
 import { FC } from 'react'
+import { formatCurrency } from '@/utils/formatCurrency'
 
 interface RevenueItem {
   date: string
@@ -65,7 +66,7 @@ const SalesTab: FC<SalesTabProps> = ({ revenueData, topProducts, totalRevenue })
                 style={{ width: `${maxRevenue ? (p.revenue / maxRevenue) * 100 : 0}%` }}
               />
             </div>
-            <span className='text-sm'>{p.revenue}</span>
+            <span className='text-sm'>{formatCurrency(p.revenue)}</span>
           </div>
         ))}
         <div

@@ -1,6 +1,7 @@
 import { FC } from 'react'
 import Button from '@/ui/Button/Button'
 import { IProduct } from '@/shared/interfaces/product.interface'
+import { formatCurrency } from '@/utils/formatCurrency'
 
 interface Props {
   product: IProduct
@@ -22,8 +23,8 @@ const ProductDetails: FC<Props> = ({ product, onClose }) => {
       <div className="space-y-1 text-sm">
         <p>Артикул: {product.articleNumber}</p>
         <p>Категория: {product.category?.name || '-'}</p>
-        <p>Закупочная цена: ${product.purchasePrice}</p>
-        <p>Цена продажи: ${product.salePrice}</p>
+        <p>Закупочная цена: {formatCurrency(product.purchasePrice)}</p>
+        <p>Цена продажи: {formatCurrency(product.salePrice)}</p>
         <p>Остаток: {product.remains}</p>
       </div>
     </div>

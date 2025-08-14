@@ -83,17 +83,41 @@ const ProductForm = ({ product, onSuccess, onCancel }: Props) => {
         error={errors.articleNumber}
       />
       <Field
-        type="number"
-        {...register('purchasePrice', { valueAsNumber: true })}
-        onWheel={e => e.currentTarget.blur()}
+        type="text"
+        inputMode="decimal"
+        step="0.01"
+        min="0"
+        {...register('purchasePrice', {
+          setValueAs: v => {
+            const normalized = String(v).replace(',', '.')
+            const num = parseFloat(normalized)
+            return isNaN(num) ? undefined : num
+          },
+          validate: {
+            nonNegative: v => v === undefined || v >= 0 || 'Цена не может быть отрицательной',
+            max: v => v === undefined || v <= 9999999.99 || 'Слишком большая цена',
+          },
+        })}
         placeholder="Закупочная цена"
         label="Закупочная цена"
         error={errors.purchasePrice}
       />
       <Field
-        type="number"
-        {...register('salePrice', { valueAsNumber: true })}
-        onWheel={e => e.currentTarget.blur()}
+        type="text"
+        inputMode="decimal"
+        step="0.01"
+        min="0"
+        {...register('salePrice', {
+          setValueAs: v => {
+            const normalized = String(v).replace(',', '.')
+            const num = parseFloat(normalized)
+            return isNaN(num) ? undefined : num
+          },
+          validate: {
+            nonNegative: v => v === undefined || v >= 0 || 'Цена не может быть отрицательной',
+            max: v => v === undefined || v <= 9999999.99 || 'Слишком большая цена',
+          },
+        })}
         placeholder="Цена продажи"
         label="Цена продажи"
         error={errors.salePrice}

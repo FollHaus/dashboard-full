@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { CategoryService } from '@/services/category/category.service'
 import { ICategory } from '@/shared/interfaces/category.interface'
 import Layout from '@/ui/Layout'
+import { formatCurrency } from '@/utils/formatCurrency'
 
 const periodPresets = [
   { label: 'Сегодня', value: 'today' },
@@ -162,7 +163,7 @@ export default function NewReportPage() {
             >
               <div className="text-sm text-neutral-500">{k.title}</div>
               <div className="text-xl font-semibold">
-                {k.currency ? `${k.value.toLocaleString()} ₽` : k.value}
+                {k.currency ? formatCurrency(k.value) : k.value}
               </div>
               <div
                 className={k.change >= 0 ? 'text-green-600' : 'text-red-600'}
