@@ -24,7 +24,8 @@ export interface IProduct {
 // Данные для создания или обновления продукта
 export interface IProductCreate {
   name: string
-  categoryName: string
+  categoryId?: number
+  categoryName?: string
   articleNumber: string
   purchasePrice: number
   salePrice: number
