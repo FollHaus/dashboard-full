@@ -217,13 +217,15 @@ const ProductsTable = () => {
           )}
           {isCreating && (
             <Modal isOpen={isCreating} onClose={() => setIsCreating(false)}>
-              <ProductForm
-                onSuccess={() => {
-                  refetch()
-                  setIsCreating(false)
-                }}
-                onCancel={() => setIsCreating(false)}
-              />
+              <div className="add-product-modal">
+                <ProductForm
+                  onSuccess={() => {
+                    refetch()
+                    setIsCreating(false)
+                  }}
+                  onCancel={() => setIsCreating(false)}
+                />
+              </div>
             </Modal>
           )}
           {error && <p className="text-error mt-2">{error}</p>}

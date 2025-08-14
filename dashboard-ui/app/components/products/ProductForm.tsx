@@ -85,6 +85,7 @@ const ProductForm = ({ product, onSuccess, onCancel }: Props) => {
       <Field
         type="number"
         {...register('purchasePrice', { valueAsNumber: true })}
+        onWheel={e => e.currentTarget.blur()}
         placeholder="Закупочная цена"
         label="Закупочная цена"
         error={errors.purchasePrice}
@@ -92,6 +93,7 @@ const ProductForm = ({ product, onSuccess, onCancel }: Props) => {
       <Field
         type="number"
         {...register('salePrice', { valueAsNumber: true })}
+        onWheel={e => e.currentTarget.blur()}
         placeholder="Цена продажи"
         label="Цена продажи"
         error={errors.salePrice}
@@ -99,6 +101,7 @@ const ProductForm = ({ product, onSuccess, onCancel }: Props) => {
       <Field
         type="number"
         {...register('remains', { valueAsNumber: true })}
+        onWheel={e => e.currentTarget.blur()}
         placeholder="Остаток"
         label="Остаток"
         error={errors.remains}
