@@ -39,8 +39,7 @@ const WeeklyTasks = () => {
     return <div className="bg-neutral-100 p-4 rounded-card shadow-card h-40 animate-pulse" />;
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
 
   const tasks = (data || [])
     .filter((t: ITask) => t.status !== TaskStatus.Completed)
@@ -91,22 +90,34 @@ const WeeklyTasks = () => {
           </li>
           {tasks.map((t) => {
             const deadline = new Date(t.deadline);
-            const diff = deadline.getTime() - today.getTime();
+            const diff = deadline.getTime() - now.getTime();
             const daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
-            const isOverdue = daysLeft < 0;
+            const isOverdue = diff < 0;
+
             let badge: string | null = null;
-            if (!isOverdue && daysLeft >= 0 && daysLeft <= 3) {
-              if (daysLeft === 0) badge = "Сегодня";
-              else if (daysLeft === 1) badge = "Завтра";
-              else badge = "≤ 3 дня";
+            if (!isOverdue && daysLeft <= 3) {
+              if (deadline.toDateString() === now.toDateString()) {
+                badge = "Сегодня";
+              } else if (daysLeft === 1) {
+                badge = "Завтра";
+              } else {
+                badge = "≤ 3 дня";
+              }
             }
+
+            let rowBg = "";
+            if (!isOverdue) {
+              if (daysLeft <= 3) rowBg = "bg-red-50";
+              else if (daysLeft <= 7) rowBg = "bg-yellow-50";
+            }
+
             return (
               <li key={t.id}>
                 <Link
                   href={`/tasks/${t.id}`}
                   className={`grid grid-cols-3 py-2 hover:bg-neutral-200 rounded ${
                     isOverdue ? "text-error" : ""
-                  }`}
+                  } ${rowBg}`}
                 >
                   <span>{t.title}</span>
                   <span>{t.executor || "-"}</span>
