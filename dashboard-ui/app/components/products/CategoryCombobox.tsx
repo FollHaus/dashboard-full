@@ -1,10 +1,12 @@
 'use client'
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import cn from 'classnames'
 import { CategoryService } from '@/services/category/category.service'
 import { ICategory } from '@/shared/interfaces/category.interface'
 import useDebounce from '@/hooks/useDebounce'
+import fieldStyles from '@/ui/Field/Field.module.scss'
 
 interface Props {
   value: { id?: number; name: string } | null
@@ -22,7 +24,9 @@ const CategoryCombobox = ({ value, onChange, error }: Props) => {
 
   const debounced = useDebounce(query, 300)
   const listId = useId()
-  const ref = useRef<HTMLDivElement>(null)
+  const inputId = useId()
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0 })
 
   const load = useCallback(() => {
     setLoading(true)
@@ -53,11 +57,22 @@ const CategoryCombobox = ({ value, onChange, error }: Props) => {
 
   useEffect(() => {
     const handle = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node))
+        setOpen(false)
     }
     document.addEventListener('click', handle)
     return () => document.removeEventListener('click', handle)
   }, [])
+
+  useEffect(() => {
+    if (!open || !wrapperRef.current) return
+    const rect = wrapperRef.current.getBoundingClientRect()
+    setMenuPos({
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width,
+    })
+  }, [open])
 
   const select = (cat: { id?: number; name: string }) => {
     onChange(cat)
@@ -91,84 +106,128 @@ const CategoryCombobox = ({ value, onChange, error }: Props) => {
   }
 
   return (
-  <div className="mb-4 relative" ref={ref}>
-    <label className="block mb-1">Категория</label>
-    <input
-      role="combobox"
-      aria-expanded={open}
-      aria-controls={listId}
-      aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
-      placeholder="Введите или выберите категорию…"
-      className="w-full border border-neutral-300 rounded px-2 py-1"
-      value={query}
-      onChange={e => {
-        setQuery(e.target.value)
-        onChange(null)
-        setOpen(true)
-      }}
-      onKeyDown={handleKey}
-      onFocus={() => setOpen(true)}
-    />
-    {error && <div className="text-error mt-1">{error}</div>}
-    {open && (
-      <ul
-        role="listbox"
-        id={listId}
-        className="mt-1 max-h-60 overflow-auto border border-neutral-300 rounded bg-white shadow absolute z-10 w-full"
-      >
-        {loading && (
-          <li className="p-2 text-sm text-neutral-500">Загрузка…</li>
-        )}
-        {loadError && (
-          <li className="p-2 text-sm text-error flex justify-between">
-            Ошибка загрузки
-            <button className="underline" onClick={load}>Повторить</button>
-          </li>
-        )}
-        {!loading && !loadError &&
-          options.map((item, i) => (
-            <li
-              key={item.id}
-              id={`${listId}-${i}`}
-              role="option"
-              aria-selected={active === i}
-              className={cn(
-                'px-2 py-1 cursor-pointer hover:bg-neutral-100',
-                active === i && 'bg-neutral-100'
-              )}
-              onMouseEnter={() => setActive(i)}
-              onMouseDown={e => {
-                e.preventDefault()
-                select(item)
-              }}
-            >
-              {item.name}
-            </li>
-          ))}
-        {!loading && !loadError && options.length === 0 && (
-          <li className="p-2 text-sm text-neutral-500">Нет совпадений</li>
-        )}
-        {!loading && !loadError && showCreate && (
-          <li
-            id={`${listId}-${options.length}`}
-            role="option"
-            aria-selected={active === options.length}
-            className={cn(
-              'px-2 py-1 cursor-pointer hover:bg-neutral-100',
-              active === options.length && 'bg-neutral-100'
-            )}
-            onMouseEnter={() => setActive(options.length)}
-            onMouseDown={e => {
-              e.preventDefault()
-              select({ name: debounced.trim() })
+    <div className={fieldStyles.field}>
+      <label htmlFor={inputId} className={fieldStyles.label}>
+        Категория
+      </label>
+      <div className='relative' ref={wrapperRef}>
+        <input
+          id={inputId}
+          role='combobox'
+          aria-expanded={open}
+          aria-controls={listId}
+          aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${inputId}-error` : undefined}
+          placeholder='Введите или выберите категорию…'
+          className={cn(fieldStyles.input, {
+            [fieldStyles.inputError]: error,
+          })}
+          value={query}
+          onChange={e => {
+            setQuery(e.target.value)
+            onChange(null)
+            setOpen(true)
+          }}
+          onKeyDown={handleKey}
+          onFocus={() => setOpen(true)}
+          disabled={loading}
+        />
+        {query && !loading && (
+          <button
+            type='button'
+            className='absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700'
+            onClick={() => {
+              setQuery('')
+              onChange(null)
             }}
+            aria-label='Очистить'
           >
-            {`Создать категорию «${debounced.trim()}»`}
-          </li>
+            ×
+          </button>
         )}
-      </ul>
-    )}
-  </div>
+        {loading && (
+          <span
+            className='absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-neutral-300 border-t-primary-500 rounded-full animate-spin'
+            aria-hidden='true'
+          />
+        )}
+      </div>
+      {error && (
+        <div className={fieldStyles.error} id={`${inputId}-error`}>
+          {error}
+        </div>
+      )}
+      {open &&
+        createPortal(
+          <ul
+            role='listbox'
+            id={listId}
+            style={{
+              position: 'absolute',
+              top: menuPos.top,
+              left: menuPos.left,
+              width: menuPos.width,
+            }}
+            className='max-h-60 overflow-auto border border-neutral-300 rounded-lg bg-white shadow-md dark:bg-neutral-800 dark:border-neutral-700 z-50'
+          >
+            {loading && (
+              <li className='p-2 text-sm text-neutral-500'>Загрузка…</li>
+            )}
+            {loadError && (
+              <li className='p-2 text-sm text-error flex justify-between'>
+                Ошибка загрузки
+                <button className='underline' onClick={load}>
+                  Повторить
+                </button>
+              </li>
+            )}
+            {!loading &&
+              !loadError &&
+              options.map((item, i) => (
+                <li
+                  key={item.id}
+                  id={`${listId}-${i}`}
+                  role='option'
+                  aria-selected={active === i}
+                  className={cn(
+                    'px-2 py-1 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-700',
+                    active === i && 'bg-neutral-100 dark:bg-neutral-700'
+                  )}
+                  onMouseEnter={() => setActive(i)}
+                  onMouseDown={e => {
+                    e.preventDefault()
+                    select(item)
+                  }}
+                >
+                  {item.name}
+                </li>
+              ))}
+            {!loading && !loadError && options.length === 0 && (
+              <li className='p-2 text-sm text-neutral-500'>Нет совпадений</li>
+            )}
+            {!loading && !loadError && showCreate && (
+              <li
+                id={`${listId}-${options.length}`}
+                role='option'
+                aria-selected={active === options.length}
+                className={cn(
+                  'px-2 py-1 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-700',
+                  active === options.length && 'bg-neutral-100 dark:bg-neutral-700'
+                )}
+                onMouseEnter={() => setActive(options.length)}
+                onMouseDown={e => {
+                  e.preventDefault()
+                  select({ name: debounced.trim() })
+                }}
+              >
+                {`Создать категорию «${debounced.trim()}»`}
+              </li>
+            )}
+          </ul>,
+          document.body
+        )}
+    </div>
   )
 }
 
