@@ -33,7 +33,12 @@ const SalesChart: React.FC<Props> = ({ period }) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["sales-chart", period, metric],
+    queryKey: [
+      "sales-chart",
+      metric,
+      start.toISOString(),
+      end.toISOString(),
+    ],
     queryFn: async () => {
       if (metric === "revenue") {
         return AnalyticsService.getDailyRevenue(
@@ -44,19 +49,18 @@ const SalesChart: React.FC<Props> = ({ period }) => {
       return AnalyticsService.getSales(days);
     },
     keepPreviousData: true,
-    placeholderData: [],
   });
 
   const buckets = buildBuckets({ start, end }, period);
-  const map = new Map(
-    (data ?? []).map((d) => [
-      period === "year" ? d.date.slice(0, 7) : d.date.slice(0, 10),
-      d.total,
-    ])
-  );
+  const map = new Map<string, number>();
+  (data ?? []).forEach((d) => {
+    const key = period === "year" ? d.date.slice(0, 7) : d.date.slice(0, 10);
+    map.set(key, (map.get(key) ?? 0) + d.total);
+  });
   const chartData = buckets.map((b) => ({ ...b, value: map.get(b.key) ?? 0 }));
   const values = chartData.map((d) => d.value);
   const max = values.length ? Math.max(...values) : 0;
+  const allZero = chartData.every((d) => d.value === 0);
 
   if (error) {
     return (
@@ -89,7 +93,11 @@ const SalesChart: React.FC<Props> = ({ period }) => {
           ))}
         </div>
       </div>
-      <div className="relative flex items-end space-x-2 h-40 border-b">
+      <div
+        className={`relative flex items-end space-x-2 h-40 border-b ${
+          allZero ? "border-red-500" : "border-neutral-300"
+        }`}
+      >
         {isLoading
           ? buckets.map((_, idx) => (
               <div

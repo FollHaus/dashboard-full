@@ -17,51 +17,24 @@ interface Props {
 }
 
 const KpiCards: React.FC<Props> = ({ period }) => {
+  const { start, end } = getPeriodRange(period);
   const {
     data,
     isLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery({
-    queryKey: ["kpi", period],
-    queryFn: async () => {
-      const { start, end } = getPeriodRange(period);
-      const today = new Date();
-      const days =
-        Math.floor(
-          (Math.min(today.getTime(), end.getTime()) - start.getTime()) /
-            86400000
-        ) + 1;
-      const [revenueData, salesData] = await Promise.all([
-        AnalyticsService.getDailyRevenue(
-          start.toISOString().slice(0, 10),
-          end.toISOString().slice(0, 10)
-        ),
-        AnalyticsService.getSales(days),
-      ]);
-      const revenue = revenueData.reduce((sum, r) => sum + r.total, 0);
-      const salesCount = salesData
-        .filter((s) => {
-          const d = new Date(s.date);
-          return d >= start && d <= end;
-        })
-        .reduce((sum, s) => sum + s.total, 0);
-      return { revenue, salesCount };
-    },
+    queryKey: ["kpi", start.toISOString(), end.toISOString()],
+    queryFn: async () =>
+      AnalyticsService.getKpis(
+        start.toISOString().slice(0, 10),
+        end.toISOString().slice(0, 10)
+      ),
     keepPreviousData: true,
   });
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-24 bg-neutral-100 rounded-card animate-pulse" />
-        ))}
-      </div>
-    );
-  }
-
-  if (error || !data) {
+  if (error) {
     return (
       <div className="text-error flex items-center gap-2">
         Ошибка загрузки
@@ -74,9 +47,9 @@ const KpiCards: React.FC<Props> = ({ period }) => {
       </div>
     );
   }
-  const revenue = data.revenue;
-  const salesCount = data.salesCount;
-  const avgCheck = salesCount ? revenue / salesCount : 0;
+  const revenue = data?.revenue ?? 0;
+  const salesCount = data?.orders ?? 0;
+  const avgCheck = data?.avgCheck ?? (salesCount ? revenue / salesCount : 0);
 
   const kpis = [
     {
@@ -97,17 +70,31 @@ const KpiCards: React.FC<Props> = ({ period }) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {kpis.map((k) => (
-        <Link
-          key={k.label}
-          href={k.href}
-          className="bg-neutral-100 p-4 rounded-card shadow-card flex flex-col"
-        >
-          <span className="text-sm text-neutral-600">{k.label}</span>
-          <span className="text-xl font-semibold">{k.value}</span>
-        </Link>
-      ))}
+    <div className="relative">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {isLoading && !data
+          ? Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-24 bg-neutral-100 rounded-card animate-pulse"
+              />
+            ))
+          : kpis.map((k) => (
+              <Link
+                key={k.label}
+                href={k.href}
+                className="bg-neutral-100 p-4 rounded-card shadow-card flex flex-col"
+              >
+                <span className="text-sm text-neutral-600">{k.label}</span>
+                <span className="text-xl font-semibold">{k.value}</span>
+              </Link>
+            ))}
+      </div>
+      {isFetching && data && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/50">
+          <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
     </div>
   );
 };

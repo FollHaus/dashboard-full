@@ -18,12 +18,14 @@ export default function Home() {
 
   return (
     <Layout>
-      <div className="space-y-8">
+      <div className="flex justify-end mb-4">
         <DashboardControls period={period} onPeriodChange={setPeriod} />
+      </div>
+      <div className="space-y-8">
         <KpiCards period={period} />
         <SalesChart period={period} />
-        <InventorySnapshot />
         <TopProducts />
+        <InventorySnapshot />
         <WeeklyTasks />
       </div>
     </Layout>
