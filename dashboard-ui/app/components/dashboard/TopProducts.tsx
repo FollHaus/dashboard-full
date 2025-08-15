@@ -53,6 +53,10 @@ const currency = new Intl.NumberFormat("ru-RU", {
   currency: "RUB",
 })
 const numberFmt = new Intl.NumberFormat("ru-RU")
+const percentFmt = new Intl.NumberFormat("ru-RU", {
+  style: "percent",
+  maximumFractionDigits: 1,
+})
 
 const formatDate = (date: Date) =>
   new Date(date.getTime() - date.getTimezoneOffset() * 60000)
@@ -144,8 +148,30 @@ const TopProducts: React.FC<Props> = ({ period }) => {
   const formatValue = (v: number) =>
     metric === "revenue" ? currency.format(v) : numberFmt.format(v)
 
+  const renderProductTick = (props: any) => {
+    const {
+      x,
+      y,
+      payload: { value },
+    } = props
+    const label: string = value
+    const truncated = label.length > 10 ? label.slice(0, 10) + "…" : label
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text
+          transform="rotate(-45)"
+          textAnchor="end"
+          dy={16}
+          title={label}
+        >
+          {truncated}
+        </text>
+      </g>
+    )
+  }
+
   return (
-    <div className="bg-neutral-100 p-4 rounded-card shadow-card">
+    <div>
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2 mb-4">
         <h3 className="text-lg font-semibold">Топ товаров</h3>
         <div className="flex flex-wrap gap-2">
@@ -181,10 +207,10 @@ const TopProducts: React.FC<Props> = ({ period }) => {
           </div>
         </div>
       </div>
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-neutral-100 rounded-card shadow-card p-4 h-96 flex flex-col">
           <h4 className="mb-2 text-sm font-medium">Товары</h4>
-          <div className="h-64 relative">
+          <div className="flex-1 relative">
             {prodError ? (
               <div className="text-error flex items-center gap-2 h-full justify-center">
                 Ошибка загрузки
@@ -208,14 +234,7 @@ const TopProducts: React.FC<Props> = ({ period }) => {
                   data={topProductData}
                   margin={{ top: 5, right: 5, left: 5, bottom: 30 }}
                 >
-                  <XAxis
-                    dataKey="name"
-                    tickFormatter={(v) => (v.length > 10 ? v.slice(0, 10) + "…" : v)}
-                    interval={0}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                  />
+                  <XAxis dataKey="name" interval={0} height={60} tick={renderProductTick} />
                   <YAxis tickFormatter={formatValue} width={80} />
                   <Tooltip formatter={(v: number) => formatValue(v)} />
                   <Legend />
@@ -245,9 +264,9 @@ const TopProducts: React.FC<Props> = ({ period }) => {
             )}
           </div>
         </div>
-        <div className="flex-1">
+        <div className="bg-neutral-100 rounded-card shadow-card p-4 h-96 flex flex-col">
           <h4 className="mb-2 text-sm font-medium">Категории</h4>
-          <div className="h-64 relative">
+          <div className="flex-1 relative">
             {catError ? (
               <div className="text-error flex items-center gap-2 h-full justify-center">
                 Ошибка загрузки
@@ -283,7 +302,11 @@ const TopProducts: React.FC<Props> = ({ period }) => {
                       />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v: number) => formatValue(v)} />
+                  <Tooltip
+                    formatter={(v: number, _: any, p: any) =>
+                      `${formatValue(v)} (${percentFmt.format(p?.percent ?? 0)})`
+                    }
+                  />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
