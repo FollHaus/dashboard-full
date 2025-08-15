@@ -2,7 +2,8 @@
   "name": "dashboard-full",
   "private": true,
   "scripts": {
-    "db:seed": "ts-node -r tsconfig-paths/register -P ./tsconfig.seed.json --transpile-only scripts/seed.ts --yes"
+    "db:seed": "ts-node -r tsconfig-paths/register -P ./tsconfig.seed.json --transpile-only scripts/seed.ts --yes",
+    "db:clear": "ts-node scripts/clear-db.ts --yes"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.9.0",
