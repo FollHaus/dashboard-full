@@ -1,77 +1,303 @@
-"use client";
+"use client"
 
-import React from "react";
-import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { AnalyticsService } from "@/services/analytics/analytics.service";
-import { ProductService } from "@/services/product/product.service";
+import React, { useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useQuery } from "@tanstack/react-query"
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts"
+import { AnalyticsService } from "@/services/analytics/analytics.service"
+import { Period } from "./DashboardControls"
+import { getPeriodRange } from "@/utils/buckets"
+
+interface Props {
+  period: Period
+}
+
+const metricOptions = [
+  { value: "revenue", label: "Выручка" },
+  { value: "quantity", label: "Количество" },
+] as const
+
+const limitOptions = [5, 10, 15] as const
+
+const COLORS = [
+  "#3B82F6",
+  "#10B981",
+  "#F59E0B",
+  "#EF4444",
+  "#8B5CF6",
+  "#6366F1",
+  "#EC4899",
+  "#14B8A6",
+  "#F97316",
+  "#84CC16",
+  "#D946EF",
+  "#0EA5E9",
+  "#F43F5E",
+  "#22C55E",
+  "#A855F7",
+]
 
 const currency = new Intl.NumberFormat("ru-RU", {
   style: "currency",
   currency: "RUB",
-});
+})
+const numberFmt = new Intl.NumberFormat("ru-RU")
 
-interface Item {
-  productId: number;
-  productName: string;
-  totalUnits: number;
-  totalRevenue: number;
-  remains: number;
-}
+const formatDate = (date: Date) =>
+  new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 10)
 
-const TopProducts: React.FC = () => {
-  const { data, isLoading, error } = useQuery<Item[]>({
-    queryKey: ["top-products"],
-    queryFn: async () => {
-      const items = await AnalyticsService.getTopProducts(5);
-      const detailed = await Promise.all(
-        items.map(async (it) => {
-          const p = await ProductService.getById(it.productId);
-          return { ...it, remains: p.remains };
+const TopProducts: React.FC<Props> = ({ period }) => {
+  const router = useRouter()
+  const [metric, setMetric] = useState<(typeof metricOptions)[number]["value"]>(
+    "revenue",
+  )
+  const [limit, setLimit] = useState<(typeof limitOptions)[number]>(5)
+  const { start, end } = getPeriodRange(period)
+  const s = formatDate(start)
+  const e = formatDate(end)
+
+  const {
+    data: products,
+    isLoading: prodLoading,
+    isFetching: prodFetching,
+    error: prodError,
+    refetch: refetchProducts,
+  } = useQuery({
+    queryKey: ["top-products", s, e],
+    queryFn: () => AnalyticsService.getTopProducts(15, s, e),
+    keepPreviousData: true,
+    placeholderData: (prev) => prev,
+  })
+
+  const {
+    data: categories,
+    isLoading: catLoading,
+    isFetching: catFetching,
+    error: catError,
+    refetch: refetchCategories,
+  } = useQuery({
+    queryKey: ["category-sales", s, e],
+    queryFn: () => AnalyticsService.getCategorySales(s, e),
+    keepPreviousData: true,
+    placeholderData: (prev) => prev,
+  })
+
+  const topProductData = useMemo(() => {
+    const items = [...(products ?? [])]
+    items.sort((a, b) =>
+      metric === "revenue"
+        ? b.totalRevenue - a.totalRevenue
+        : b.totalUnits - a.totalUnits,
+    )
+    return items.slice(0, limit).map((p) => ({
+      name: p.productName,
+      value: metric === "revenue" ? p.totalRevenue : p.totalUnits,
+      productId: p.productId,
+      productName: p.productName,
+    }))
+  }, [products, metric, limit])
+
+  const topCategoryData = useMemo(() => {
+    const items = [...(categories ?? [])]
+    items.sort((a, b) =>
+      metric === "revenue"
+        ? b.totalRevenue - a.totalRevenue
+        : b.totalUnits - a.totalUnits,
+    )
+    const sliced = items.slice(0, limit)
+    if (items.length > limit) {
+      const others = items.slice(limit)
+      const othersValue = others.reduce(
+        (sum, c) =>
+          sum + (metric === "revenue" ? c.totalRevenue : c.totalUnits),
+        0,
+      )
+      if (othersValue > 0) {
+        sliced.push({
+          categoryId: 0,
+          categoryName: "Прочее",
+          totalUnits: metric === "quantity" ? othersValue : 0,
+          totalRevenue: metric === "revenue" ? othersValue : 0,
         })
-      );
-      return detailed;
-    },
-  });
+      }
+    }
+    return sliced.map((c) => ({
+      name: c.categoryName,
+      value: metric === "revenue" ? c.totalRevenue : c.totalUnits,
+      categoryId: c.categoryId,
+    }))
+  }, [categories, metric, limit])
 
-  if (isLoading) {
-    return <div className="h-40 bg-neutral-100 rounded-card animate-pulse" />;
-  }
-
-  if (error || !data) {
-    return <div className="text-error">Нет данных</div>;
-  }
+  const formatValue = (v: number) =>
+    metric === "revenue" ? currency.format(v) : numberFmt.format(v)
 
   return (
     <div className="bg-neutral-100 p-4 rounded-card shadow-card">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2 mb-4">
         <h3 className="text-lg font-semibold">Топ товаров</h3>
-        <Link href="/products/sales" className="text-sm text-primary-600">
-          Показать все
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <div className="flex gap-1" aria-label="Метрика">
+            {metricOptions.map((m) => (
+              <button
+                key={m.value}
+                className={`px-2 py-1 text-sm rounded border focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  metric === m.value
+                    ? "bg-primary-500 text-white border-primary-500"
+                    : "border-neutral-300"
+                }`}
+                onClick={() => setMetric(m.value)}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-1" aria-label="Количество элементов">
+            {limitOptions.map((n) => (
+              <button
+                key={n}
+                className={`px-2 py-1 text-sm rounded border focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  limit === n
+                    ? "bg-primary-500 text-white border-primary-500"
+                    : "border-neutral-300"
+                }`}
+                onClick={() => setLimit(n)}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-neutral-600">
-            <th className="py-1">Название</th>
-            <th className="py-1">Продажи</th>
-            <th className="py-1">Шт.</th>
-            <th className="py-1">Остаток</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((p) => (
-            <tr key={p.productId} className="border-t border-neutral-200">
-              <td className="py-1">{p.productName}</td>
-              <td className="py-1">{currency.format(p.totalRevenue)}</td>
-              <td className="py-1">{p.totalUnits}</td>
-              <td className="py-1">{p.remains}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1">
+          <h4 className="mb-2 text-sm font-medium">Товары</h4>
+          <div className="h-64 relative">
+            {prodError ? (
+              <div className="text-error flex items-center gap-2 h-full justify-center">
+                Ошибка загрузки
+                <button className="underline" onClick={() => refetchProducts()}>
+                  Повторить
+                </button>
+              </div>
+            ) : prodLoading && !products ? (
+              <div className="absolute inset-0 flex items-end space-x-2">
+                {Array.from({ length: limit }).map((_, idx) => (
+                  <div key={idx} className="flex-1 animate-pulse bg-neutral-300" />
+                ))}
+              </div>
+            ) : topProductData.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-neutral-500">
+                Нет данных
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={topProductData}
+                  margin={{ top: 5, right: 5, left: 5, bottom: 30 }}
+                >
+                  <XAxis
+                    dataKey="name"
+                    tickFormatter={(v) => (v.length > 10 ? v.slice(0, 10) + "…" : v)}
+                    interval={0}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis tickFormatter={formatValue} width={80} />
+                  <Tooltip formatter={(v: number) => formatValue(v)} />
+                  <Legend />
+                  <Bar
+                    dataKey="value"
+                    name={metricOptions.find((m) => m.value === metric)?.label}
+                    fill="#3B82F6"
+                    onClick={(d: any) =>
+                      router.push(
+                        `/products?searchName=${encodeURIComponent(
+                          d.productName,
+                        )}`,
+                      )
+                    }
+                  >
+                    {topProductData.map((_, idx) => (
+                      <Cell key={idx} cursor="pointer" />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+            {prodFetching && products && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/50">
+                <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex-1">
+          <h4 className="mb-2 text-sm font-medium">Категории</h4>
+          <div className="h-64 relative">
+            {catError ? (
+              <div className="text-error flex items-center gap-2 h-full justify-center">
+                Ошибка загрузки
+                <button className="underline" onClick={() => refetchCategories()}>
+                  Повторить
+                </button>
+              </div>
+            ) : catLoading && !categories ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-32 h-32 rounded-full animate-pulse bg-neutral-300" />
+              </div>
+            ) : topCategoryData.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-neutral-500">
+                Нет данных
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={topCategoryData}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius="80%"
+                    onClick={(d: any) =>
+                      router.push(`/products?categoryId=${d.categoryId}`)
+                    }
+                  >
+                    {topCategoryData.map((_, idx) => (
+                      <Cell
+                        key={`cell-${idx}`}
+                        fill={COLORS[idx % COLORS.length]}
+                        cursor="pointer"
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v: number) => formatValue(v)} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+            {catFetching && categories && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/50">
+                <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
-  );
-};
+  )
+}
 
-export default TopProducts;
+export default TopProducts
