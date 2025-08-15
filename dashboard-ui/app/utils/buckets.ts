@@ -44,7 +44,10 @@ export function buildBuckets(
       const date = new Date(range.start.getFullYear(), m, 1);
       buckets.push({
         key: `${date.getFullYear()}-${String(m + 1).padStart(2, "0")}`,
-        label: date.toLocaleDateString("ru-RU", { month: "short" }),
+        label: date.toLocaleDateString("ru-RU", {
+          month: "short",
+          year: "numeric",
+        }),
         value: 0,
       });
     }
@@ -59,8 +62,8 @@ export function buildBuckets(
     buckets.push({
       key,
       label: current.toLocaleDateString("ru-RU", {
-        day: "numeric",
-        month: "short",
+        day: "2-digit",
+        month: "2-digit",
       }),
       value: 0,
     });
