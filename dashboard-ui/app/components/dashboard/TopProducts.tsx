@@ -53,10 +53,8 @@ const currency = new Intl.NumberFormat("ru-RU", {
   currency: "RUB",
 })
 const numberFmt = new Intl.NumberFormat("ru-RU")
-const percentFmt = new Intl.NumberFormat("ru-RU", {
-  style: "percent",
-  maximumFractionDigits: 1,
-})
+const truncate = (v: string, len: number) =>
+  (v.length > len ? `${v.slice(0, len)}…` : v)
 
 const formatDate = (date: Date) =>
   new Date(date.getTime() - date.getTimezoneOffset() * 60000)
@@ -80,7 +78,7 @@ const TopProducts: React.FC<Props> = ({ period }) => {
     error: prodError,
     refetch: refetchProducts,
   } = useQuery({
-    queryKey: ["top-products", s, e],
+    queryKey: ["top-products", s, e, metric, limit],
     queryFn: () => AnalyticsService.getTopProducts(15, s, e),
     keepPreviousData: true,
     placeholderData: (prev) => prev,
@@ -93,7 +91,7 @@ const TopProducts: React.FC<Props> = ({ period }) => {
     error: catError,
     refetch: refetchCategories,
   } = useQuery({
-    queryKey: ["category-sales", s, e],
+    queryKey: ["category-sales", s, e, metric, limit],
     queryFn: () => AnalyticsService.getCategorySales(s, e),
     keepPreviousData: true,
     placeholderData: (prev) => prev,
@@ -148,28 +146,6 @@ const TopProducts: React.FC<Props> = ({ period }) => {
   const formatValue = (v: number) =>
     metric === "revenue" ? currency.format(v) : numberFmt.format(v)
 
-  const renderProductTick = (props: any) => {
-    const {
-      x,
-      y,
-      payload: { value },
-    } = props
-    const label: string = value
-    const truncated = label.length > 10 ? label.slice(0, 10) + "…" : label
-    return (
-      <g transform={`translate(${x},${y})`}>
-        <text
-          transform="rotate(-45)"
-          textAnchor="end"
-          dy={16}
-          title={label}
-        >
-          {truncated}
-        </text>
-      </g>
-    )
-  }
-
   return (
     <div>
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2 mb-4">
@@ -207,9 +183,11 @@ const TopProducts: React.FC<Props> = ({ period }) => {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-neutral-100 rounded-card shadow-card p-4 h-96 flex flex-col">
-          <h4 className="mb-2 text-sm font-medium">Товары</h4>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl p-4 shadow flex flex-col h-96">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-medium">Товары</h4>
+          </div>
           <div className="flex-1 relative">
             {prodError ? (
               <div className="text-error flex items-center gap-2 h-full justify-center">
@@ -232,10 +210,20 @@ const TopProducts: React.FC<Props> = ({ period }) => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={topProductData}
-                  margin={{ top: 5, right: 5, left: 5, bottom: 30 }}
+                  margin={{ top: 16, right: 8, left: 48, bottom: 36 }}
                 >
-                  <XAxis dataKey="name" interval={0} height={60} tick={renderProductTick} />
-                  <YAxis tickFormatter={formatValue} width={80} />
+                  <XAxis
+                    dataKey="name"
+                    interval={0}
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(v) => truncate(String(v), 16)}
+                    height={40}
+                    dy={10}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(v: number) => formatValue(Number(v))}
+                  />
                   <Tooltip formatter={(v: number) => formatValue(v)} />
                   <Legend />
                   <Bar
@@ -264,8 +252,10 @@ const TopProducts: React.FC<Props> = ({ period }) => {
             )}
           </div>
         </div>
-        <div className="bg-neutral-100 rounded-card shadow-card p-4 h-96 flex flex-col">
-          <h4 className="mb-2 text-sm font-medium">Категории</h4>
+        <div className="bg-white rounded-xl p-4 shadow flex flex-col h-96">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-medium">Категории</h4>
+          </div>
           <div className="flex-1 relative">
             {catError ? (
               <div className="text-error flex items-center gap-2 h-full justify-center">
@@ -278,18 +268,16 @@ const TopProducts: React.FC<Props> = ({ period }) => {
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-32 h-32 rounded-full animate-pulse bg-neutral-300" />
               </div>
-            ) : topCategoryData.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-neutral-500">
-                Нет данных
-              </div>
-            ) : (
+            ) : topCategoryData.length > 0 && topCategoryData.some((d) => d.value > 0) ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={topCategoryData}
                     dataKey="value"
                     nameKey="name"
-                    outerRadius="80%"
+                    outerRadius={120}
+                    innerRadius={60}
+                    paddingAngle={1}
                     onClick={(d: any) =>
                       router.push(`/products?categoryId=${d.categoryId}`)
                     }
@@ -302,14 +290,14 @@ const TopProducts: React.FC<Props> = ({ period }) => {
                       />
                     ))}
                   </Pie>
-                  <Tooltip
-                    formatter={(v: number, _: any, p: any) =>
-                      `${formatValue(v)} (${percentFmt.format(p?.percent ?? 0)})`
-                    }
-                  />
-                  <Legend />
+                  <Tooltip formatter={(v: number) => formatValue(v)} />
+                  <Legend verticalAlign="bottom" height={36} />
                 </PieChart>
               </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-neutral-500">
+                Нет данных
+              </div>
             )}
             {catFetching && categories && (
               <div className="absolute inset-0 flex items-center justify-center bg-white/50">
