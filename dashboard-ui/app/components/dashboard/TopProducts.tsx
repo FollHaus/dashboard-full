@@ -430,7 +430,7 @@ const TopProducts: React.FC<Props> = ({ period }) => {
                   className="mt-4 lg:mt-0 lg:ml-4 lg:w-48 text-sm"
                   style={{ maxHeight: "320px", overflowY: "auto" }}
                 >
-                  <ul className="space-y-1">
+                  <ul className="space-y-1 pr-3.5">
                     {legendItems.map((item) => (
                       <li
                         key={item.name}
