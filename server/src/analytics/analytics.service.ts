@@ -44,7 +44,7 @@ export class AnalyticsService {
 		if (categoryIds && categoryIds.length) {
 			where['$product.category_id$'] = { [Op.in]: categoryIds }
 		}
-                const revenue = await this.saleRepo.sum(col('SaleModel.total_price'), {
+                const revenue = await this.saleRepo.sum('totalPrice', {
                         where,
                         // @ts-ignore
                         include:
