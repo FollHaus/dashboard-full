@@ -32,6 +32,21 @@ export const AnalyticsService = {
     })
     return res.data
   },
+  async getKpis(
+    startDate?: string,
+    endDate?: string,
+    categories?: number[]
+  ) {
+    const params: any = {}
+    if (startDate) params.startDate = startDate
+    if (endDate) params.endDate = endDate
+    if (categories && categories.length) params.categories = categories.join(',')
+    const res = await axios.get(
+      '/analytics/kpis',
+      { params }
+    )
+    return res.data
+  },
   async getSales(period: number) {
     const res = await axios.get<ISalesStat[]>(`/analytics/sales`, { params: { period } })
     return res.data

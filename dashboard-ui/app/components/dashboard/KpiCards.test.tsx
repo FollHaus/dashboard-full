@@ -3,14 +3,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { vi } from 'vitest'
 import KpiCards from './KpiCards'
 
-const today = new Date().toISOString().slice(0, 10)
-
 vi.mock('@/services/analytics/analytics.service', () => ({
   AnalyticsService: {
-    getDailyRevenue: vi.fn(() =>
-      Promise.resolve([{ date: today, total: 1000 }])
+    getKpis: vi.fn(() =>
+      Promise.resolve({ revenue: 1000, orders: 2, avgCheck: 500 })
     ),
-    getSales: vi.fn(() => Promise.resolve([{ date: today, total: 2 }])),
   },
 }))
 
@@ -27,6 +24,7 @@ describe('KpiCards', () => {
   it('aggregates KPIs', async () => {
     renderKpis()
     expect(await screen.findByText('2')).toBeInTheDocument()
+    expect(await screen.findByText(/1[\s\u00A0]?000,00/)).toBeInTheDocument()
     expect(await screen.findByText(/500,00/)).toBeInTheDocument()
   })
 })

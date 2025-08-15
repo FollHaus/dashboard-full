@@ -25,7 +25,7 @@ const DashboardControls: React.FC<Props> = ({
   onWarehouseChange,
 }) => {
   return (
-    <div className="flex items-center gap-4">
+    <div className="inline-flex items-center gap-4">
       <select
         aria-label="Выбор периода"
         className="border border-neutral-300 rounded px-2 py-1 text-sm w-auto"
@@ -41,7 +41,7 @@ const DashboardControls: React.FC<Props> = ({
       {onWarehouseChange && (
         <select
           aria-label="Склад"
-          className="border border-neutral-300 rounded px-2 py-1 text-sm ml-auto w-auto"
+          className="border border-neutral-300 rounded px-2 py-1 text-sm w-auto"
           value={warehouse ?? ""}
           onChange={(e) => onWarehouseChange(e.target.value)}
         >
