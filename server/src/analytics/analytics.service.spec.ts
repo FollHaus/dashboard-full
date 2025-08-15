@@ -123,15 +123,20 @@ describe('AnalyticsService', () => {
   })
 
   describe('getSales', () => {
-    it('builds date range and maps result', async () => {
-      saleRepo.findAll.mockResolvedValue([{ date: '2024-01-01', total: '40' }])
-      const result = await service.getSales(7)
+    it('maps results with filters', async () => {
+      saleRepo.findAll.mockResolvedValue([{ date: '2024-01-01', total: '3' }])
+      const result = await service.getSales('2024-01-01', '2024-01-07', [1])
       expect(saleRepo.findAll).toHaveBeenCalledWith(expect.objectContaining({
         where: expect.objectContaining({
-          saleDate: { [Op.between]: [expect.any(String), expect.any(String)] }
-        })
+          saleDate: { [Op.between]: ['2024-01-01', '2024-01-07'] },
+          '$product.category_id$': { [Op.in]: [1] }
+        }),
+        include: [{ model: ProductModel, attributes: [] }],
+        group: [expect.anything()],
+        order: [[expect.anything(), 'ASC']],
+        raw: true
       }))
-      expect(result).toEqual([{ date: '2024-01-01', total: 40 }])
+      expect(result).toEqual([{ date: '2024-01-01', total: 3 }])
     })
   })
 })

@@ -5,7 +5,6 @@ import { ProductModel } from '../product/product.model'
 import { AnalyticsQueryDto } from './dto/analytics.query.dto'
 import { LowStockQueryDto } from './dto/low-stock.query.dto'
 import { TopProductsQueryDto } from './dto/top-products.query.dto'
-import { SalesPeriodQueryDto } from './dto/sales-period.query.dto'
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('analytics')
@@ -126,16 +125,14 @@ export class AnalyticsController {
         }
 
         /**
-         * Возвращает суммы продаж по дням за выбранный период.
-         *
-         * @param period - Период в днях (7, 14, 30, 365)
+         * Возвращает количество продаж по дням за выбранный период.
          */
         @Get('sales')
         getSales(
                 @Query(new ValidationPipe({ transform: true }))
-                query: SalesPeriodQueryDto
+                query: AnalyticsQueryDto
         ) {
-                const { period } = query
-                return this.analyticsService.getSales(period)
+                const { startDate, endDate, categories } = query
+                return this.analyticsService.getSales(startDate, endDate, categories)
         }
 }

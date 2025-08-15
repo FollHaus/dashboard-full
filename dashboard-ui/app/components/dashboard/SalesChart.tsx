@@ -20,11 +20,6 @@ const SalesChart: React.FC<Props> = ({ period }) => {
     "revenue"
   );
   const { start, end } = getPeriodRange(period);
-  const today = new Date();
-  const days =
-    Math.floor(
-      (Math.min(today.getTime(), end.getTime()) - start.getTime()) / 86400000
-    ) + 1;
 
   const {
     data,
@@ -40,13 +35,12 @@ const SalesChart: React.FC<Props> = ({ period }) => {
       end.toISOString(),
     ],
     queryFn: async () => {
+      const s = start.toISOString().slice(0, 10);
+      const e = end.toISOString().slice(0, 10);
       if (metric === "revenue") {
-        return AnalyticsService.getDailyRevenue(
-          start.toISOString().slice(0, 10),
-          end.toISOString().slice(0, 10)
-        );
+        return AnalyticsService.getDailyRevenue(s, e);
       }
-      return AnalyticsService.getSales(days);
+      return AnalyticsService.getSales(s, e);
     },
     keepPreviousData: true,
   });

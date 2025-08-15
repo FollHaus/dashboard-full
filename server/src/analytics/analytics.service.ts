@@ -353,28 +353,37 @@ export class AnalyticsService {
         }
 
         /**
-         * Возвращает сумму продаж по дням за выбранный период.
-         *
-         * @param period - Количество дней (7, 14, 30, 365)
+         * Возвращает количество продаж по дням за выбранный период.
          */
-        async getSales(period: number): Promise<{ date: string; total: number }[]> {
-                const endDate = new Date()
-                const startDate = new Date()
-                startDate.setDate(endDate.getDate() - (period - 1))
+        async getSales(
+                startDate?: string,
+                endDate?: string,
+                categoryIds?: number[]
+        ): Promise<{ date: string; total: number }[]> {
+                const where: any = {}
+                if (startDate || endDate) {
+                        if (startDate && endDate) {
+                                where.saleDate = { [Op.between]: [startDate, endDate] }
+                        } else if (startDate) {
+                                where.saleDate = { [Op.gte]: startDate }
+                        } else if (endDate) {
+                                where.saleDate = { [Op.lte]: endDate }
+                        }
+                }
+                if (categoryIds && categoryIds.length) {
+                        where['$product.category_id$'] = { [Op.in]: categoryIds }
+                }
 
                 const rows = await this.saleRepo.findAll({
                         attributes: [
                                 [col('SaleModel.sale_date'), 'date'],
-                                [fn('SUM', col('SaleModel.total_price')), 'total']
+                                [fn('COUNT', col('SaleModel.id')), 'total']
                         ],
-                        where: {
-                                saleDate: {
-                                        [Op.between]: [
-                                                startDate.toISOString().slice(0, 10),
-                                                endDate.toISOString().slice(0, 10)
-                                        ]
-                                }
-                        },
+                        where,
+                        include:
+                                categoryIds && categoryIds.length
+                                        ? [{ model: ProductModel, attributes: [] }]
+                                        : undefined,
                         group: [col('SaleModel.sale_date')],
                         order: [[col('SaleModel.sale_date'), 'ASC']],
                         raw: true
@@ -382,7 +391,7 @@ export class AnalyticsService {
 
                 return rows.map((r: any) => ({
                         date: r.date,
-                        total: parseFloat(r.total)
+                        total: parseInt(r.total)
                 }))
         }
 }
