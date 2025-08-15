@@ -16,3 +16,12 @@ afterEach(() => {
   cleanup()
 })
 afterAll(() => server.close())
+
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+// @ts-ignore
+vi.stubGlobal('ResizeObserver', ResizeObserverMock)

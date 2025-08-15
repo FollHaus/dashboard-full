@@ -1,5 +1,6 @@
 import axios from '../../api/interceptor'
 import { ITopProduct } from '@/shared/interfaces/top-product.interface'
+import { ICategorySales } from '@/shared/interfaces/category-sales.interface'
 import { ISalesStat } from '@/shared/interfaces/sales-stat.interface'
 import { ITurnover } from '@/shared/interfaces/turnover.interface'
 
@@ -16,6 +17,21 @@ export const AnalyticsService = {
     if (endDate) params.endDate = endDate
     if (categories && categories.length) params.categories = categories.join(',')
     const res = await axios.get<ITopProduct[]>('/analytics/top-products', { params })
+    return res.data
+  },
+  async getCategorySales(
+    startDate?: string,
+    endDate?: string,
+    categories?: number[]
+  ) {
+    const params: any = {}
+    if (startDate) params.startDate = startDate
+    if (endDate) params.endDate = endDate
+    if (categories && categories.length) params.categories = categories.join(',')
+    const res = await axios.get<ICategorySales[]>(
+      '/analytics/category-sales',
+      { params }
+    )
     return res.data
   },
   async getDailyRevenue(

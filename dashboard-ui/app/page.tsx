@@ -24,7 +24,7 @@ export default function Home() {
       <div className="space-y-8">
         <KpiCards period={period} />
         <SalesChart period={period} />
-        <TopProducts />
+        <TopProducts period={period} />
         <InventorySnapshot />
         <WeeklyTasks />
       </div>
