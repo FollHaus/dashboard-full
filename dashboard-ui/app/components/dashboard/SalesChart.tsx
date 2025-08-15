@@ -2,6 +2,17 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  CartesianGrid,
+  ReferenceLine,
+} from "recharts";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
 import { Period } from "./DashboardControls";
 import { buildBuckets, getPeriodRange } from "@/utils/buckets";
@@ -21,6 +32,12 @@ const SalesChart: React.FC<Props> = ({ period }) => {
   );
   const { start, end } = getPeriodRange(period);
 
+  const formatDate = (date: Date) => {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 10);
+  };
+
   const {
     data,
     isFetching,
@@ -31,12 +48,12 @@ const SalesChart: React.FC<Props> = ({ period }) => {
     queryKey: [
       "sales-chart",
       metric,
-      start.toISOString(),
-      end.toISOString(),
+      formatDate(start),
+      formatDate(end),
     ],
     queryFn: async () => {
-      const s = start.toISOString().slice(0, 10);
-      const e = end.toISOString().slice(0, 10);
+      const s = formatDate(start);
+      const e = formatDate(end);
       if (metric === "revenue") {
         return AnalyticsService.getDailyRevenue(s, e);
       }
@@ -52,9 +69,16 @@ const SalesChart: React.FC<Props> = ({ period }) => {
     map.set(key, (map.get(key) ?? 0) + d.total);
   });
   const chartData = buckets.map((b) => ({ ...b, value: map.get(b.key) ?? 0 }));
-  const values = chartData.map((d) => d.value);
-  const max = values.length ? Math.max(...values) : 0;
   const allZero = chartData.every((d) => d.value === 0);
+
+  const currency = new Intl.NumberFormat("ru-RU", {
+    style: "currency",
+    currency: "RUB",
+    maximumFractionDigits: 0,
+  });
+
+  const formatValue = (v: number) =>
+    metric === "revenue" ? currency.format(v) : v.toLocaleString("ru-RU");
 
   if (error) {
     return (
@@ -87,30 +111,42 @@ const SalesChart: React.FC<Props> = ({ period }) => {
           ))}
         </div>
       </div>
-      <div
-        className={`relative flex items-end space-x-2 h-40 border-b ${
-          allZero ? "border-red-500" : "border-neutral-300"
-        }`}
-      >
-        {isLoading
-          ? buckets.map((_, idx) => (
-              <div
-                key={idx}
-                className="flex flex-col items-center flex-1 animate-pulse"
-              >
-                <div className="bg-neutral-300 w-full rounded-t h-full" />
-              </div>
-            ))
-          : chartData.map((item) => (
-              <div key={item.key} className="flex flex-col items-center flex-1">
-                <div
-                  className="bg-primary-500 w-full rounded-t"
-                  style={{ height: max ? `${(item.value / max) * 100}%` : 0 }}
-                  title={item.value.toString()}
-                />
-                <span className="mt-2 text-xs text-neutral-800">{item.label}</span>
-              </div>
+      <div className="h-64 relative">
+        {isLoading ? (
+          <div className="absolute inset-0 flex items-end space-x-2">
+            {buckets.map((_, idx) => (
+              <div key={idx} className="flex-1 animate-pulse bg-neutral-300" />
             ))}
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ left: 8, right: 8, top: 5, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
+              <YAxis
+                tickFormatter={formatValue}
+                tickLine={false}
+                axisLine={false}
+                width={80}
+              />
+              <Tooltip
+                formatter={(value: number) => formatValue(value)}
+                labelFormatter={(label) => label}
+              />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke={metric === "revenue" ? "#3B82F6" : "#10B981"}
+                strokeWidth={2}
+                dot={false}
+                name={metricOptions.find((m) => m.value === metric)?.label}
+                isAnimationActive
+              />
+              {allZero && <ReferenceLine y={0} stroke="#EF4444" strokeWidth={1} />}
+            </LineChart>
+          </ResponsiveContainer>
+        )}
         {isFetching && data && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/50">
             <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
