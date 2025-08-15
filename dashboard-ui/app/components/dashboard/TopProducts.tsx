@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import {
@@ -9,7 +9,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -55,6 +54,7 @@ const rubFormatter = new Intl.NumberFormat("ru-RU", {
 const intFormatter = new Intl.NumberFormat("ru-RU")
 const formatRub = (v: number) => rubFormatter.format(v)
 const formatInt = (v: number) => intFormatter.format(v)
+const round2 = (v: number) => Math.round(v * 100) / 100
 
 const formatDate = (date: Date) =>
   new Date(date.getTime() - date.getTimezoneOffset() * 60000)
@@ -97,8 +97,84 @@ const TopProducts: React.FC<Props> = ({ period }) => {
     placeholderData: (prev) => prev,
   })
 
+  const productsAgg = useMemo(() => {
+    const map = new Map<number, { name: string; qty: number; rev: number }>()
+    for (const row of products ?? []) {
+      const productId = Number((row as any).productId)
+      if (!productId) continue
+      const productName = String((row as any).productName ?? "")
+      const qty =
+        Number(
+          (row as any).quantity_sold ??
+            (row as any).unitsSold ??
+            (row as any).totalUnits ??
+            0,
+        ) || 0
+      const rawRev =
+        Number(
+          (row as any).revenue ??
+            (row as any).total_price ??
+            (row as any).totalRevenue ??
+            0,
+        ) || 0
+      const rev =
+        ("revenue" in (row as any) || "total_price" in (row as any))
+          ? rawRev / 100
+          : rawRev
+      const curr = map.get(productId) ?? { name: productName, qty: 0, rev: 0 }
+      curr.name = productName || curr.name
+      curr.qty += qty
+      curr.rev += rev
+      map.set(productId, curr)
+    }
+    return Array.from(map.entries()).map(([productId, v]) => ({
+      productId,
+      productName: v.name,
+      totalUnits: Math.round(Number(v.qty) || 0),
+      totalRevenue: round2(Number(v.rev) || 0),
+    }))
+  }, [products])
+
+  const categoriesAgg = useMemo(() => {
+    const map = new Map<number, { name: string; qty: number; rev: number }>()
+    for (const row of categories ?? []) {
+      const categoryId = Number((row as any).categoryId)
+      if (!categoryId) continue
+      const categoryName = String((row as any).categoryName ?? "")
+      const qty =
+        Number(
+          (row as any).quantity_sold ??
+            (row as any).unitsSold ??
+            (row as any).totalUnits ??
+            0,
+        ) || 0
+      const rawRev =
+        Number(
+          (row as any).revenue ??
+            (row as any).total_price ??
+            (row as any).totalRevenue ??
+            0,
+        ) || 0
+      const rev =
+        ("revenue" in (row as any) || "total_price" in (row as any))
+          ? rawRev / 100
+          : rawRev
+      const curr = map.get(categoryId) ?? { name: categoryName, qty: 0, rev: 0 }
+      curr.name = categoryName || curr.name
+      curr.qty += qty
+      curr.rev += rev
+      map.set(categoryId, curr)
+    }
+    return Array.from(map.entries()).map(([categoryId, v]) => ({
+      categoryId,
+      categoryName: v.name,
+      totalUnits: Math.round(Number(v.qty) || 0),
+      totalRevenue: round2(Number(v.rev) || 0),
+    }))
+  }, [categories])
+
   const topProductData = useMemo(() => {
-    const items = [...(products ?? [])]
+    const items = [...productsAgg]
     items.sort((a, b) =>
       metric === "revenue"
         ? b.totalRevenue - a.totalRevenue
@@ -110,53 +186,100 @@ const TopProducts: React.FC<Props> = ({ period }) => {
       productId: p.productId,
       productName: p.productName,
     }))
-  }, [products, metric, limit])
+  }, [productsAgg, metric, limit])
 
   const pieData = useMemo(() => {
-    const items = [...(categories ?? [])]
+    const items = [...categoriesAgg]
     items.sort((a, b) =>
       metric === "revenue"
         ? b.totalRevenue - a.totalRevenue
         : b.totalUnits - a.totalUnits,
     )
-    const sliced = items.slice(0, limit)
-    if (items.length > limit) {
-      const others = items.slice(limit)
-      const othersValue = others.reduce(
+    const top = items.slice(0, limit)
+    const rest = items.slice(limit)
+    if (rest.length) {
+      const restValue = rest.reduce(
         (sum, c) =>
           sum + (metric === "revenue" ? c.totalRevenue : c.totalUnits),
         0,
       )
-      if (othersValue > 0) {
-        sliced.push({
+      if (restValue > 0) {
+        top.push({
           categoryId: 0,
           categoryName: "Прочее",
-          totalUnits: metric === "quantity" ? othersValue : 0,
-          totalRevenue: metric === "revenue" ? othersValue : 0,
+          totalUnits:
+            metric === "quantity" ? Math.round(restValue) : 0,
+          totalRevenue:
+            metric === "revenue" ? round2(restValue) : 0,
         })
       }
     }
-    return sliced
+    return top
       .map((c) => {
         const value = Number(
           metric === "revenue" ? c.totalRevenue : c.totalUnits,
         )
-        if (isNaN(value)) return null
+        if (!isFinite(value)) return null
         return { name: c.categoryName, value, categoryId: c.categoryId }
       })
       .filter(Boolean) as { name: string; value: number; categoryId: number }[]
-  }, [categories, metric, limit])
+  }, [categoriesAgg, metric, limit])
 
   const formatValue = metric === "revenue" ? formatRub : formatInt
   const total = pieData.reduce(
     (sum, d) => sum + (Number(d.value) || 0),
     0,
   )
-  const legendPayload = pieData.map((d, idx) => ({
-    value: d.name,
-    color: COLORS[idx % COLORS.length],
-    type: "square" as const,
-  }))
+
+  const productTotalQty = useMemo(
+    () => productsAgg.reduce((s, p) => s + (Number(p.totalUnits) || 0), 0),
+    [productsAgg],
+  )
+  const productTotalRev = useMemo(
+    () => productsAgg.reduce((s, p) => s + (Number(p.totalRevenue) || 0), 0),
+    [productsAgg],
+  )
+  const categoryTotalQty = useMemo(
+    () => categoriesAgg.reduce((s, c) => s + (Number(c.totalUnits) || 0), 0),
+    [categoriesAgg],
+  )
+  const categoryTotalRev = useMemo(
+    () => categoriesAgg.reduce((s, c) => s + (Number(c.totalRevenue) || 0), 0),
+    [categoriesAgg],
+  )
+
+  useEffect(() => {
+    const round = metric === "revenue" ? round2 : Math.round
+    const totalAll = round(
+      metric === "revenue" ? categoryTotalRev : categoryTotalQty,
+    )
+    const totalTopPlusOther = round(total)
+    console.debug({ metric, totalAll, totalTopPlusOther, equal: totalAll === totalTopPlusOther })
+    const prodTotal = round(
+      metric === "revenue" ? productTotalRev : productTotalQty,
+    )
+    const catTotal = round(
+      metric === "revenue" ? categoryTotalRev : categoryTotalQty,
+    )
+    console.debug({ metric, prodTotal, catTotal, equal: prodTotal === catTotal })
+  }, [
+    metric,
+    total,
+    productTotalQty,
+    productTotalRev,
+    categoryTotalQty,
+    categoryTotalRev,
+  ])
+
+  const legendItems = useMemo(
+    () =>
+      pieData.map((d, idx) => ({
+        color: COLORS[idx % COLORS.length],
+        name: d.name,
+        value: d.value,
+      })),
+    [pieData],
+  )
 
   return (
     <div>
@@ -304,15 +427,28 @@ const TopProducts: React.FC<Props> = ({ period }) => {
                   </ResponsiveContainer>
                 </div>
                 <div
-                  className="mt-4 lg:mt-0 lg:ml-4 lg:w-48"
+                  className="mt-4 lg:mt-0 lg:ml-4 lg:w-48 text-sm"
                   style={{ maxHeight: "320px", overflowY: "auto" }}
                 >
-                  <Legend
-                    layout="vertical"
-                    align="right"
-                    verticalAlign="middle"
-                    payload={legendPayload}
-                  />
+                  <ul className="space-y-1">
+                    {legendItems.map((item) => (
+                      <li
+                        key={item.name}
+                        className="flex items-center justify-between gap-2"
+                      >
+                        <span className="flex items-center gap-2 min-w-0">
+                          <span
+                            className="w-3 h-3 rounded-sm flex-shrink-0"
+                            style={{ backgroundColor: item.color }}
+                          />
+                          <span className="truncate">{item.name}</span>
+                        </span>
+                        <span className="flex-shrink-0">
+                          {formatValue(Number(item.value) || 0)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             )}
