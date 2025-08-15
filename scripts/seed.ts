@@ -4,7 +4,13 @@
  * npx ts-node scripts/seed.ts --yes --categories=15 --products=120 --sales=300 --tasks=60 --days=365 --locale=ru
  */
 
-import { Sequelize } from 'sequelize-typescript'
+// Import Sequelize from the same location as the server models to avoid
+// loading multiple instances of sequelize-typescript. Having different
+// copies for the models and the Sequelize instance causes association
+// setup to fail with "hasMany called with something that's not a subclass
+// of Sequelize.Model".
+// eslint-disable-next-line import/no-relative-packages
+import { Sequelize } from '../server/node_modules/sequelize-typescript'
 import * as dotenv from 'dotenv'
 import { Faker, allLocales } from '@faker-js/faker'
 import * as readline from 'node:readline'
