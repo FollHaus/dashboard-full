@@ -180,12 +180,18 @@ const TopProducts: React.FC<Props> = ({ period }) => {
         ? b.totalRevenue - a.totalRevenue
         : b.totalUnits - a.totalUnits,
     )
-    return items.slice(0, limit).map((p) => ({
-      name: p.productName,
-      value: metric === "revenue" ? p.totalRevenue : p.totalUnits,
-      productId: p.productId,
-      productName: p.productName,
-    }))
+    return items.slice(0, limit).map((p) => {
+      const value =
+        metric === "revenue"
+          ? Number(p.totalRevenue) || 0
+          : Number(p.totalUnits) || 0
+      return {
+        name: p.productName,
+        value,
+        productId: p.productId,
+        productName: p.productName,
+      }
+    })
   }, [productsAgg, metric, limit])
 
   const pieData = useMemo(() => {
@@ -214,22 +220,32 @@ const TopProducts: React.FC<Props> = ({ period }) => {
         })
       }
     }
-    return top
+    const data = top
       .map((c) => {
-        const value = Number(
-          metric === "revenue" ? c.totalRevenue : c.totalUnits,
-        )
+        const value =
+          metric === "revenue"
+            ? Number(c.totalRevenue) || 0
+            : Number(c.totalUnits) || 0
         if (!isFinite(value)) return null
         return { name: c.categoryName, value, categoryId: c.categoryId }
       })
-      .filter(Boolean) as { name: string; value: number; categoryId: number }[]
+      .filter(Boolean) as {
+      name: string
+      value: number
+      categoryId: number
+    }[]
+
+    const total = data.reduce((s, d) => s + (Number(d.value) || 0), 0)
+    return data.map((d) => ({ ...d, __total: total })) as {
+      name: string
+      value: number
+      categoryId: number
+      __total: number
+    }[]
   }, [categoriesAgg, metric, limit])
 
   const formatValue = metric === "revenue" ? formatRub : formatInt
-  const total = pieData.reduce(
-    (sum, d) => sum + (Number(d.value) || 0),
-    0,
-  )
+  const total = pieData.length ? Number(pieData[0].__total) : 0
 
   const productTotalQty = useMemo(
     () => productsAgg.reduce((s, p) => s + (Number(p.totalUnits) || 0), 0),
@@ -283,11 +299,18 @@ const TopProducts: React.FC<Props> = ({ period }) => {
   const renderPieTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null
     const entry = payload[0]
-    const value = Number(entry.value) || 0
-    const percent = (entry.percent || 0) * 100
+    const frac = Number(entry.percent ?? 0)
+    const v = Number(entry.value) || 0
+    const total = Number(entry.payload?.__total || 0)
+    const pct =
+      entry.percent != null
+        ? frac * 100
+        : total > 0
+          ? (v / total) * 100
+          : 0
     const formattedValue =
-      metric === "revenue" ? formatRub(value) : formatInt(Math.round(value))
-    const formattedPercent = `${percent.toFixed(2)}%`
+      metric === "revenue" ? formatRub(v) : formatInt(Math.round(v))
+    const formattedPercent = `${pct.toFixed(1)}%`
     return (
       <div className="bg-white p-2 border rounded text-sm">
         <div>{entry.name}</div>
