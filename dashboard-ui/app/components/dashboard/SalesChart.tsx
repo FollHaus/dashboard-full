@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
 import { Period } from "./DashboardControls";
+import { buildBuckets, getPeriodRange } from "@/utils/buckets";
 
 interface Props {
   period: Period;
@@ -14,42 +15,59 @@ const metricOptions = [
   { value: "sales", label: "Количество" },
 ] as const;
 
-const daysMap: Record<Period, number> = {
-  day: 1,
-  week: 7,
-  month: 30,
-  year: 365,
-};
-
-const getDates = (period: Period) => {
-  const end = new Date();
-  const start = new Date();
-  start.setDate(end.getDate() - daysMap[period] + 1);
-  return {
-    start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10),
-  };
-};
-
 const SalesChart: React.FC<Props> = ({ period }) => {
   const [metric, setMetric] = useState<(typeof metricOptions)[number]["value"]>(
     "revenue"
   );
+  const { start, end } = getPeriodRange(period);
+  const today = new Date();
+  const days =
+    Math.floor(
+      (Math.min(today.getTime(), end.getTime()) - start.getTime()) / 86400000
+    ) + 1;
 
-  const { data, isFetching } = useQuery({
+  const {
+    data,
+    isFetching,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["sales-chart", period, metric],
     queryFn: async () => {
       if (metric === "revenue") {
-        const { start, end } = getDates(period);
-        return AnalyticsService.getDailyRevenue(start, end);
+        return AnalyticsService.getDailyRevenue(
+          start.toISOString().slice(0, 10),
+          end.toISOString().slice(0, 10)
+        );
       }
-      return AnalyticsService.getSales(daysMap[period]);
+      return AnalyticsService.getSales(days);
     },
     keepPreviousData: true,
+    placeholderData: [],
   });
 
-  const values = data?.map((d) => d.total) ?? [];
+  const buckets = buildBuckets({ start, end }, period);
+  const map = new Map(
+    (data ?? []).map((d) => [
+      period === "year" ? d.date.slice(0, 7) : d.date.slice(0, 10),
+      d.total,
+    ])
+  );
+  const chartData = buckets.map((b) => ({ ...b, value: map.get(b.key) ?? 0 }));
+  const values = chartData.map((d) => d.value);
   const max = values.length ? Math.max(...values) : 0;
+
+  if (error) {
+    return (
+      <div className="bg-neutral-100 p-4 rounded-card shadow-card text-error flex items-center gap-2">
+        Ошибка загрузки
+        <button className="underline" onClick={() => refetch()}>
+          Повторить
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-neutral-100 p-4 rounded-card shadow-card">
@@ -71,28 +89,24 @@ const SalesChart: React.FC<Props> = ({ period }) => {
           ))}
         </div>
       </div>
-      <div className="relative flex items-end space-x-2 h-40">
-        {data
-          ? data.map((item) => (
-              <div key={item.date} className="flex flex-col items-center flex-1">
-                <div
-                  className="bg-primary-500 w-full rounded-t"
-                  style={{ height: max ? `${(item.total / max) * 100}%` : 0 }}
-                />
-                <span className="mt-2 text-xs text-neutral-800">
-                  {new Date(item.date).toLocaleDateString("ru-RU", {
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </span>
-              </div>
-            ))
-          : Array.from({ length: daysMap[period] }).map((_, idx) => (
+      <div className="relative flex items-end space-x-2 h-40 border-b">
+        {isLoading
+          ? buckets.map((_, idx) => (
               <div
                 key={idx}
                 className="flex flex-col items-center flex-1 animate-pulse"
               >
                 <div className="bg-neutral-300 w-full rounded-t h-full" />
+              </div>
+            ))
+          : chartData.map((item) => (
+              <div key={item.key} className="flex flex-col items-center flex-1">
+                <div
+                  className="bg-primary-500 w-full rounded-t"
+                  style={{ height: max ? `${(item.value / max) * 100}%` : 0 }}
+                  title={item.value.toString()}
+                />
+                <span className="mt-2 text-xs text-neutral-800">{item.label}</span>
               </div>
             ))}
         {isFetching && data && (

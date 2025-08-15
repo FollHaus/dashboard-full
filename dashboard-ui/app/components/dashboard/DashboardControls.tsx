@@ -25,10 +25,10 @@ const DashboardControls: React.FC<Props> = ({
   onWarehouseChange,
 }) => {
   return (
-    <div className="flex flex-wrap gap-4 items-center">
+    <div className="flex items-center gap-4">
       <select
         aria-label="Выбор периода"
-        className="border border-neutral-300 rounded px-2 py-1 text-sm"
+        className="border border-neutral-300 rounded px-2 py-1 text-sm w-auto"
         value={period}
         onChange={(e) => onPeriodChange(e.target.value as Period)}
       >
@@ -41,7 +41,7 @@ const DashboardControls: React.FC<Props> = ({
       {onWarehouseChange && (
         <select
           aria-label="Склад"
-          className="border border-neutral-300 rounded px-2 py-1 text-sm"
+          className="border border-neutral-300 rounded px-2 py-1 text-sm ml-auto w-auto"
           value={warehouse ?? ""}
           onChange={(e) => onWarehouseChange(e.target.value)}
         >
