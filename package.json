@@ -2,18 +2,21 @@
   "name": "dashboard-full",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run start:dev --prefix server\" \"npm run dev --prefix dashboard-ui\"",
-    "db:seed": "NODE_PATH=server/node_modules ts-node --transpile-only --compiler-options '{\"module\":\"CommonJS\",\"experimentalDecorators\":true,\"emitDecoratorMetadata\":true}' scripts/seed.ts --yes"
+    "db:seed": "ts-node -r tsconfig-paths/register -P ./tsconfig.seed.json --transpile-only scripts/seed.ts --yes"
+
   },
   "devDependencies": {
     "@faker-js/faker": "^9.9.0",
+    "@types/node": "^24.2.1",
     "concurrently": "^8.2.2",
+    "cross-env": "^10.0.0",
     "dotenv": "^17.2.1",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
     "sequelize": "^6.37.7",
     "sequelize-typescript": "^2.1.6",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.2"
   }
 }
-
