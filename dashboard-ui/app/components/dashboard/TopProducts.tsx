@@ -276,10 +276,27 @@ const TopProducts: React.FC<Props> = ({ period }) => {
       pieData.map((d, idx) => ({
         color: COLORS[idx % COLORS.length],
         name: d.name,
-        value: d.value,
       })),
     [pieData],
   )
+
+  const renderPieTooltip = ({ active, payload }: any) => {
+    if (!active || !payload?.length) return null
+    const entry = payload[0]
+    const value = Number(entry.value) || 0
+    const percent = (entry.percent || 0) * 100
+    const formattedValue =
+      metric === "revenue" ? formatRub(value) : formatInt(Math.round(value))
+    const formattedPercent = `${percent.toFixed(2)}%`
+    return (
+      <div className="bg-white p-2 border rounded text-sm">
+        <div>{entry.name}</div>
+        <div>
+          {formattedValue} ({formattedPercent})
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -422,7 +439,7 @@ const TopProducts: React.FC<Props> = ({ period }) => {
                           />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(v: number) => formatValue(Number(v))} />
+                      <Tooltip content={renderPieTooltip} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -434,17 +451,14 @@ const TopProducts: React.FC<Props> = ({ period }) => {
                     {legendItems.map((item) => (
                       <li
                         key={item.name}
-                        className="flex items-center justify-between gap-2"
+                        className="flex items-center gap-2"
                       >
                         <span className="flex items-center gap-2 min-w-0">
                           <span
-                            className="w-3 h-3 rounded-sm flex-shrink-0"
+                            className="w-3 h-3 rounded-full flex-shrink-0"
                             style={{ backgroundColor: item.color }}
                           />
                           <span className="truncate">{item.name}</span>
-                        </span>
-                        <span className="flex-shrink-0">
-                          {formatValue(Number(item.value) || 0)}
                         </span>
                       </li>
                     ))}
