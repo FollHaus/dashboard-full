@@ -44,14 +44,14 @@ export class AnalyticsService {
 		if (categoryIds && categoryIds.length) {
 			where['$product.category_id$'] = { [Op.in]: categoryIds }
 		}
-		const revenue = await this.saleRepo.sum('totalPrice', {
-			where,
-			// @ts-ignore
-			include:
-				categoryIds && categoryIds.length
-					? [{ model: ProductModel, attributes: [] }]
-					: undefined
-		})
+                const revenue = await this.saleRepo.sum(col('SaleModel.total_price'), {
+                        where,
+                        // @ts-ignore
+                        include:
+                                categoryIds && categoryIds.length
+                                        ? [{ model: ProductModel, attributes: [] }]
+                                        : undefined
+                })
                 return parseFloat(String(revenue)) || 0
         }
 
@@ -80,16 +80,16 @@ export class AnalyticsService {
 
                 const rows = await this.saleRepo.findAll({
                         attributes: [
-                                [col('sale_date'), 'date'],
-                                [fn('SUM', col('total_price')), 'total']
+                                [col('SaleModel.sale_date'), 'date'],
+                                [fn('SUM', col('SaleModel.total_price')), 'total']
                         ],
                         where,
                         include:
                                 categoryIds && categoryIds.length
                                         ? [{ model: ProductModel, attributes: [] }]
                                         : undefined,
-                        group: [col('sale_date')],
-                        order: [[col('sale_date'), 'ASC']],
+                        group: [col('SaleModel.sale_date')],
+                        order: [[col('SaleModel.sale_date'), 'ASC']],
                         raw: true
                 })
 
@@ -133,12 +133,12 @@ export class AnalyticsService {
 		}
 
 		const rows = await this.saleRepo.findAll({
-			attributes: [
-				[col('product->category.id'), 'categoryId'],
-				[col('product->category.name'), 'categoryName'],
-				[fn('SUM', col('quantity_sold')), 'totalUnits'],
-				[fn('SUM', col('total_price')), 'totalRevenue']
-			],
+                        attributes: [
+                                [col('product->category.id'), 'categoryId'],
+                                [col('product->category.name'), 'categoryName'],
+                                [fn('SUM', col('SaleModel.quantity_sold')), 'totalUnits'],
+                                [fn('SUM', col('SaleModel.total_price')), 'totalRevenue']
+                        ],
 			where: whereSales,
 			include: [includeProduct],
 			group: [
@@ -190,8 +190,8 @@ export class AnalyticsService {
                                 [col('product.id'), 'productId'],
                                 [col('product.name'), 'productName'],
                                 [col('product->category.name'), 'categoryName'],
-                                [fn('SUM', col('quantity_sold')), 'totalUnits'],
-                                [fn('SUM', col('total_price')), 'totalRevenue']
+                                [fn('SUM', col('SaleModel.quantity_sold')), 'totalUnits'],
+                                [fn('SUM', col('SaleModel.total_price')), 'totalRevenue']
                         ],
                         where: whereSales,
                         include: [includeProduct],
@@ -201,7 +201,7 @@ export class AnalyticsService {
                                 'product->category.id',
                                 'product->category.name'
                         ],
-                        order: [[fn('SUM', col('quantity_sold')), 'DESC']],
+                        order: [[fn('SUM', col('SaleModel.quantity_sold')), 'DESC']],
                         raw: true,
                         ...(limit ? { limit } : {})
                 })
@@ -311,14 +311,15 @@ export class AnalyticsService {
 
                 const kpiRow: any = await this.saleRepo.findOne({
                         attributes: [
-                                [fn('SUM', col('total_price')), 'revenue'],
-                                [fn('COUNT', col('id')), 'orders'],
-                                [fn('SUM', col('quantity_sold')), 'unitsSold'],
+                                [fn('SUM', col('SaleModel.total_price')), 'revenue'],
+                                [fn('COUNT', col('SaleModel.id')), 'orders'],
+                                [fn('SUM', col('SaleModel.quantity_sold')), 'unitsSold'],
                                 [
                                         fn(
                                                 'SUM',
                                                 literal(
-                                                        '(product.sale_price - product.purchase_price) * quantity_sold'
+                                                        '("product"."sale_price" - "product"."purchase_price") * ' +
+                                                                '"SaleModel"."quantity_sold"'
                                                 )
                                         ),
                                         'margin'
@@ -363,8 +364,8 @@ export class AnalyticsService {
 
                 const rows = await this.saleRepo.findAll({
                         attributes: [
-                                [col('sale_date'), 'date'],
-                                [fn('SUM', col('total_price')), 'total']
+                                [col('SaleModel.sale_date'), 'date'],
+                                [fn('SUM', col('SaleModel.total_price')), 'total']
                         ],
                         where: {
                                 saleDate: {
@@ -374,8 +375,8 @@ export class AnalyticsService {
                                         ]
                                 }
                         },
-                        group: [col('sale_date')],
-                        order: [[col('sale_date'), 'ASC']],
+                        group: [col('SaleModel.sale_date')],
+                        order: [[col('SaleModel.sale_date'), 'ASC']],
                         raw: true
                 })
 
