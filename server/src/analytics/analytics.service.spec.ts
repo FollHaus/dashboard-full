@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { getModelToken } from '@nestjs/sequelize'
-import { Op, col } from 'sequelize'
+import { Op } from 'sequelize'
 import { DateTime } from 'luxon'
 import { AnalyticsService } from './analytics.service'
 import { SaleModel } from '../sale/sale.model'
@@ -31,7 +31,7 @@ describe('AnalyticsService', () => {
     it('calculates revenue with filters', async () => {
       saleRepo.sum.mockResolvedValue('100')
       const result = await service.getRevenue('2024-01-01', '2024-01-31', [1, 2])
-      expect(saleRepo.sum).toHaveBeenCalledWith(col('SaleModel.total_price'), expect.objectContaining({
+      expect(saleRepo.sum).toHaveBeenCalledWith('totalPrice', expect.objectContaining({
         where: expect.objectContaining({
           saleDate: { [Op.between]: ['2024-01-01', '2024-01-31'] },
           '$product.category_id$': { [Op.in]: [1, 2] }
