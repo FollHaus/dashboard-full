@@ -4,6 +4,8 @@
  * npx ts-node scripts/seed.ts --yes --categories=15 --products=120 --sales=300 --tasks=60 --days=365 --locale=ru
  */
 
+
+>>>>>>> 3f268282fab4197d064229051f8b3a656e5165cb
 import { Sequelize } from '../server/node_modules/sequelize-typescript'
 import * as dotenv from 'dotenv'
 import { Faker, allLocales } from '@faker-js/faker'
