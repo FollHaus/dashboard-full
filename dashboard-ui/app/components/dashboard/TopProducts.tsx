@@ -48,13 +48,13 @@ const COLORS = [
   "#A855F7",
 ]
 
-const currency = new Intl.NumberFormat("ru-RU", {
+const rubFormatter = new Intl.NumberFormat("ru-RU", {
   style: "currency",
   currency: "RUB",
 })
-const numberFmt = new Intl.NumberFormat("ru-RU")
-const truncate = (v: string, len: number) =>
-  (v.length > len ? `${v.slice(0, len)}…` : v)
+const intFormatter = new Intl.NumberFormat("ru-RU")
+const formatRub = (v: number) => rubFormatter.format(v)
+const formatInt = (v: number) => intFormatter.format(v)
 
 const formatDate = (date: Date) =>
   new Date(date.getTime() - date.getTimezoneOffset() * 60000)
@@ -112,7 +112,7 @@ const TopProducts: React.FC<Props> = ({ period }) => {
     }))
   }, [products, metric, limit])
 
-  const topCategoryData = useMemo(() => {
+  const pieData = useMemo(() => {
     const items = [...(categories ?? [])]
     items.sort((a, b) =>
       metric === "revenue"
@@ -136,15 +136,27 @@ const TopProducts: React.FC<Props> = ({ period }) => {
         })
       }
     }
-    return sliced.map((c) => ({
-      name: c.categoryName,
-      value: metric === "revenue" ? c.totalRevenue : c.totalUnits,
-      categoryId: c.categoryId,
-    }))
+    return sliced
+      .map((c) => {
+        const value = Number(
+          metric === "revenue" ? c.totalRevenue : c.totalUnits,
+        )
+        if (isNaN(value)) return null
+        return { name: c.categoryName, value, categoryId: c.categoryId }
+      })
+      .filter(Boolean) as { name: string; value: number; categoryId: number }[]
   }, [categories, metric, limit])
 
-  const formatValue = (v: number) =>
-    metric === "revenue" ? currency.format(v) : numberFmt.format(v)
+  const formatValue = metric === "revenue" ? formatRub : formatInt
+  const total = pieData.reduce(
+    (sum, d) => sum + (Number(d.value) || 0),
+    0,
+  )
+  const legendPayload = pieData.map((d, idx) => ({
+    value: d.name,
+    color: COLORS[idx % COLORS.length],
+    type: "square" as const,
+  }))
 
   return (
     <div>
@@ -184,11 +196,11 @@ const TopProducts: React.FC<Props> = ({ period }) => {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl p-4 shadow flex flex-col h-96">
+        <div className="bg-white rounded-xl p-4 shadow flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-sm font-medium">Товары</h4>
           </div>
-          <div className="flex-1 relative">
+          <div className="h-96 relative">
             {prodError ? (
               <div className="text-error flex items-center gap-2 h-full justify-center">
                 Ошибка загрузки
@@ -210,22 +222,11 @@ const TopProducts: React.FC<Props> = ({ period }) => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={topProductData}
-                  margin={{ top: 16, right: 8, left: 48, bottom: 36 }}
+                  margin={{ top: 16, right: 8, left: 48, bottom: 16 }}
                 >
-                  <XAxis
-                    dataKey="name"
-                    interval={0}
-                    tick={{ fontSize: 12 }}
-                    tickFormatter={(v) => truncate(String(v), 16)}
-                    height={40}
-                    dy={10}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 12 }}
-                    tickFormatter={(v: number) => formatValue(Number(v))}
-                  />
-                  <Tooltip formatter={(v: number) => formatValue(v)} />
-                  <Legend />
+                  <XAxis dataKey="name" tick={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 12 }} tickFormatter={formatValue} />
+                  <Tooltip formatter={(v: number) => formatValue(Number(v))} />
                   <Bar
                     dataKey="value"
                     name={metricOptions.find((m) => m.value === metric)?.label}
@@ -252,11 +253,11 @@ const TopProducts: React.FC<Props> = ({ period }) => {
             )}
           </div>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow flex flex-col h-96">
+        <div className="bg-white rounded-xl p-4 shadow flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-sm font-medium">Категории</h4>
           </div>
-          <div className="flex-1 relative">
+          <div className="h-96 relative">
             {catError ? (
               <div className="text-error flex items-center gap-2 h-full justify-center">
                 Ошибка загрузки
@@ -268,35 +269,51 @@ const TopProducts: React.FC<Props> = ({ period }) => {
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-32 h-32 rounded-full animate-pulse bg-neutral-300" />
               </div>
-            ) : topCategoryData.length > 0 && topCategoryData.some((d) => d.value > 0) ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={topCategoryData}
-                    dataKey="value"
-                    nameKey="name"
-                    outerRadius={120}
-                    innerRadius={60}
-                    paddingAngle={1}
-                    onClick={(d: any) =>
-                      router.push(`/products?categoryId=${d.categoryId}`)
-                    }
-                  >
-                    {topCategoryData.map((_, idx) => (
-                      <Cell
-                        key={`cell-${idx}`}
-                        fill={COLORS[idx % COLORS.length]}
-                        cursor="pointer"
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(v: number) => formatValue(v)} />
-                  <Legend verticalAlign="bottom" height={36} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
+            ) : pieData.length === 0 || total === 0 ? (
               <div className="flex items-center justify-center h-full text-neutral-500">
                 Нет данных
+              </div>
+            ) : (
+              <div className="h-full flex flex-col lg:flex-row">
+                <div className="flex-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={60}
+                        outerRadius={120}
+                        paddingAngle={1}
+                        label={false}
+                        labelLine={false}
+                        onClick={(d: any) =>
+                          router.push(`/products?categoryId=${d.categoryId}`)
+                        }
+                      >
+                        {pieData.map((_, idx) => (
+                          <Cell
+                            key={`cell-${idx}`}
+                            fill={COLORS[idx % COLORS.length]}
+                            cursor="pointer"
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(v: number) => formatValue(Number(v))} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div
+                  className="mt-4 lg:mt-0 lg:ml-4 lg:w-48"
+                  style={{ maxHeight: "320px", overflowY: "auto" }}
+                >
+                  <Legend
+                    layout="vertical"
+                    align="right"
+                    verticalAlign="middle"
+                    payload={legendPayload}
+                  />
+                </div>
               </div>
             )}
             {catFetching && categories && (
