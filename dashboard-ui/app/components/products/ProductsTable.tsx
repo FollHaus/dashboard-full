@@ -274,7 +274,9 @@ const ProductsTable = () => {
                     <div className="h-4 bg-neutral-200 rounded w-1/3" />
                   </td>
                   <td className="p-2 col-quantity">
-                    <div className="h-4 bg-neutral-200 rounded w-1/4 ml-auto" />
+                    <div className="flex items-center">
+                      <div className="h-4 bg-neutral-200 rounded w-1/4 ml-auto min-w-[3rem]" />
+                    </div>
                   </td>
                   <td className="p-2 col-sale">
                     <div className="h-4 bg-neutral-200 rounded w-1/4 ml-auto" />
@@ -310,13 +312,15 @@ const ProductsTable = () => {
                     <span className="block truncate">{prod.code}</span>
                   </td>
                   <td className="p-2 col-quantity">
-                    {prod.quantity}
-                    {prod.quantity > 0 &&
-                      isLowStock(prod.quantity, prod.minStock) && (
-                        <span className="ml-2 bg-warning text-white text-xs px-2 py-0.5 rounded">
-                          мало
-                        </span>
-                      )}
+                    <div className="flex items-center">
+                      <span className="text-right min-w-[3rem]">{prod.quantity}</span>
+                      {prod.quantity > 0 &&
+                        isLowStock(prod.quantity, prod.minStock) && (
+                          <span className="ml-2 text-xs text-red-600 font-medium">
+                            (мало)
+                          </span>
+                        )}
+                    </div>
                   </td>
                   <td className="p-2 col-sale">{formatCurrency(prod.price)}</td>
                   <td className="p-2 col-purchase">{formatCurrency(prod.purchasePrice)}</td>

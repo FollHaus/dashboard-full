@@ -25,7 +25,7 @@
 }
 
 .inventory-table .col-quantity {
-  width: 100px;
+  min-width: 100px;
 }
 
 .inventory-table .col-sale {
