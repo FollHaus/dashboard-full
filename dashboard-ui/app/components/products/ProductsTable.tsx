@@ -3,16 +3,16 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Button from '@/ui/Button/Button'
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
+import { FaChevronLeft, FaChevronRight, FaEdit } from 'react-icons/fa'
 import { ProductService } from '@/services/product/product.service'
 import ProductForm from './ProductForm'
-import ProductDetails from './ProductDetails'
 import Modal from '@/ui/Modal/Modal'
 import { useInventoryList } from '@/hooks/useInventoryList'
 import { IInventory } from '@/shared/interfaces/inventory.interface'
-import { IProduct } from '@/shared/interfaces/product.interface'
 import useDebounce from '@/hooks/useDebounce'
 import { formatCurrency } from '@/utils/formatCurrency'
+import { calculateInventoryStats, DEFAULT_LOW_STOCK } from '@/utils/inventoryStats'
+import EditProductForm from './EditProductForm'
 import './ProductsTable.css'
 
 const ProductsTable = () => {
@@ -32,9 +32,10 @@ const ProductsTable = () => {
   const [searchField, setSearchField] = useState<'name' | 'sku'>(initialField)
   const [sortField, setSortField] = useState<'name' | 'quantity' | 'price'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [products, setProducts] = useState<IInventory[]>([])
+  const [stats, setStats] = useState({ outOfStock: 0, lowStock: 0 })
   const [error, setError] = useState<string | null>(null)
   const [stockFilter, setStockFilter] = useState<'all' | 'out' | 'low'>('all')
 
@@ -70,6 +71,7 @@ const ProductsTable = () => {
   useEffect(() => {
     if (status === 'success' && data) {
       setProducts(data.items)
+      setStats(data.stats)
     }
   }, [status, data])
 
@@ -85,14 +87,47 @@ const ProductsTable = () => {
   const handleDelete = async (id: number) => {
     try {
       await ProductService.delete(id)
-      setProducts(prev => prev.filter(p => p.id !== id))
+      setProducts(prev => {
+        const updated = prev.filter(p => p.id !== id)
+        setStats(calculateInventoryStats(updated, DEFAULT_LOW_STOCK))
+        return updated
+      })
     } catch (e: any) {
       setError(e.message)
     }
   }
 
-  const openDetails = (index: number) => {
-    setSelectedIndex(index)
+  const handleEditSave = async (data: {
+    purchasePrice: number
+    salePrice: number
+    remains: number
+  }) => {
+    if (editingIndex === null) return
+    const prevProducts = [...products]
+    const product = products[editingIndex]
+    const updatedProduct = {
+      ...product,
+      purchasePrice: data.purchasePrice,
+      price: data.salePrice,
+      quantity: data.remains,
+    }
+    const newProducts = prevProducts.slice()
+    newProducts[editingIndex] = updatedProduct
+    setProducts(newProducts)
+    setStats(calculateInventoryStats(newProducts, DEFAULT_LOW_STOCK))
+    try {
+      await ProductService.update(product.id, {
+        purchasePrice: data.purchasePrice,
+        salePrice: data.salePrice,
+        remains: data.remains,
+      })
+      setEditingIndex(null)
+      refetch()
+    } catch (e: any) {
+      setProducts(prevProducts)
+      setStats(calculateInventoryStats(prevProducts, DEFAULT_LOW_STOCK))
+      setError(e.message)
+    }
   }
 
   const isInitialLoading = status === 'pending' && !data
@@ -150,9 +185,7 @@ const ProductsTable = () => {
             {isInitialLoading ? (
               <div className="mt-1 h-6 w-8 bg-neutral-200 rounded animate-pulse" />
             ) : (
-              <div className="text-xl font-semibold">
-                {data?.stats.outOfStock ?? 0}
-              </div>
+              <div className="text-xl font-semibold">{stats.outOfStock}</div>
             )}
           </div>
           <div
@@ -167,9 +200,7 @@ const ProductsTable = () => {
             {isInitialLoading ? (
               <div className="mt-1 h-6 w-8 bg-neutral-200 rounded animate-pulse" />
             ) : (
-              <div className="text-xl font-semibold">
-                {data?.stats.lowStock ?? 0}
-              </div>
+              <div className="text-xl font-semibold">{stats.lowStock}</div>
             )}
           </div>
         </div>
@@ -184,7 +215,10 @@ const ProductsTable = () => {
         <table className="min-w-full bg-neutral-100 rounded shadow-md">
           <thead>
             <tr className="text-left border-b border-neutral-300">
-              <th className="p-2 cursor-pointer" onClick={() => handleSort('name')}>
+              <th
+                className="p-2 cursor-pointer col-name"
+                onClick={() => handleSort('name')}
+              >
                 <span className="inline-flex items-center">
                   Название
                   <span className="ml-1 inline-block w-4">
@@ -192,9 +226,12 @@ const ProductsTable = () => {
                   </span>
                 </span>
               </th>
-              <th className="p-2">Категория</th>
-              <th className="p-2">Артикул</th>
-              <th className="p-2 cursor-pointer" onClick={() => handleSort('quantity')}>
+              <th className="p-2 col-category">Категория</th>
+              <th className="p-2 col-code">Артикул</th>
+              <th
+                className="p-2 cursor-pointer col-quantity"
+                onClick={() => handleSort('quantity')}
+              >
                 <span className="inline-flex items-center">
                   Остаток
                   <span className="ml-1 inline-block w-4">
@@ -202,7 +239,10 @@ const ProductsTable = () => {
                   </span>
                 </span>
               </th>
-              <th className="p-2 cursor-pointer" onClick={() => handleSort('price')}>
+              <th
+                className="p-2 cursor-pointer col-sale"
+                onClick={() => handleSort('price')}
+              >
                 <span className="inline-flex items-center">
                   Цена продажи
                   <span className="ml-1 inline-block w-4">
@@ -210,33 +250,33 @@ const ProductsTable = () => {
                   </span>
                 </span>
               </th>
-              <th className="p-2">Закупочная цена</th>
-              <th className="p-2">Действия</th>
+              <th className="p-2 col-purchase">Закупочная цена</th>
+              <th className="p-2 col-actions">Действия</th>
             </tr>
           </thead>
           <tbody>
             {isInitialLoading &&
               Array.from({ length: pageSize }).map((_, i) => (
                 <tr key={i} className="row animate-pulse">
-                  <td className="p-2">
+                  <td className="p-2 col-name">
                     <div className="h-4 bg-neutral-200 rounded w-3/4" />
                   </td>
-                  <td className="p-2">
+                  <td className="p-2 col-category">
                     <div className="h-4 bg-neutral-200 rounded w-1/2" />
                   </td>
-                  <td className="p-2">
+                  <td className="p-2 col-code">
                     <div className="h-4 bg-neutral-200 rounded w-1/3" />
                   </td>
-                  <td className="p-2">
+                  <td className="p-2 col-quantity">
                     <div className="h-4 bg-neutral-200 rounded w-1/4 ml-auto" />
                   </td>
-                  <td className="p-2">
+                  <td className="p-2 col-sale">
                     <div className="h-4 bg-neutral-200 rounded w-1/4 ml-auto" />
                   </td>
-                  <td className="p-2">
+                  <td className="p-2 col-purchase">
                     <div className="h-4 bg-neutral-200 rounded w-1/4 ml-auto" />
                   </td>
-                  <td className="p-2">
+                  <td className="p-2 col-actions">
                     <div className="h-4 bg-neutral-200 rounded w-1/2 ml-auto" />
                   </td>
                 </tr>
@@ -254,18 +294,26 @@ const ProductsTable = () => {
                   key={prod.id}
                   className="row border-b border-neutral-200 hover:bg-neutral-200"
                 >
-                  <td className="p-2">{prod.name}</td>
-                  <td className="p-2">{prod.category?.name || '-'}</td>
-                  <td className="p-2">{prod.code}</td>
-                  <td className="p-2">{prod.quantity}</td>
-                  <td className="p-2">{formatCurrency(prod.price)}</td>
-                  <td className="p-2">{formatCurrency(prod.purchasePrice)}</td>
-                  <td className="p-2 space-x-2 flex justify-end">
+                  <td className="p-2 col-name" title={prod.name}>
+                    <span className="block truncate">{prod.name}</span>
+                  </td>
+                  <td className="p-2 col-category" title={prod.category?.name || '-'}>
+                    <span className="block truncate">{prod.category?.name || '-'}</span>
+                  </td>
+                  <td className="p-2 col-code" title={prod.code}>
+                    <span className="block truncate">{prod.code}</span>
+                  </td>
+                  <td className="p-2 col-quantity">{prod.quantity}</td>
+                  <td className="p-2 col-sale">{formatCurrency(prod.price)}</td>
+                  <td className="p-2 col-purchase">{formatCurrency(prod.purchasePrice)}</td>
+                  <td className="p-2 col-actions space-x-2 flex justify-end">
                     <Button
-                      className="bg-primary-500 text-white px-2 py-1"
-                      onClick={() => openDetails(index)}
+                      className="bg-primary-500 text-white p-2"
+                      onClick={() => setEditingIndex(index)}
+                      title="Редактировать"
+                      aria-label="Редактировать"
                     >
-                      Статистика
+                      <FaEdit />
                     </Button>
                     <Button
                       className="bg-error text-white px-2 py-1"
@@ -307,33 +355,21 @@ const ProductsTable = () => {
           )}
         </div>
       )}
-
-      {selectedIndex !== null && (
-        <ProductDetails
-          product={
-            {
-              id: products[selectedIndex].id,
-              name: products[selectedIndex].name,
-              articleNumber: products[selectedIndex].code,
-              purchasePrice: products[selectedIndex].purchasePrice,
-              salePrice: products[selectedIndex].price,
-              remains: products[selectedIndex].quantity,
-              minStock: products[selectedIndex].minStock,
-              category: products[selectedIndex].category,
-            } as IProduct
-          }
-          onClose={() => setSelectedIndex(null)}
-          onPrev={
-            selectedIndex > 0 ? () => setSelectedIndex(i => i! - 1) : undefined
-          }
-          onNext={
-            selectedIndex < products.length - 1
-              ? () => setSelectedIndex(i => i! + 1)
-              : undefined
-          }
-          onFirst={() => setSelectedIndex(0)}
-          onLast={() => setSelectedIndex(products.length - 1)}
-        />
+      {editingIndex !== null && (
+        <Modal
+          isOpen={editingIndex !== null}
+          onClose={() => setEditingIndex(null)}
+        >
+          <EditProductForm
+            product={{
+              purchasePrice: products[editingIndex].purchasePrice,
+              salePrice: products[editingIndex].price,
+              remains: products[editingIndex].quantity,
+            }}
+            onSave={handleEditSave}
+            onCancel={() => setEditingIndex(null)}
+          />
+        </Modal>
       )}
       {isCreating && (
         <Modal isOpen={isCreating} onClose={() => setIsCreating(false)}>
