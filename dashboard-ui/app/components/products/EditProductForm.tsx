@@ -7,7 +7,7 @@ import Button from '@/ui/Button/Button'
 import { ProductService } from '@/services/product/product.service'
 import { toast } from '@/utils/toast'
 import { InventoryList } from '@/shared/interfaces/inventory.interface'
-import { DEFAULT_LOW_STOCK } from '@/utils/inventoryStats'
+import { isLowStock } from '@/utils/inventoryStats'
 
 interface ProductData {
   id: number
@@ -157,71 +157,82 @@ const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
 
     const wasLow =
       initial.current.remains > 0 &&
-      initial.current.remains <=
-        (initial.current.minStock ?? DEFAULT_LOW_STOCK)
-    const isLow = body.remains > 0 && body.remains <= body.minStock
+      isLowStock(initial.current.remains, initial.current.minStock)
+    const wasOut = initial.current.remains === 0
+    const isLow = body.remains > 0 && isLowStock(body.remains, body.minStock)
+    const isOut = body.remains === 0
     const deltaLow = (isLow ? 1 : 0) - (wasLow ? 1 : 0)
+    const deltaOut = (isOut ? 1 : 0) - (wasOut ? 1 : 0)
 
     setIsSaving(true)
+
+    // Optimistic cache update
+    queryClient.setQueryData(['product', product.id], (old: any) =>
+      old ? { ...old, ...body, isLow } : old,
+    )
+
+    const lists = queryClient.getQueriesData<InventoryList>({
+      queryKey: ['products'],
+    })
+    lists.forEach(([key, old]) => {
+      if (!old) return
+      const index = old.items.findIndex(it => it.id === product.id)
+      if (index === -1) return
+      const filter = (key[1] as any)?.filters?.stock
+      const item = old.items[index]
+      const wasLowItem =
+        item.quantity > 0 && isLowStock(item.quantity, item.minStock)
+      const wasOutItem = item.quantity === 0
+      const updated = {
+        ...item,
+        name: body.name,
+        minStock: body.minStock,
+        purchasePrice: body.purchasePrice,
+        price: body.salePrice,
+        quantity: body.remains,
+      }
+      const isLowItem =
+        updated.quantity > 0 && isLowStock(updated.quantity, updated.minStock)
+      const isOutItem = updated.quantity === 0
+
+      let items = [...old.items]
+      let total = old.total
+      if (
+        (filter === 'low' && !isLowItem) ||
+        (filter === 'out' && !isOutItem)
+      ) {
+        items.splice(index, 1)
+        total -= 1
+      } else {
+        items[index] = updated
+      }
+
+      const stats = {
+        outOfStock:
+          old.stats.outOfStock + (isOutItem ? 1 : 0) - (wasOutItem ? 1 : 0),
+        lowStock:
+          old.stats.lowStock + (isLowItem ? 1 : 0) - (wasLowItem ? 1 : 0),
+      }
+
+      queryClient.setQueryData(key, { ...old, items, total, stats })
+    })
+
+    queryClient.setQueryData(['inventory-snapshot'], (old: any) =>
+      old
+        ? {
+            ...old,
+            lowStock: (old.lowStock ?? 0) + deltaLow,
+            outOfStock: (old.outOfStock ?? 0) + deltaOut,
+          }
+        : old,
+    )
+
     try {
       await ProductService.update(product.id, body)
-
-      // update individual product cache
-      queryClient.setQueryData(['product', product.id], (old: any) =>
-        old
-          ? { ...old, ...body, isLow }
-          : old,
-      )
-
-      // update products lists
-      const lists = queryClient.getQueriesData<InventoryList>({
-        queryKey: ['products'],
-      })
-      lists.forEach(([key, old]) => {
-        if (!old) return
-        const index = old.items.findIndex(it => it.id === product.id)
-        if (index === -1) return
-        const item = old.items[index]
-        const wasLowItem =
-          item.quantity > 0 &&
-          item.quantity <= (item.minStock ?? DEFAULT_LOW_STOCK)
-        const updated = {
-          ...item,
-          name: body.name,
-          minStock: body.minStock,
-          purchasePrice: body.purchasePrice,
-          price: body.salePrice,
-          quantity: body.remains,
-        }
-        const isLowItem =
-          updated.quantity > 0 && updated.quantity <= updated.minStock
-
-        let items = [...old.items]
-        items[index] = updated
-
-        let stats = { ...old.stats }
-        if (wasLowItem !== isLowItem) {
-          stats.lowStock += isLowItem ? 1 : -1
-        }
-
-        queryClient.setQueryData(key, { ...old, items, stats })
-      })
-
-      // update snapshot
-      queryClient.setQueryData(
-        ['inventory-snapshot'],
-        (old: any) =>
-          old
-            ? { ...old, lowStock: (old.lowStock ?? 0) + deltaLow }
-            : old,
-      )
-
       toast.success('Сохранено')
-
       queryClient.invalidateQueries({ queryKey: ['products'] })
       queryClient.invalidateQueries({ queryKey: ['inventory-snapshot'] })
       queryClient.invalidateQueries({ queryKey: ['product', product.id] })
-
       onSuccess({ id: product.id, ...body })
     } catch (err: any) {
       const payload = err?.response?.data?.message
@@ -250,6 +261,9 @@ const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
       } else {
         toast.error('Ошибка сохранения')
       }
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['inventory-snapshot'] })
+      queryClient.invalidateQueries({ queryKey: ['product', product.id] })
     } finally {
       setIsSaving(false)
     }

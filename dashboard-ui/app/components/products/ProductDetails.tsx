@@ -8,7 +8,7 @@ import { IProduct } from '@/shared/interfaces/product.interface'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { toast } from '@/utils/toast'
 import Field from '@/ui/Field/Field'
-import { DEFAULT_LOW_STOCK } from '@/utils/inventoryStats'
+import { isLowStock } from '@/utils/inventoryStats'
 import { InventoryList } from '@/shared/interfaces/inventory.interface'
 
 interface Props {
@@ -84,8 +84,8 @@ const ProductDetails: FC<Props> = ({
 
       const wasLow =
         product.remains > 0 &&
-        product.remains <= (product.minStock ?? DEFAULT_LOW_STOCK)
-      const isLow = product.remains > 0 && product.remains <= n
+        isLowStock(product.remains, product.minStock)
+      const isLow = product.remains > 0 && isLowStock(product.remains, n)
       const deltaLow = (isLow ? 1 : 0) - (wasLow ? 1 : 0)
 
       // update individual product cache
@@ -104,10 +104,9 @@ const ProductDetails: FC<Props> = ({
         const filter = (key[1] as any)?.filters?.stock
         const item = old.items[index]
         const wasLowItem =
-          item.quantity > 0 &&
-          item.quantity <= (item.minStock ?? DEFAULT_LOW_STOCK)
+          item.quantity > 0 && isLowStock(item.quantity, item.minStock)
         const updated = { ...item, minStock: n }
-        const isLowItem = item.quantity > 0 && item.quantity <= n
+        const isLowItem = item.quantity > 0 && isLowStock(item.quantity, n)
         let items = [...old.items]
         let total = old.total
         let lowStock = old.stats.lowStock

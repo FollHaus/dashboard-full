@@ -11,7 +11,11 @@ import { useInventoryList } from '@/hooks/useInventoryList'
 import { IInventory } from '@/shared/interfaces/inventory.interface'
 import useDebounce from '@/hooks/useDebounce'
 import { formatCurrency } from '@/utils/formatCurrency'
-import { calculateInventoryStats, DEFAULT_LOW_STOCK } from '@/utils/inventoryStats'
+import {
+  calculateInventoryStats,
+  DEFAULT_MIN_STOCK,
+  isLowStock,
+} from '@/utils/inventoryStats'
 import EditProductForm from './EditProductForm'
 import './ProductsTable.css'
 
@@ -89,7 +93,7 @@ const ProductsTable = () => {
       await ProductService.delete(id)
       setProducts(prev => {
         const updated = prev.filter(p => p.id !== id)
-        setStats(calculateInventoryStats(updated, DEFAULT_LOW_STOCK))
+        setStats(calculateInventoryStats(updated, DEFAULT_MIN_STOCK))
         return updated
       })
     } catch (e: any) {
@@ -107,7 +111,7 @@ const ProductsTable = () => {
     if (editingIndex === null) return
     const newProducts = [...products]
     const product = newProducts[editingIndex]
-    newProducts[editingIndex] = {
+    const updated = {
       ...product,
       name: data.name,
       minStock: data.minStock,
@@ -115,8 +119,20 @@ const ProductsTable = () => {
       price: data.salePrice,
       quantity: data.remains,
     }
+    const matchesLow =
+      updated.quantity > 0 && isLowStock(updated.quantity, updated.minStock)
+    const matchesOut = updated.quantity === 0
+
+    if (
+      (stockFilter === 'low' && !matchesLow) ||
+      (stockFilter === 'out' && !matchesOut)
+    ) {
+      newProducts.splice(editingIndex, 1)
+    } else {
+      newProducts[editingIndex] = updated
+    }
     setProducts(newProducts)
-    setStats(calculateInventoryStats(newProducts, DEFAULT_LOW_STOCK))
+    setStats(calculateInventoryStats(newProducts, DEFAULT_MIN_STOCK))
     setEditingIndex(null)
   }
 
@@ -293,7 +309,15 @@ const ProductsTable = () => {
                   <td className="p-2 col-code" title={prod.code}>
                     <span className="block truncate">{prod.code}</span>
                   </td>
-                  <td className="p-2 col-quantity">{prod.quantity}</td>
+                  <td className="p-2 col-quantity">
+                    {prod.quantity}
+                    {prod.quantity > 0 &&
+                      isLowStock(prod.quantity, prod.minStock) && (
+                        <span className="ml-2 bg-warning text-white text-xs px-2 py-0.5 rounded">
+                          мало
+                        </span>
+                      )}
+                  </td>
                   <td className="p-2 col-sale">{formatCurrency(prod.price)}</td>
                   <td className="p-2 col-purchase">{formatCurrency(prod.purchasePrice)}</td>
                   <td className="p-2 col-actions space-x-2 flex justify-end">

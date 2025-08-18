@@ -8,7 +8,8 @@ import {
 } from '@/shared/interfaces/inventory.interface'
 import {
   calculateInventoryStats,
-  DEFAULT_LOW_STOCK,
+  DEFAULT_MIN_STOCK,
+  isLowStock,
 } from '@/utils/inventoryStats'
 
 export interface InventoryListParams {
@@ -59,15 +60,13 @@ export const useInventoryList = (params: InventoryListParams) => {
           filtered = filtered.filter(it => it.code.toLowerCase().includes(q))
         }
 
-        const stats = calculateInventoryStats(filtered, DEFAULT_LOW_STOCK)
+        const stats = calculateInventoryStats(filtered, DEFAULT_MIN_STOCK)
 
         if (params.filters?.stock === 'out') {
           filtered = filtered.filter(it => it.quantity === 0)
         } else if (params.filters?.stock === 'low') {
           filtered = filtered.filter(
-            it =>
-              it.quantity > 0 &&
-              it.quantity <= (it.minStock ?? DEFAULT_LOW_STOCK),
+            it => it.quantity > 0 && isLowStock(it.quantity, it.minStock),
           )
         }
 
