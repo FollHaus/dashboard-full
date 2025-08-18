@@ -7,6 +7,9 @@ import { ProductService } from '@/services/product/product.service'
 import { IProduct } from '@/shared/interfaces/product.interface'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { toast } from '@/utils/toast'
+import Field from '@/ui/Field/Field'
+import { DEFAULT_LOW_STOCK } from '@/utils/inventoryStats'
+import { InventoryList } from '@/shared/interfaces/inventory.interface'
 
 interface Props {
   product: IProduct
@@ -78,13 +81,66 @@ const ProductDetails: FC<Props> = ({
     setIsSaving(true)
     try {
       await ProductService.update(product.id, { minStock: n })
-      const isLow = product.remains <= n
-      toast.success('Сохранено')
-      queryClient.invalidateQueries({ queryKey: ['products'] })
-      queryClient.invalidateQueries({ queryKey: ['inventory-snapshot'] })
+
+      const wasLow =
+        product.remains > 0 &&
+        product.remains <= (product.minStock ?? DEFAULT_LOW_STOCK)
+      const isLow = product.remains > 0 && product.remains <= n
+      const deltaLow = (isLow ? 1 : 0) - (wasLow ? 1 : 0)
+
+      // update individual product cache
       queryClient.setQueryData(['product', product.id], (old: any) =>
         old ? { ...old, minStock: n, isLow } : old,
       )
+
+      // update products lists
+      const lists = queryClient.getQueriesData<InventoryList>({
+        queryKey: ['products'],
+      })
+      lists.forEach(([key, old]) => {
+        if (!old) return
+        const index = old.items.findIndex(it => it.id === product.id)
+        if (index === -1) return
+        const filter = (key[1] as any)?.filters?.stock
+        const item = old.items[index]
+        const wasLowItem =
+          item.quantity > 0 &&
+          item.quantity <= (item.minStock ?? DEFAULT_LOW_STOCK)
+        const updated = { ...item, minStock: n }
+        const isLowItem = item.quantity > 0 && item.quantity <= n
+        let items = [...old.items]
+        let total = old.total
+        let lowStock = old.stats.lowStock
+        items[index] = updated
+        if (filter === 'low' && !isLowItem) {
+          items.splice(index, 1)
+          total -= 1
+        }
+        if (wasLowItem !== isLowItem) {
+          lowStock += isLowItem ? 1 : -1
+        }
+        queryClient.setQueryData(key, {
+          ...old,
+          items,
+          total,
+          stats: { ...old.stats, lowStock },
+        })
+      })
+
+      // update snapshot
+      queryClient.setQueryData(
+        ['inventory-snapshot'],
+        (old: any) =>
+          old
+            ? { ...old, lowStock: (old.lowStock ?? 0) + deltaLow }
+            : old,
+      )
+
+      toast.success('Сохранено')
+
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['inventory-snapshot'] })
+      queryClient.invalidateQueries({ queryKey: ['product', product.id] })
     } catch (err) {
       toast.error('Ошибка сохранения')
     } finally {
@@ -171,11 +227,9 @@ const ProductDetails: FC<Props> = ({
         </div>
         <form onSubmit={handleSubmit}>
           <h3 className="font-medium mb-2">Настройки товара</h3>
-          <label htmlFor="minStock" className="block text-sm font-medium text-gray-700 mb-1">
-            Минимальный остаток
-          </label>
-          <input
+          <Field
             id="minStock"
+            label="Минимальный остаток"
             type="number"
             inputMode="numeric"
             min={0}
@@ -183,14 +237,12 @@ const ProductDetails: FC<Props> = ({
             value={minStock}
             onChange={handleChange}
             onWheel={e => (e.currentTarget as HTMLInputElement).blur()}
-            className={`w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] ${
-              error ? 'border-red-500' : 'border-gray-300'
-            }`}
+            disabled={isSaving}
+            error={error ? ({ message: error } as any) : undefined}
           />
           <p className="mt-1 text-xs text-gray-500">
             Товар считается «мало», если Остаток ≤ Минимальный остаток.
           </p>
-          {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
           <div className="mt-4 flex justify-end space-x-2">
             <Button
               type="submit"
