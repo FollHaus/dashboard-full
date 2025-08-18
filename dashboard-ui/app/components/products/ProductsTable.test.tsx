@@ -153,7 +153,7 @@ describe('ProductsTable', () => {
     expect(lowBlock?.querySelector('div.text-xl')?.textContent).toBe('1')
 
     const row = screen.getByText('Product 1').closest('tr')!
-    expect(within(row).queryByText('мало')).toBeNull()
+    expect(within(row).queryByText('(мало)')).toBeNull()
 
     const editBtn = within(row).getByTitle('Редактировать')
     await userEvent.click(editBtn)
@@ -164,7 +164,7 @@ describe('ProductsTable', () => {
 
     await waitFor(() => {
       const updatedRow = screen.getByText('Product 1').closest('tr')!
-      expect(within(updatedRow).getByText('мало')).toBeInTheDocument()
+      expect(within(updatedRow).getByText('(мало)')).toBeInTheDocument()
     })
     expect(lowBlock?.querySelector('div.text-xl')?.textContent).toBe('2')
   })
@@ -195,7 +195,7 @@ describe('ProductsTable', () => {
     const lowBlock = screen.getByText('Мало на складе').parentElement
     expect(lowBlock?.querySelector('div.text-xl')?.textContent).toBe('1')
     const row = screen.getByText('Product 1').closest('tr')!
-    expect(within(row).getByText('мало')).toBeInTheDocument()
+    expect(within(row).getByText('(мало)')).toBeInTheDocument()
 
     const editBtn = within(row).getByTitle('Редактировать')
     await userEvent.click(editBtn)
@@ -206,7 +206,7 @@ describe('ProductsTable', () => {
 
     await waitFor(() => {
       const updatedRow = screen.getByText('Product 1').closest('tr')!
-      expect(within(updatedRow).queryByText('мало')).toBeNull()
+      expect(within(updatedRow).queryByText('(мало)')).toBeNull()
     })
     expect(lowBlock?.querySelector('div.text-xl')?.textContent).toBe('0')
   })
