@@ -6,6 +6,10 @@ import {
   InventoryList,
   IInventory,
 } from '@/shared/interfaces/inventory.interface'
+import {
+  calculateInventoryStats,
+  DEFAULT_LOW_STOCK,
+} from '@/utils/inventoryStats'
 
 export interface InventoryListParams {
   page?: number
@@ -29,12 +33,17 @@ export const useInventoryList = (params: InventoryListParams) => {
         },
         signal
       ).then(products => {
+        const normalizePrice = (value: number) =>
+          value > 1000 ? value / 100 : value
+
         const items: IInventory[] = products.map(p => ({
           id: p.id,
           name: p.name,
           code: p.articleNumber,
           quantity: p.remains,
-          price: Number(p.salePrice),
+          price: normalizePrice(Number(p.salePrice)),
+          purchasePrice: normalizePrice(Number(p.purchasePrice)),
+          minStock: p.minStock,
           status: p.remains > 0 ? 'in_stock' : 'out_of_stock',
           updatedAt: (p as any).updatedAt,
           category: (p as any).category,
@@ -48,6 +57,18 @@ export const useInventoryList = (params: InventoryListParams) => {
         if (params.searchSku) {
           const q = params.searchSku.toLowerCase()
           filtered = filtered.filter(it => it.code.toLowerCase().includes(q))
+        }
+
+        const stats = calculateInventoryStats(filtered, DEFAULT_LOW_STOCK)
+
+        if (params.filters?.stock === 'out') {
+          filtered = filtered.filter(it => it.quantity === 0)
+        } else if (params.filters?.stock === 'low') {
+          filtered = filtered.filter(
+            it =>
+              it.quantity > 0 &&
+              it.quantity <= (it.minStock ?? DEFAULT_LOW_STOCK),
+          )
         }
 
         if (params.sort) {
@@ -67,7 +88,7 @@ export const useInventoryList = (params: InventoryListParams) => {
         const start = (page - 1) * pageSize
         const paginated = filtered.slice(start, start + pageSize)
 
-        return { items: paginated, total, page, pageSize }
+        return { items: paginated, total, page, pageSize, stats }
       }),
     keepPreviousData: true,
     placeholderData: prev => prev,

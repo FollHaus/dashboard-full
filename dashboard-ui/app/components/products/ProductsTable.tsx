@@ -9,6 +9,7 @@ import ProductDetails from './ProductDetails'
 import Modal from '@/ui/Modal/Modal'
 import { useInventoryList } from '@/hooks/useInventoryList'
 import { IInventory } from '@/shared/interfaces/inventory.interface'
+import { IProduct } from '@/shared/interfaces/product.interface'
 import useDebounce from '@/hooks/useDebounce'
 import { formatCurrency } from '@/utils/formatCurrency'
 import './ProductsTable.css'
@@ -30,10 +31,11 @@ const ProductsTable = () => {
   const [searchField, setSearchField] = useState<'name' | 'sku'>(initialField)
   const [sortField, setSortField] = useState<'name' | 'quantity' | 'price'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
-  const [selected, setSelected] = useState<IInventory | null>(null)
+  const [selected, setSelected] = useState<IProduct | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [products, setProducts] = useState<IInventory[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [stockFilter, setStockFilter] = useState<'all' | 'out' | 'low'>('all')
 
   const debouncedTerm = useDebounce(searchTerm, 300)
   const debouncedField = useDebounce(searchField, 300)
@@ -53,7 +55,7 @@ const ProductsTable = () => {
 
   useEffect(() => {
     setPage(1)
-  }, [debouncedTerm, debouncedField])
+  }, [debouncedTerm, debouncedField, stockFilter])
 
   const { data, status, isFetching, isError, refetch } = useInventoryList({
     page,
@@ -61,6 +63,7 @@ const ProductsTable = () => {
     searchName: debouncedField === 'name' ? debouncedTerm : undefined,
     searchSku: debouncedField === 'sku' ? debouncedTerm : undefined,
     sort: `${sortField}:${sortOrder}`,
+    filters: stockFilter === 'all' ? undefined : { stock: stockFilter },
   })
 
   useEffect(() => {
@@ -85,6 +88,19 @@ const ProductsTable = () => {
     } catch (e: any) {
       setError(e.message)
     }
+  }
+
+  const openDetails = (prod: IInventory) => {
+    setSelected({
+      id: prod.id,
+      name: prod.name,
+      articleNumber: prod.code,
+      purchasePrice: prod.purchasePrice,
+      salePrice: prod.price,
+      remains: prod.quantity,
+      minStock: prod.minStock,
+      category: prod.category,
+    })
   }
 
   const isInitialLoading = status === 'pending' && !data
@@ -118,7 +134,7 @@ const ProductsTable = () => {
         </Button>
       </div>
 
-      {isError && products.length === 0 && (
+      {isError && !data ? (
         <div className="text-center text-error py-4">
           Ошибка загрузки
           <Button
@@ -128,7 +144,45 @@ const ProductsTable = () => {
             Повторить
           </Button>
         </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div
+            className={`h-24 p-4 bg-white rounded shadow cursor-pointer flex flex-col items-center justify-center ${
+              stockFilter === 'out' ? 'ring-2 ring-primary-500' : ''
+            }`}
+            onClick={() =>
+              setStockFilter(f => (f === 'out' ? 'all' : 'out'))
+            }
+          >
+            <div className="text-sm">Нет в наличии</div>
+            {isInitialLoading ? (
+              <div className="mt-1 h-6 w-8 bg-neutral-200 rounded animate-pulse" />
+            ) : (
+              <div className="text-xl font-semibold">
+                {data?.stats.outOfStock ?? 0}
+              </div>
+            )}
+          </div>
+          <div
+            className={`h-24 p-4 bg-white rounded shadow cursor-pointer flex flex-col items-center justify-center ${
+              stockFilter === 'low' ? 'ring-2 ring-primary-500' : ''
+            }`}
+            onClick={() =>
+              setStockFilter(f => (f === 'low' ? 'all' : 'low'))
+            }
+          >
+            <div className="text-sm">Мало на складе</div>
+            {isInitialLoading ? (
+              <div className="mt-1 h-6 w-8 bg-neutral-200 rounded animate-pulse" />
+            ) : (
+              <div className="text-xl font-semibold">
+                {data?.stats.lowStock ?? 0}
+              </div>
+            )}
+          </div>
+        </div>
       )}
+
       <div
         className={`inventory-table ${
           isFetching && !isInitialLoading ? 'loading' : ''
@@ -164,6 +218,7 @@ const ProductsTable = () => {
                   </span>
                 </span>
               </th>
+              <th className="p-2">Закупочная цена</th>
               <th className="p-2">Действия</th>
             </tr>
           </thead>
@@ -187,13 +242,16 @@ const ProductsTable = () => {
                     <div className="h-4 bg-neutral-200 rounded w-1/4 ml-auto" />
                   </td>
                   <td className="p-2">
+                    <div className="h-4 bg-neutral-200 rounded w-1/4 ml-auto" />
+                  </td>
+                  <td className="p-2">
                     <div className="h-4 bg-neutral-200 rounded w-1/2 ml-auto" />
                   </td>
                 </tr>
               ))}
             {!isInitialLoading && products.length === 0 && (
               <tr className="row">
-                <td colSpan={6} className="p-2 text-center">
+                <td colSpan={7} className="p-2 text-center">
                   Нет данных
                 </td>
               </tr>
@@ -209,9 +267,16 @@ const ProductsTable = () => {
                   <td className="p-2">{prod.code}</td>
                   <td className="p-2">{prod.quantity}</td>
                   <td className="p-2">{formatCurrency(prod.price)}</td>
-                  <td className="p-2">
+                  <td className="p-2">{formatCurrency(prod.purchasePrice)}</td>
+                  <td className="p-2 space-x-2 flex justify-end">
                     <Button
-                      className="bg-error text-white px-4 py-1"
+                      className="bg-primary-500 text-white px-2 py-1"
+                      onClick={() => openDetails(prod)}
+                    >
+                      Статистика
+                    </Button>
+                    <Button
+                      className="bg-error text-white px-2 py-1"
                       onClick={() => handleDelete(prod.id)}
                     >
                       Удалить
