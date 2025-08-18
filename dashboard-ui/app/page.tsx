@@ -5,7 +5,6 @@ import type { Metadata } from "next";
 import DashboardControls, { Period } from "@/components/dashboard/DashboardControls";
 import KpiCards from "@/components/dashboard/KpiCards";
 import SalesChart from "@/components/dashboard/SalesChart";
-import InventorySnapshot from "@/components/dashboard/InventorySnapshot";
 import TopProducts from "@/components/dashboard/TopProducts";
 import WeeklyTasks from "@/components/dashboard/WeeklyTasks";
 
@@ -25,7 +24,6 @@ export default function Home() {
         <KpiCards period={period} />
         <SalesChart period={period} />
         <TopProducts period={period} />
-        <InventorySnapshot />
         <WeeklyTasks />
       </div>
     </Layout>
