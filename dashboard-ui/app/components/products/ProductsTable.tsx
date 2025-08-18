@@ -275,7 +275,7 @@ const ProductsTable = () => {
                   </td>
                   <td className="p-2 col-quantity">
                     <div className="flex items-center">
-                      <div className="h-4 bg-neutral-200 rounded w-1/4 ml-auto min-w-[3rem]" />
+                      <div className="h-4 bg-neutral-200 rounded ml-auto min-w-[3rem]" />
                     </div>
                   </td>
                   <td className="p-2 col-sale">
@@ -314,12 +314,11 @@ const ProductsTable = () => {
                   <td className="p-2 col-quantity">
                     <div className="flex items-center">
                       <span className="text-right min-w-[3rem]">{prod.quantity}</span>
-                      {prod.quantity > 0 &&
-                        isLowStock(prod.quantity, prod.minStock) && (
-                          <span className="ml-2 text-xs text-red-600 font-medium">
-                            (мало)
-                          </span>
-                        )}
+                      {isLowStock(prod.quantity, prod.minStock) && (
+                        <span className="ml-2 rounded-full bg-red-100 text-red-600 text-xs font-medium px-2 py-0.5">
+                          Мало
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="p-2 col-sale">{formatCurrency(prod.price)}</td>
