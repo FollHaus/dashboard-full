@@ -97,37 +97,27 @@ const ProductsTable = () => {
     }
   }
 
-  const handleEditSave = async (data: {
+  const handleEditSuccess = (data: {
+    name: string
+    minStock: number
     purchasePrice: number
     salePrice: number
     remains: number
   }) => {
     if (editingIndex === null) return
-    const prevProducts = [...products]
-    const product = products[editingIndex]
-    const updatedProduct = {
+    const newProducts = [...products]
+    const product = newProducts[editingIndex]
+    newProducts[editingIndex] = {
       ...product,
+      name: data.name,
+      minStock: data.minStock,
       purchasePrice: data.purchasePrice,
       price: data.salePrice,
       quantity: data.remains,
     }
-    const newProducts = prevProducts.slice()
-    newProducts[editingIndex] = updatedProduct
     setProducts(newProducts)
     setStats(calculateInventoryStats(newProducts, DEFAULT_LOW_STOCK))
-    try {
-      await ProductService.update(product.id, {
-        purchasePrice: data.purchasePrice,
-        salePrice: data.salePrice,
-        remains: data.remains,
-      })
-      setEditingIndex(null)
-      refetch()
-    } catch (e: any) {
-      setProducts(prevProducts)
-      setStats(calculateInventoryStats(prevProducts, DEFAULT_LOW_STOCK))
-      setError(e.message)
-    }
+    setEditingIndex(null)
   }
 
   const isInitialLoading = status === 'pending' && !data
@@ -362,11 +352,14 @@ const ProductsTable = () => {
         >
           <EditProductForm
             product={{
+              id: products[editingIndex].id,
+              name: products[editingIndex].name,
+              minStock: products[editingIndex].minStock,
               purchasePrice: products[editingIndex].purchasePrice,
               salePrice: products[editingIndex].price,
               remains: products[editingIndex].quantity,
             }}
-            onSave={handleEditSave}
+            onSuccess={handleEditSuccess}
             onCancel={() => setEditingIndex(null)}
           />
         </Modal>

@@ -75,4 +75,24 @@ describe('ProductsTable', () => {
       expect(screen.queryByText('Product 1')).not.toBeInTheDocument()
     })
   })
+
+  it('edits product and updates stats', async () => {
+    renderTable()
+    await screen.findByText('Product 1')
+    const lowBlock = screen.getByText('Мало на складе').parentElement
+    expect(lowBlock?.querySelector('div.text-xl')?.textContent).toBe('2')
+
+    const editBtn = (await screen.findAllByTitle('Редактировать'))[0]
+    await userEvent.click(editBtn)
+    const nameInput = await screen.findByLabelText('Название товара')
+    await userEvent.clear(nameInput)
+    await userEvent.type(nameInput, 'Новый')
+    const minStockInput = screen.getByLabelText('Минимальный остаток')
+    await userEvent.clear(minStockInput)
+    await userEvent.type(minStockInput, '3')
+    await userEvent.click(screen.getByRole('button', { name: 'Сохранить' }))
+
+    await waitFor(() => expect(screen.getByText('Новый')).toBeInTheDocument())
+    expect(lowBlock?.querySelector('div.text-xl')?.textContent).toBe('1')
+  })
 })

@@ -6,7 +6,10 @@ import { IField } from '@/ui/Field/field.interface'
 
 
 const Field = forwardRef<HTMLInputElement, IField>(
-  ({ error, label, type = 'text', style, id, ...rest }, ref) => {
+  (
+    { error, label, type = 'text', style, id, className, ...rest },
+    ref,
+  ) => {
     return (
       <div className={styles.field} style={style}>
         {label && (
@@ -16,7 +19,9 @@ const Field = forwardRef<HTMLInputElement, IField>(
         )}
         <input
           id={id}
-          className={cn(styles.input, { [styles.inputError]: error })}
+          className={cn(styles.input, className, {
+            [styles.inputError]: error,
+          })}
           ref={ref}
           type={type}
           {...rest}

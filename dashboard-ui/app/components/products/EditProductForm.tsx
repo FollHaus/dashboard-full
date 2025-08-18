@@ -1,107 +1,384 @@
 'use client'
 
-import { useForm } from 'react-hook-form'
+import { useEffect, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import Field from '@/ui/Field/Field'
 import Button from '@/ui/Button/Button'
+import { ProductService } from '@/services/product/product.service'
+import { toast } from '@/utils/toast'
+import { InventoryList } from '@/shared/interfaces/inventory.interface'
+import { DEFAULT_LOW_STOCK } from '@/utils/inventoryStats'
 
-interface Props {
-  product: {
-    purchasePrice: number
-    salePrice: number
-    remains: number
-  }
-  onSave: (data: FormData) => Promise<void> | void
-  onCancel: () => void
-}
-
-interface FormData {
+interface ProductData {
+  id: number
+  name: string
+  minStock?: number
   purchasePrice: number
   salePrice: number
   remains: number
 }
 
-const EditProductForm = ({ product, onSave, onCancel }: Props) => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isValid, isSubmitting },
-  } = useForm<FormData>({
-    mode: 'onChange',
-    defaultValues: {
-      purchasePrice: product.purchasePrice,
-      salePrice: product.salePrice,
-      remains: product.remains,
-    },
-  })
+interface Props {
+  product: ProductData
+  onSuccess: (data: ProductData) => void
+  onCancel: () => void
+}
 
-  const onSubmit = async (data: FormData) => {
-    await onSave(data)
+const toNum = (s: string | number) =>
+  typeof s === 'number' ? s : Number(String(s).replace(',', '.'))
+
+const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
+  const queryClient = useQueryClient()
+
+  const initial = useRef<ProductData>(product)
+
+  const [name, setName] = useState(product.name)
+  const [minStock, setMinStock] = useState<string>(
+    product.minStock !== undefined ? String(product.minStock) : '',
+  )
+  const [purchasePrice, setPurchasePrice] = useState<string>(
+    String(product.purchasePrice),
+  )
+  const [salePrice, setSalePrice] = useState<string>(
+    String(product.salePrice),
+  )
+  const [remains, setRemains] = useState<string>(String(product.remains))
+
+  const [nameError, setNameError] = useState<string | null>(null)
+  const [minStockError, setMinStockError] = useState<string | null>(null)
+  const [purchasePriceError, setPurchasePriceError] = useState<string | null>(
+    null,
+  )
+  const [salePriceError, setSalePriceError] = useState<string | null>(null)
+  const [remainsError, setRemainsError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    initial.current = product
+    setName(product.name)
+    setMinStock(
+      product.minStock !== undefined ? String(product.minStock) : '',
+    )
+    setPurchasePrice(String(product.purchasePrice))
+    setSalePrice(String(product.salePrice))
+    setRemains(String(product.remains))
+    setNameError(null)
+    setMinStockError(null)
+    setPurchasePriceError(null)
+    setSalePriceError(null)
+    setRemainsError(null)
+  }, [product.id])
+
+  const validate = () => {
+    let valid = true
+
+    const trimmed = name.trim()
+    if (!trimmed || trimmed.length < 2 || trimmed.length > 150) {
+      setNameError('Введите от 2 до 150 символов')
+      valid = false
+    } else {
+      setNameError(null)
+    }
+
+    if (minStock === '') {
+      setMinStockError('Введите целое число не меньше 0')
+      valid = false
+    } else {
+      const n = Number(minStock)
+      if (!Number.isInteger(n) || n < 0) {
+        setMinStockError('Введите целое число не меньше 0')
+        valid = false
+      } else {
+        setMinStockError(null)
+      }
+    }
+
+    const p = toNum(purchasePrice)
+    if (!Number.isFinite(p) || p < 0) {
+      setPurchasePriceError('Введите число не меньше 0')
+      valid = false
+    } else {
+      setPurchasePriceError(null)
+    }
+
+    const s = toNum(salePrice)
+    if (!Number.isFinite(s) || s < 0) {
+      setSalePriceError('Введите число не меньше 0')
+      valid = false
+    } else {
+      setSalePriceError(null)
+    }
+
+    if (remains === '') {
+      setRemainsError('Введите целое число не меньше 0')
+      valid = false
+    } else {
+      const r = Number(remains)
+      if (!Number.isInteger(r) || r < 0) {
+        setRemainsError('Введите целое число не меньше 0')
+        valid = false
+      } else {
+        setRemainsError(null)
+      }
+    }
+
+    return valid
   }
 
+  const isPristine =
+    name === initial.current.name &&
+    minStock ===
+      (initial.current.minStock !== undefined
+        ? String(initial.current.minStock)
+        : '') &&
+    purchasePrice === String(initial.current.purchasePrice) &&
+    salePrice === String(initial.current.salePrice) &&
+    remains === String(initial.current.remains)
+
+  const handlePriceBlur = (
+    setter: (v: string) => void,
+    value: string,
+  ) => {
+    const n = toNum(value)
+    if (Number.isFinite(n)) setter(String(n))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!validate()) return
+
+    const body = {
+      name: name.trim(),
+      minStock: Number(minStock),
+      purchasePrice: toNum(purchasePrice),
+      salePrice: toNum(salePrice),
+      remains: Number(remains),
+    }
+
+    const wasLow =
+      initial.current.remains > 0 &&
+      initial.current.remains <=
+        (initial.current.minStock ?? DEFAULT_LOW_STOCK)
+    const isLow = body.remains > 0 && body.remains <= body.minStock
+    const deltaLow = (isLow ? 1 : 0) - (wasLow ? 1 : 0)
+
+    setIsSaving(true)
+    try {
+      await ProductService.update(product.id, body)
+
+      // update individual product cache
+      queryClient.setQueryData(['product', product.id], (old: any) =>
+        old
+          ? { ...old, ...body, isLow }
+          : old,
+      )
+
+      // update products lists
+      const lists = queryClient.getQueriesData<InventoryList>({
+        queryKey: ['products'],
+      })
+      lists.forEach(([key, old]) => {
+        if (!old) return
+        const index = old.items.findIndex(it => it.id === product.id)
+        if (index === -1) return
+        const item = old.items[index]
+        const wasLowItem =
+          item.quantity > 0 &&
+          item.quantity <= (item.minStock ?? DEFAULT_LOW_STOCK)
+        const updated = {
+          ...item,
+          name: body.name,
+          minStock: body.minStock,
+          purchasePrice: body.purchasePrice,
+          price: body.salePrice,
+          quantity: body.remains,
+        }
+        const isLowItem =
+          updated.quantity > 0 && updated.quantity <= updated.minStock
+
+        let items = [...old.items]
+        items[index] = updated
+
+        let stats = { ...old.stats }
+        if (wasLowItem !== isLowItem) {
+          stats.lowStock += isLowItem ? 1 : -1
+        }
+
+        queryClient.setQueryData(key, { ...old, items, stats })
+      })
+
+      // update snapshot
+      queryClient.setQueryData(
+        ['inventory-snapshot'],
+        (old: any) =>
+          old
+            ? { ...old, lowStock: (old.lowStock ?? 0) + deltaLow }
+            : old,
+      )
+
+      toast.success('Сохранено')
+
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['inventory-snapshot'] })
+      queryClient.invalidateQueries({ queryKey: ['product', product.id] })
+
+      onSuccess({ id: product.id, ...body })
+    } catch (err: any) {
+      const payload = err?.response?.data?.message
+      if (Array.isArray(payload)) {
+        payload.forEach((e: any) => {
+          const msg = 'Введите число не меньше 0'
+          switch (e.property) {
+            case 'name':
+              setNameError('Введите от 2 до 150 символов')
+              break
+            case 'minStock':
+              setMinStockError(msg)
+              break
+            case 'purchasePrice':
+              setPurchasePriceError(msg)
+              break
+            case 'salePrice':
+              setSalePriceError(msg)
+              break
+            case 'remains':
+              setRemainsError(msg)
+              break
+          }
+        })
+        toast.error('Проверьте заполнение полей.')
+      } else {
+        toast.error('Ошибка сохранения')
+      }
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const disableSave =
+    isSaving ||
+    isPristine ||
+    !!(
+      nameError ||
+      minStockError ||
+      purchasePriceError ||
+      salePriceError ||
+      remainsError
+    )
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Field
-        type="text"
-        inputMode="decimal"
-        step="0.01"
-        min="0"
-        {...register('purchasePrice', {
-          setValueAs: v => {
-            const normalized = String(v).replace(',', '.')
-            const num = parseFloat(normalized)
-            return isNaN(num) ? undefined : num
-          },
-          validate: {
-            nonNegative: v =>
-              v === undefined || v >= 0 || 'Цена не может быть отрицательной',
-          },
-        })}
-        label="Закупочная цена"
-        error={errors.purchasePrice}
+        id="name"
+        label="Название товара"
+        value={name}
+        onChange={e => {
+          setName(e.target.value)
+          const trimmed = e.target.value.trim()
+          setNameError(
+            !trimmed || trimmed.length < 2 || trimmed.length > 150
+              ? 'Введите от 2 до 150 символов'
+              : null,
+          )
+        }}
+        error={nameError ? { message: nameError } as any : undefined}
       />
       <Field
-        type="text"
-        inputMode="decimal"
-        step="0.01"
-        min="0"
-        {...register('salePrice', {
-          setValueAs: v => {
-            const normalized = String(v).replace(',', '.')
-            const num = parseFloat(normalized)
-            return isNaN(num) ? undefined : num
-          },
-          validate: {
-            nonNegative: v =>
-              v === undefined || v >= 0 || 'Цена не может быть отрицательной',
-          },
-        })}
-        label="Цена продажи"
-        error={errors.salePrice}
-      />
-      <Field
+        id="minStock"
         type="number"
-        min="0"
-        {...register('remains', {
-          valueAsNumber: true,
-          min: { value: 0, message: 'Значение не может быть отрицательным' },
-        })}
+        className="appearance-none"
+        step={1}
+        min={0}
+        value={minStock}
+        onChange={e => {
+          setMinStock(e.target.value)
+          const v = e.target.value
+          const n = Number(v)
+          setMinStockError(
+            v === '' || !Number.isInteger(n) || n < 0
+              ? 'Введите целое число не меньше 0'
+              : null,
+          )
+        }}
+        onWheel={e => e.currentTarget.blur()}
+        label="Минимальный остаток"
+        error={minStockError ? { message: minStockError } as any : undefined}
+      />
+      <p className="text-xs text-neutral-500">
+        Товар считается «мало», если Остаток ≤ Минимальный остаток.
+      </p>
+      <Field
+        id="purchasePrice"
+        type="text"
+        inputMode="decimal"
+        value={purchasePrice}
+        onChange={e => {
+          setPurchasePrice(e.target.value)
+          const n = toNum(e.target.value)
+          setPurchasePriceError(
+            !Number.isFinite(n) || n < 0 ? 'Введите число не меньше 0' : null,
+          )
+        }}
+        onBlur={() => handlePriceBlur(setPurchasePrice, purchasePrice)}
+        label="Закупочная цена"
+        error={
+          purchasePriceError
+            ? ({ message: purchasePriceError } as any)
+            : undefined
+        }
+      />
+      <Field
+        id="salePrice"
+        type="text"
+        inputMode="decimal"
+        value={salePrice}
+        onChange={e => {
+          setSalePrice(e.target.value)
+          const n = toNum(e.target.value)
+          setSalePriceError(
+            !Number.isFinite(n) || n < 0 ? 'Введите число не меньше 0' : null,
+          )
+        }}
+        onBlur={() => handlePriceBlur(setSalePrice, salePrice)}
+        label="Цена продажи"
+        error={
+          salePriceError ? ({ message: salePriceError } as any) : undefined
+        }
+      />
+      <Field
+        id="remains"
+        type="number"
+        className="appearance-none"
+        step={1}
+        min={0}
+        value={remains}
+        onChange={e => {
+          setRemains(e.target.value)
+          const v = e.target.value
+          const n = Number(v)
+          setRemainsError(
+            v === '' || !Number.isInteger(n) || n < 0
+              ? 'Введите целое число не меньше 0'
+              : null,
+          )
+        }}
         onWheel={e => e.currentTarget.blur()}
         label="Остаток"
-        error={errors.remains}
+        error={remainsError ? ({ message: remainsError } as any) : undefined}
       />
       <div className="flex justify-end space-x-2">
         <Button
           type="submit"
           className="bg-primary-500 text-white px-4 py-1"
-          disabled={!isValid || isSubmitting}
+          disabled={disableSave}
         >
-          Сохранить
+          {isSaving ? '...' : 'Сохранить'}
         </Button>
         <Button
           type="button"
           onClick={onCancel}
           className="bg-secondary-500 text-white px-4 py-1"
-          disabled={isSubmitting}
+          disabled={isSaving}
         >
           Отмена
         </Button>
