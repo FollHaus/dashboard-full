@@ -7,6 +7,39 @@
   height: 44px;
 }
 
+.inventory-table table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.inventory-table .col-name {
+  width: 240px;
+}
+
+.inventory-table .col-category {
+  width: 160px;
+}
+
+.inventory-table .col-code {
+  width: 120px;
+}
+
+.inventory-table .col-quantity {
+  width: 100px;
+}
+
+.inventory-table .col-sale {
+  width: 120px;
+}
+
+.inventory-table .col-purchase {
+  width: 140px;
+}
+
+.inventory-table .col-actions {
+  width: 140px;
+}
+
 .inventory-table.loading::after {
   content: '';
   position: absolute;
