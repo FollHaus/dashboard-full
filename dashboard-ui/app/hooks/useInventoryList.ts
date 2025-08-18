@@ -22,7 +22,7 @@ export interface InventoryListParams {
 
 export const useInventoryList = (params: InventoryListParams) => {
   return useQuery<InventoryList, Error>({
-    queryKey: ['inventory', params],
+    queryKey: ['products', params],
     queryFn: ({ signal }) =>
       ProductService.getAll(
         {
