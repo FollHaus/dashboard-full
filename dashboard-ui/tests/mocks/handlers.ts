@@ -45,6 +45,17 @@ export const handlers = [
   http.get('http://localhost:4000/api/products', () => {
     return HttpResponse.json(mockProducts)
   }),
+  http.get('http://localhost:4000/api/products/:id', ({ params }) => {
+    const product = mockProducts.find(p => p.id === Number(params.id))
+    return HttpResponse.json(product)
+  }),
+  http.put('http://localhost:4000/api/products/:id', async ({ params, request }) => {
+    const id = Number(params.id)
+    const body = await request.json()
+    const product = mockProducts.find(p => p.id === id)
+    if (product) Object.assign(product, body)
+    return HttpResponse.json(product)
+  }),
   http.delete('http://localhost:4000/api/products/:id', () => {
     return HttpResponse.json({})
   }),

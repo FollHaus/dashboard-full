@@ -55,14 +55,15 @@ export class ProductService {
 		}
 
 		// 3) Создаем продукт
-		return this.productRepo.create({
-			name: dto.name,
-			categoryId,
-			articleNumber: dto.articleNumber,
-			purchasePrice: dto.purchasePrice,
-			salePrice: dto.salePrice,
-			remains: dto.remains ?? 0
-		})
+                return this.productRepo.create({
+                        name: dto.name,
+                        categoryId,
+                        articleNumber: dto.articleNumber,
+                        purchasePrice: dto.purchasePrice,
+                        salePrice: dto.salePrice,
+                        remains: dto.remains ?? 0,
+                        minStock: dto.minStock ?? 0,
+                })
 	}
 
 	/**

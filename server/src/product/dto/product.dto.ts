@@ -29,7 +29,10 @@ export class CreateProductDto {
         @IsNumber({ maxDecimalPlaces: 2 })
         salePrice: number
 
-	@IsNumber() @Min(0) @IsOptional() remains?: number
+        @IsNumber() @Min(0) @IsOptional() remains?: number
+
+        @IsNumber() @Min(0) @IsOptional()
+        minStock?: number
 
 	@IsOptional()
 	@IsNumber()
