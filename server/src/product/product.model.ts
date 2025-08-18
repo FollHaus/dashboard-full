@@ -40,8 +40,11 @@ export class ProductModel extends Model {
         @Column({ field: 'sale_price', type: DataType.DECIMAL(12, 2) })
         salePrice: number // Продажная цена
 
-	@Column(DataType.INTEGER)
-	remains: number // Остаток
+        @Column(DataType.INTEGER)
+        remains: number // Остаток
+
+        @Column({ field: 'min_stock', type: DataType.INTEGER, allowNull: true })
+        minStock?: number // Минимальный остаток для уведомлений
 }
 
 /*
