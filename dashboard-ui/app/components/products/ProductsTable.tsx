@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Button from '@/ui/Button/Button'
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import { ProductService } from '@/services/product/product.service'
 import ProductForm from './ProductForm'
 import ProductDetails from './ProductDetails'
@@ -31,7 +32,7 @@ const ProductsTable = () => {
   const [searchField, setSearchField] = useState<'name' | 'sku'>(initialField)
   const [sortField, setSortField] = useState<'name' | 'quantity' | 'price'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
-  const [selected, setSelected] = useState<IProduct | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [products, setProducts] = useState<IInventory[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -90,17 +91,8 @@ const ProductsTable = () => {
     }
   }
 
-  const openDetails = (prod: IInventory) => {
-    setSelected({
-      id: prod.id,
-      name: prod.name,
-      articleNumber: prod.code,
-      purchasePrice: prod.purchasePrice,
-      salePrice: prod.price,
-      remains: prod.quantity,
-      minStock: prod.minStock,
-      category: prod.category,
-    })
+  const openDetails = (index: number) => {
+    setSelectedIndex(index)
   }
 
   const isInitialLoading = status === 'pending' && !data
@@ -257,7 +249,7 @@ const ProductsTable = () => {
               </tr>
             )}
             {!isInitialLoading &&
-              products.map(prod => (
+              products.map((prod, index) => (
                 <tr
                   key={prod.id}
                   className="row border-b border-neutral-200 hover:bg-neutral-200"
@@ -271,7 +263,7 @@ const ProductsTable = () => {
                   <td className="p-2 space-x-2 flex justify-end">
                     <Button
                       className="bg-primary-500 text-white px-2 py-1"
-                      onClick={() => openDetails(prod)}
+                      onClick={() => openDetails(index)}
                     >
                       Статистика
                     </Button>
@@ -289,29 +281,59 @@ const ProductsTable = () => {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex justify-center mt-4 space-x-2">
-          <Button
-            className="px-3 py-1 bg-neutral-200"
-            disabled={page <= 1}
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-          >
-            Предыдущая
-          </Button>
+        <div className="flex justify-center mt-4 space-x-2 items-center">
+          {page > 1 && (
+            <Button
+              className="p-2 rounded-full bg-neutral-200 hover:bg-neutral-300 active:bg-neutral-400"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              aria-label="Предыдущий товар"
+              title="Предыдущий товар"
+            >
+              <FaChevronLeft />
+            </Button>
+          )}
           <span>
             {page} / {totalPages}
           </span>
-          <Button
-            className="px-3 py-1 bg-neutral-200"
-            disabled={page >= totalPages}
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-          >
-            Следующая
-          </Button>
+          {page < totalPages && (
+            <Button
+              className="p-2 rounded-full bg-neutral-200 hover:bg-neutral-300 active:bg-neutral-400"
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              aria-label="Следующий товар"
+              title="Следующий товар"
+            >
+              <FaChevronRight />
+            </Button>
+          )}
         </div>
       )}
 
-      {selected && (
-        <ProductDetails product={selected} onClose={() => setSelected(null)} />
+      {selectedIndex !== null && (
+        <ProductDetails
+          product={
+            {
+              id: products[selectedIndex].id,
+              name: products[selectedIndex].name,
+              articleNumber: products[selectedIndex].code,
+              purchasePrice: products[selectedIndex].purchasePrice,
+              salePrice: products[selectedIndex].price,
+              remains: products[selectedIndex].quantity,
+              minStock: products[selectedIndex].minStock,
+              category: products[selectedIndex].category,
+            } as IProduct
+          }
+          onClose={() => setSelectedIndex(null)}
+          onPrev={
+            selectedIndex > 0 ? () => setSelectedIndex(i => i! - 1) : undefined
+          }
+          onNext={
+            selectedIndex < products.length - 1
+              ? () => setSelectedIndex(i => i! + 1)
+              : undefined
+          }
+          onFirst={() => setSelectedIndex(0)}
+          onLast={() => setSelectedIndex(products.length - 1)}
+        />
       )}
       {isCreating && (
         <Modal isOpen={isCreating} onClose={() => setIsCreating(false)}>

@@ -5,9 +5,11 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   children: React.ReactNode
+  className?: string
+  ariaLabelledby?: string
 }
 
-const Modal = ({ isOpen, onClose, children }: Props) => {
+const Modal = ({ isOpen, onClose, children, className, ariaLabelledby }: Props) => {
   const ref = useRef<HTMLDivElement>(null)
   const previousFocus = useRef<HTMLElement | null>(null)
 
@@ -58,7 +60,7 @@ const Modal = ({ isOpen, onClose, children }: Props) => {
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
           onClick={handleClick}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -66,12 +68,13 @@ const Modal = ({ isOpen, onClose, children }: Props) => {
         >
           <motion.div
             ref={ref}
-            className="bg-white rounded p-4 max-w-lg w-full"
+            className={`bg-white rounded p-4 max-w-lg w-full ${className ?? ''}`}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             role="dialog"
             aria-modal="true"
+            aria-labelledby={ariaLabelledby}
           >
             {children}
           </motion.div>
