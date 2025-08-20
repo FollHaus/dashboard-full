@@ -1,15 +1,12 @@
 "use client";
 
 import React from "react";
+import { usePeriod, Period } from "@/store/period";
 
 interface Props {
-  period: Period;
-  onPeriodChange: (p: Period) => void;
   warehouse?: string;
   onWarehouseChange?: (w: string) => void;
 }
-
-export type Period = "day" | "week" | "month" | "year";
 
 const periodOptions: { value: Period; label: string }[] = [
   { value: "day", label: "День" },
@@ -18,19 +15,15 @@ const periodOptions: { value: Period; label: string }[] = [
   { value: "year", label: "Год" },
 ];
 
-const DashboardControls: React.FC<Props> = ({
-  period,
-  onPeriodChange,
-  warehouse,
-  onWarehouseChange,
-}) => {
+const DashboardControls: React.FC<Props> = ({ warehouse, onWarehouseChange }) => {
+  const { period, set } = usePeriod();
   return (
     <div className="inline-flex items-center gap-4">
       <select
         aria-label="Выбор периода"
         className="border border-neutral-300 rounded px-2 py-1 text-sm w-auto"
         value={period}
-        onChange={(e) => onPeriodChange(e.target.value as Period)}
+        onChange={(e) => set(e.target.value as Period)}
       >
         {periodOptions.map((o) => (
           <option key={o.value} value={o.value}>

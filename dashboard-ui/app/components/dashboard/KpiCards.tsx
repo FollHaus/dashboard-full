@@ -4,19 +4,16 @@ import React from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
-import { Period } from "./DashboardControls";
 import { getPeriodRange } from "@/utils/buckets";
+import { usePeriod } from "@/store/period";
 
 const currency = new Intl.NumberFormat("ru-RU", {
   style: "currency",
   currency: "RUB",
 });
 
-interface Props {
-  period: Period;
-}
-
-const KpiCards: React.FC<Props> = ({ period }) => {
+const KpiCards: React.FC = () => {
+  const { period } = usePeriod();
   const { start, end } = getPeriodRange(period);
   const {
     data,
@@ -25,7 +22,7 @@ const KpiCards: React.FC<Props> = ({ period }) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["kpi", start.toISOString(), end.toISOString()],
+    queryKey: ["kpi", period, start.toISOString(), end.toISOString()],
     queryFn: async () =>
       AnalyticsService.getKpis(
         start.toISOString().slice(0, 10),

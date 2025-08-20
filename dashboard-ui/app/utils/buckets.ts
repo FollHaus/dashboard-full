@@ -1,4 +1,4 @@
-import { Period } from "@/components/dashboard/DashboardControls";
+import { Period } from "@/store/period";
 
 export interface Bucket {
   key: string; // ISO date (YYYY-MM-DD) or YYYY-MM for months

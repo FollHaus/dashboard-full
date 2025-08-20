@@ -15,12 +15,8 @@ import {
   Cell,
 } from "recharts"
 import { AnalyticsService } from "@/services/analytics/analytics.service"
-import { Period } from "./DashboardControls"
 import { getPeriodRange } from "@/utils/buckets"
-
-interface Props {
-  period: Period
-}
+import { usePeriod } from "@/store/period"
 
 const metricOptions = [
   { value: "revenue", label: "Выручка" },
@@ -61,8 +57,9 @@ const formatDate = (date: Date) =>
     .toISOString()
     .slice(0, 10)
 
-const TopProducts: React.FC<Props> = ({ period }) => {
+const TopProducts: React.FC = () => {
   const router = useRouter()
+  const { period } = usePeriod()
   const [metric, setMetric] = useState<(typeof metricOptions)[number]["value"]>(
     "revenue",
   )
@@ -78,7 +75,7 @@ const TopProducts: React.FC<Props> = ({ period }) => {
     error: prodError,
     refetch: refetchProducts,
   } = useQuery({
-    queryKey: ["top-products", s, e, metric, limit],
+    queryKey: ["top-products", period, s, e, metric, limit],
     queryFn: () => AnalyticsService.getTopProducts(15, s, e),
     keepPreviousData: true,
     placeholderData: (prev) => prev,
@@ -91,7 +88,7 @@ const TopProducts: React.FC<Props> = ({ period }) => {
     error: catError,
     refetch: refetchCategories,
   } = useQuery({
-    queryKey: ["category-sales", s, e, metric, limit],
+    queryKey: ["category-sales", period, s, e, metric, limit],
     queryFn: () => AnalyticsService.getCategorySales(s, e),
     keepPreviousData: true,
     placeholderData: (prev) => prev,
