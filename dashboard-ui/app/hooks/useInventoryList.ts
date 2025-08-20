@@ -15,8 +15,7 @@ import {
 export interface InventoryListParams {
   page?: number
   pageSize?: number
-  searchName?: string
-  searchSku?: string
+  search?: string
   sort?: string
   filters?: Record<string, string>
 }
@@ -29,8 +28,7 @@ export const useInventoryList = (params: InventoryListParams) => {
         {
           page: params.page,
           pageSize: params.pageSize,
-          searchName: params.searchName,
-          searchSku: params.searchSku,
+          search: params.search,
         },
         signal
       ).then(products => {
@@ -51,13 +49,13 @@ export const useInventoryList = (params: InventoryListParams) => {
         }))
 
         let filtered = items
-        if (params.searchName) {
-          const q = params.searchName.toLowerCase()
-          filtered = filtered.filter(it => it.name.toLowerCase().includes(q))
-        }
-        if (params.searchSku) {
-          const q = params.searchSku.toLowerCase()
-          filtered = filtered.filter(it => it.code.toLowerCase().includes(q))
+        if (params.search) {
+          const q = params.search.toLowerCase()
+          filtered = filtered.filter(it =>
+            it.name.toLowerCase().includes(q) ||
+            it.code.toLowerCase().includes(q) ||
+            (it.category?.name || '').toLowerCase().includes(q)
+          )
         }
 
         const stats = calculateInventoryStats(filtered, DEFAULT_MIN_STOCK)

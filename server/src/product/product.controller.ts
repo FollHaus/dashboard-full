@@ -34,11 +34,8 @@ export class ProductController {
 	 * Получение списка всех продуктов
 	 */
         @Get()
-        async findAll(
-                @Query('searchName') searchName?: string,
-                @Query('searchSku') searchSku?: string
-        ): Promise<ProductModel[]> {
-                return this.productService.findAll({ searchName, searchSku })
+        async findAll(@Query('search') search?: string): Promise<ProductModel[]> {
+                return this.productService.findAll({ search })
         }
 
 	/**

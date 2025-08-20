@@ -24,16 +24,12 @@ const ProductsTable = () => {
   const searchParams = useSearchParams()
 
   const initialPage = Number(searchParams.get('page') || '1')
-  const initialName = searchParams.get('searchName') || ''
-  const initialSku = searchParams.get('searchSku') || ''
-  const initialField: 'name' | 'sku' = initialSku ? 'sku' : 'name'
-  const initialTerm = initialField === 'sku' ? initialSku : initialName
+  const initialTerm = searchParams.get('search') || ''
 
   const [page, setPage] = useState(initialPage)
   const [pageSize] = useState(10)
   const ROW_HEIGHT = 44
   const [searchTerm, setSearchTerm] = useState(initialTerm)
-  const [searchField, setSearchField] = useState<'name' | 'sku'>(initialField)
   const [sortField, setSortField] = useState<'name' | 'quantity' | 'price'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
@@ -44,30 +40,25 @@ const ProductsTable = () => {
   const [stockFilter, setStockFilter] = useState<'all' | 'out' | 'low'>('all')
 
   const debouncedTerm = useDebounce(searchTerm, 300)
-  const debouncedField = useDebounce(searchField, 300)
 
   useEffect(() => {
     const params = new URLSearchParams()
     if (page > 1) params.set('page', String(page))
-    if (debouncedTerm) {
-      if (debouncedField === 'name') params.set('searchName', debouncedTerm)
-      else params.set('searchSku', debouncedTerm)
-    }
+    if (debouncedTerm) params.set('search', debouncedTerm)
     const newQuery = params.toString()
     if (newQuery !== searchParams.toString()) {
       router.replace(`?${newQuery}`)
     }
-  }, [page, debouncedTerm, debouncedField, router, searchParams])
+  }, [page, debouncedTerm, router, searchParams])
 
   useEffect(() => {
     setPage(1)
-  }, [debouncedTerm, debouncedField, stockFilter])
+  }, [debouncedTerm, stockFilter])
 
   const { data, status, isFetching, isError, refetch } = useInventoryList({
     page,
     pageSize,
-    searchName: debouncedField === 'name' ? debouncedTerm : undefined,
-    searchSku: debouncedField === 'sku' ? debouncedTerm : undefined,
+    search: debouncedTerm,
     sort: `${sortField}:${sortOrder}`,
     filters: stockFilter === 'all' ? undefined : { stock: stockFilter },
   })
@@ -142,23 +133,13 @@ const ProductsTable = () => {
   return (
     <div>
       <div className="flex flex-wrap gap-2 mb-4 items-end">
-        <div className="flex border border-neutral-300 rounded overflow-hidden">
-          <input
-            type="text"
-            placeholder="Поиск..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="px-2 py-1 outline-none"
-          />
-          <select
-            value={searchField}
-            onChange={e => setSearchField(e.target.value as 'name' | 'sku')}
-            className="px-2 py-1 bg-neutral-100 border-l border-neutral-300"
-          >
-            <option value="name">Название</option>
-            <option value="sku">Артикул</option>
-          </select>
-        </div>
+        <input
+          type="text"
+          placeholder="Поиск..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="px-2 py-1 border border-neutral-300 rounded outline-none"
+        />
         <Button
           className="ml-auto bg-primary-500 text-white px-4 py-1"
           onClick={() => setIsCreating(true)}
@@ -292,7 +273,7 @@ const ProductsTable = () => {
             {!isInitialLoading && products.length === 0 && (
               <tr className="row">
                 <td colSpan={7} className="p-2 text-center">
-                  Нет данных
+                  Товары не найдены
                 </td>
               </tr>
             )}

@@ -69,22 +69,21 @@ export class ProductService {
 	/**
 	 * 2) Возвращает все продукты с категориями и продажами.
 	 */
-        async findAll(params?: {
-                searchName?: string
-                searchSku?: string
-        }): Promise<ProductModel[]> {
+        async findAll(params?: { search?: string }): Promise<ProductModel[]> {
                 const where: any = {}
-                if (params?.searchName) {
-                        where.name = { [Op.iLike]: `%${params.searchName}%` }
-                }
-                if (params?.searchSku) {
-                        where.articleNumber = {
-                                [Op.iLike]: `%${params.searchSku}%`,
-                        }
+                if (params?.search) {
+                        where[Op.or] = [
+                                { name: { [Op.iLike]: `%${params.search}%` } },
+                                { articleNumber: { [Op.iLike]: `%${params.search}%` } },
+                                { '$category.name$': { [Op.iLike]: `%${params.search}%` } },
+                        ]
                 }
                 return this.productRepo.findAll({
                         where,
-                        include: ['category', 'sales'],
+                        include: [
+                                { model: CategoryModel, as: 'category', required: false },
+                                'sales',
+                        ],
                 })
         }
 
