@@ -77,7 +77,7 @@ describe('ProductsTable', () => {
       http.get('http://localhost:4000/api/products', () => HttpResponse.json([]))
     )
     renderTable()
-    expect(await screen.findByText('Нет данных')).toBeInTheDocument()
+    expect(await screen.findByText('Товары не найдены')).toBeInTheDocument()
   })
 
   it('filters by name', async () => {
@@ -93,8 +93,6 @@ describe('ProductsTable', () => {
   it('filters by sku', async () => {
     renderTable()
     await screen.findByText('Product 1')
-    const select = screen.getByRole('combobox')
-    await userEvent.selectOptions(select, 'sku')
     const input = screen.getByPlaceholderText('Поиск...')
     await userEvent.type(input, 'B2')
     await waitFor(() => {

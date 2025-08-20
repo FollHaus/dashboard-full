@@ -393,7 +393,7 @@ const TopProducts: React.FC = () => {
                     fill="#3B82F6"
                     onClick={(d: any) =>
                       router.push(
-                        `/products?searchName=${encodeURIComponent(
+                        `/products?search=${encodeURIComponent(
                           d.productName,
                         )}`,
                       )

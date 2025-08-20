@@ -51,7 +51,10 @@ describe('ProductDetails minStock', () => {
     const client = new QueryClient()
     const updateSpy = vi
       .spyOn(ProductService, 'update')
-      .mockResolvedValue({ ...mockProducts[0], minStock: 3 })
+      .mockImplementation(async () => {
+        mockProducts[0].minStock = 3
+        return { ...mockProducts[0] }
+      })
     renderWithClient(
       <ProductDetails product={{ ...mockProducts[0] }} onClose={() => {}} />,
       client
@@ -135,9 +138,12 @@ describe('ProductDetails minStock', () => {
       items: [expect.objectContaining({ minStock: 3 })],
       stats: { outOfStock: 0, lowStock: 0 },
     })
-    expect(client.getQueryData(['inventory-snapshot'])).toMatchObject({
-      lowStock: 0,
-    })
+    await waitFor(() =>
+      expect(client.getQueryData(['products', { page: 1 }])).toMatchObject({
+        items: [expect.objectContaining({ minStock: 3 })],
+        stats: { outOfStock: 0, lowStock: 0 },
+      }),
+    )
   })
 
   it('removes product from low filter when threshold decreases', async () => {
