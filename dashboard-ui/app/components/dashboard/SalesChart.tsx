@@ -14,19 +14,16 @@ import {
   ReferenceLine,
 } from "recharts";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
-import { Period } from "./DashboardControls";
 import { buildBuckets, getPeriodRange } from "@/utils/buckets";
-
-interface Props {
-  period: Period;
-}
+import { usePeriod } from "@/store/period";
 
 const metricOptions = [
   { value: "revenue", label: "Выручка" },
   { value: "sales", label: "Количество" },
 ] as const;
 
-const SalesChart: React.FC<Props> = ({ period }) => {
+const SalesChart: React.FC = () => {
+  const { period } = usePeriod();
   const [metric, setMetric] = useState<(typeof metricOptions)[number]["value"]>(
     "revenue"
   );
@@ -48,6 +45,7 @@ const SalesChart: React.FC<Props> = ({ period }) => {
     queryKey: [
       "sales-chart",
       metric,
+      period,
       formatDate(start),
       formatDate(end),
     ],

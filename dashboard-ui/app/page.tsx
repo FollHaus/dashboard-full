@@ -1,29 +1,33 @@
 'use client'
 import Layout from "@/ui/Layout";
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import type { Metadata } from "next";
-import DashboardControls, { Period } from "@/components/dashboard/DashboardControls";
+import DashboardControls from "@/components/dashboard/DashboardControls";
 import KpiCards from "@/components/dashboard/KpiCards";
 import SalesChart from "@/components/dashboard/SalesChart";
 import TopProducts from "@/components/dashboard/TopProducts";
 import WeeklyTasks from "@/components/dashboard/WeeklyTasks";
+import { usePeriod } from "@/store/period";
 
 const metadata: Metadata = {
   title: "Главная",
 };
 
 export default function Home() {
-  const [period, setPeriod] = useState<Period>("day");
+  const { initFrom } = usePeriod();
+  useEffect(() => {
+    initFrom();
+  }, [initFrom]);
 
   return (
     <Layout>
       <div className="flex justify-end mb-4">
-        <DashboardControls period={period} onPeriodChange={setPeriod} />
+        <DashboardControls />
       </div>
       <div className="space-y-8">
-        <KpiCards period={period} />
-        <SalesChart period={period} />
-        <TopProducts period={period} />
+        <KpiCards />
+        <SalesChart />
+        <TopProducts />
         <WeeklyTasks />
       </div>
     </Layout>

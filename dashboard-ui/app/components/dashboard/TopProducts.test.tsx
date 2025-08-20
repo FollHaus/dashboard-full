@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { vi } from 'vitest'
 import TopProducts from './TopProducts'
+import { PeriodProvider } from '@/store/period'
 
 vi.mock('@/services/analytics/analytics.service', () => ({
   AnalyticsService: {
@@ -18,13 +19,18 @@ vi.mock('@/services/analytics/analytics.service', () => ({
   },
 }))
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}))
 
 const renderWidget = () => {
   const client = new QueryClient()
   render(
     <QueryClientProvider client={client}>
-      <TopProducts period="day" />
+      <PeriodProvider>
+        <TopProducts />
+      </PeriodProvider>
     </QueryClientProvider>
   )
 }

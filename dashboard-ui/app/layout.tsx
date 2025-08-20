@@ -6,6 +6,7 @@ import { Metadata } from 'next'
 import AuthProvider from 'providers/auth-provider/AuthProvider'
 import { ReactQueryProvider } from './providers/react-query-provider/react-query-provider'
 import { FilterProvider } from './providers/filter-provider/filter-provider'
+import { PeriodProvider } from '@/store/period'
 
 export const metadata: Metadata = {
   icons: {
@@ -29,7 +30,9 @@ export default function RootLayout({
         <FilterProvider>
           <AuthProvider>
             <FontProviders>
-              <body>{children}</body>
+              <PeriodProvider>
+                <body>{children}</body>
+              </PeriodProvider>
             </FontProviders>
           </AuthProvider>
         </FilterProvider>
