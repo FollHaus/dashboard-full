@@ -36,12 +36,16 @@ const WeeklyTasks = () => {
   });
   const [segment, setSegment] = useState<"all" | "today" | "overdue">("all");
 
+  const tasks: ITask[] = useMemo(() => {
+    const unique = new Map<number, ITask>();
+    (data || []).forEach((t) => unique.set(t.id, t));
+    return Array.from(unique.values());
+  }, [data]);
+  const now = new Date();
+
   if (isLoading) {
     return <div className="bg-neutral-200 p-4 md:p-5 rounded-2xl shadow-card h-40 animate-pulse" />;
   }
-
-  const now = new Date();
-  const tasks: ITask[] = data || [];
   const todayTasks = tasks.filter((t) => {
     const d = new Date(t.deadline);
     return (
