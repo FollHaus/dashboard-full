@@ -68,6 +68,15 @@ const SalesChart: React.FC = () => {
   });
   const chartData = buckets.map((b) => ({ ...b, value: map.get(b.key) ?? 0 }));
   const allZero = chartData.every((d) => d.value === 0);
+  const maxValue = Math.max(...chartData.map((d) => d.value), 0);
+  const step =
+    metric === "revenue"
+      ? Math.max(1, Math.round(maxValue / 5 / 100000)) * 100000
+      : Math.max(1, Math.round(maxValue / 5));
+  const ticks = Array.from(
+    { length: Math.floor(maxValue / step) + 1 },
+    (_, i) => i * step
+  );
 
   const currency = new Intl.NumberFormat("ru-RU", {
     style: "currency",
@@ -80,7 +89,7 @@ const SalesChart: React.FC = () => {
 
   if (error) {
     return (
-      <div className="bg-neutral-100 p-4 rounded-card shadow-card text-error flex items-center gap-2">
+      <div className="bg-neutral-200 p-4 md:p-5 rounded-2xl shadow-card text-error flex items-center gap-2">
         Ошибка загрузки
         <button className="underline" onClick={() => refetch()}>
           Повторить
@@ -90,9 +99,9 @@ const SalesChart: React.FC = () => {
   }
 
   return (
-    <div className="bg-neutral-100 p-4 rounded-card shadow-card">
+    <div className="bg-neutral-200 p-4 md:p-5 rounded-2xl shadow-card">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
-        <h3 className="text-lg font-semibold">Продажи</h3>
+        <h3 className="text-lg font-semibold flex items-center gap-2">📊 Продажи</h3>
         <div className="flex gap-2">
           {metricOptions.map((m) => (
             <button
@@ -120,18 +129,25 @@ const SalesChart: React.FC = () => {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ left: 8, right: 8, top: 5, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
+              <XAxis
+                dataKey="label"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 14 }}
+              />
               <YAxis
                 tickFormatter={formatValue}
+                ticks={ticks}
                 tickLine={false}
                 axisLine={false}
                 width={80}
               />
               <Tooltip
-                formatter={(value: number) => formatValue(value)}
+                formatter={(value: number) => formatValue(Number(value))}
                 labelFormatter={(label) => label}
+                contentStyle={{ fontSize: 12 }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
               <Line
                 type="monotone"
                 dataKey="value"
@@ -144,6 +160,11 @@ const SalesChart: React.FC = () => {
               {allZero && <ReferenceLine y={0} stroke="#EF4444" strokeWidth={1} />}
             </LineChart>
           </ResponsiveContainer>
+        )}
+        {allZero && (
+          <div className="absolute inset-0 flex items-center justify-center text-neutral-500">
+            Нет данных
+          </div>
         )}
         {isFetching && data && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/50">
