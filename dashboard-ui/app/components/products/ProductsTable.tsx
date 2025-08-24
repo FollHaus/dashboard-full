@@ -18,6 +18,7 @@ import {
   calculateInventoryStats,
   DEFAULT_MIN_STOCK,
   isLowStock,
+  stockTone,
 } from '@/utils/inventoryStats'
 import EditProductForm from './EditProductForm'
 import './ProductsTable.css'
@@ -370,26 +371,26 @@ const ProductsTable = () => {
             <span>
               Продажная стоимость: {formatCurrency(stats.saleValue)}
             </span>
-            <div className="ml-auto flex gap-2">
-              <Button
-                className="bg-neutral-200 px-2 py-1"
-                onClick={handleExport}
-                title="Экспорт CSV"
-                aria-label="Экспорт CSV"
-              >
-                <FaFileExport />
-              </Button>
-              <Button
-                className="bg-neutral-200 px-2 py-1"
-                onClick={() => window.print()}
-                title="Печать"
-                aria-label="Печать"
-              >
-                <FaPrint />
-              </Button>
-            </div>
+          <div className="ml-auto flex gap-2">
+            <Button
+              className="bg-neutral-200 px-2 py-1"
+              onClick={handleExport}
+              title="Экспорт CSV"
+              aria-label="Экспорт CSV"
+            >
+              <FaFileExport aria-hidden="true" />
+            </Button>
+            <Button
+              className="bg-neutral-200 px-2 py-1"
+              onClick={() => window.print()}
+              title="Печать"
+              aria-label="Печать"
+            >
+              <FaPrint aria-hidden="true" />
+            </Button>
           </div>
-        </>
+        </div>
+      </>
       )}
 
       <div
@@ -479,13 +480,7 @@ const ProductsTable = () => {
               products.map((prod, index) => (
                 <tr
                   key={prod.id}
-                  className={`row border-b border-neutral-200 hover:bg-neutral-200 odd:bg-white even:bg-gray-50 ${
-                    prod.quantity === 0
-                      ? 'bg-red-100'
-                      : prod.quantity > 0 && isLowStock(prod.quantity, prod.minStock)
-                        ? 'bg-yellow-100'
-                        : ''
-                  }`}
+                  className="row border-b border-neutral-200 hover:bg-neutral-200 odd:bg-white even:bg-gray-50"
                 >
                   <td className="px-3 py-2 col-name" title={prod.name}>
                     <span className="block truncate">{prod.name}</span>
@@ -512,10 +507,12 @@ const ProductsTable = () => {
                     <span className="block truncate">{prod.code}</span>
                   </td>
                   <td className="px-3 py-2 col-quantity">
-                    <div className="flex items-center justify-end">
-                      <span className="min-w-[3rem] text-right whitespace-nowrap">
-                        {prod.quantity}
-                      </span>
+                    <div
+                      className={`inline-flex items-center justify-end min-w-[3rem] px-2 py-1 rounded-lg whitespace-nowrap ${stockTone(
+                        prod.quantity,
+                      )}`}
+                    >
+                      <span className="tabular-nums">{prod.quantity}</span>
                       {prod.quantity > 0 && isLowStock(prod.quantity, prod.minStock) && (
                         <span className="ml-2 rounded-full bg-red-100 text-red-600 text-xs font-medium px-2 py-0.5">
                           Мало
