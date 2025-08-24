@@ -320,19 +320,40 @@ const ProductsTable = () => {
               className="w-full pl-10 pr-3 h-11 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
             />
           </div>
-          {stockOptions.map(opt => (
-            <button
-              key={opt.value}
-              className={`px-3 py-1 rounded border text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 ${
-                stockFilter === opt.value
-                  ? 'bg-brand-600 text-white border-brand-600'
-                  : 'bg-white border-gray-300 text-gray-700'
-              }`}
-              onClick={() => setStockFilter(opt.value)}
-            >
-              {opt.label}
-            </button>
-          ))}
+          {stockOptions.map(opt => {
+            const isActive = stockFilter === opt.value
+            const base =
+              'px-4 py-2 rounded-lg text-sm font-medium transition-colors select-none focus:outline-none focus:ring-2'
+            let variant = ''
+            if (isActive) {
+              switch (opt.value) {
+                case 'low':
+                  variant =
+                    'bg-warning text-neutral-950 hover:brightness-95 focus:ring-warning'
+                  break
+                case 'out':
+                  variant =
+                    'bg-error text-neutral-50 hover:brightness-95 focus:ring-error'
+                  break
+                default:
+                  variant =
+                    'bg-primary-500 text-neutral-50 hover:bg-primary-400 focus:ring-primary-300'
+              }
+            } else {
+              variant =
+                'bg-neutral-200 text-neutral-900 hover:bg-neutral-300 focus:ring-primary-300 dark:bg-neutral-600 dark:text-neutral-50 dark:hover:bg-neutral-500'
+            }
+            return (
+              <button
+                key={opt.value}
+                aria-pressed={isActive}
+                className={`${base} ${variant}`}
+                onClick={() => setStockFilter(opt.value)}
+              >
+                {opt.label}
+              </button>
+            )
+          })}
         </div>
       </div>
 
