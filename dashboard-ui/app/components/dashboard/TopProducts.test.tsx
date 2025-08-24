@@ -38,7 +38,7 @@ const renderWidget = () => {
 describe('TopProducts charts', () => {
   it('renders headings', async () => {
     renderWidget()
-    expect(await screen.findByText('Топ товаров')).toBeInTheDocument()
+    expect(await screen.findByText('🏆 Топ товаров')).toBeInTheDocument()
     expect(screen.getByText('Товары')).toBeInTheDocument()
     expect(screen.getByText('Категории')).toBeInTheDocument()
   })

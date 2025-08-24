@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { FaReceipt, FaRubleSign, FaShoppingCart } from "react-icons/fa";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
 import { getPeriodRange } from "@/utils/buckets";
 import { usePeriod } from "@/store/period";
@@ -53,37 +54,53 @@ const KpiCards: React.FC = () => {
       label: "Выручка",
       value: currency.format(revenue),
       href: "/reports",
+      text: "text-success",
+      bg: "bg-success/20",
+      Icon: FaRubleSign,
     },
     {
       label: "Кол-во продаж",
       value: salesCount.toLocaleString("ru-RU"),
       href: "/reports",
+      text: "text-info",
+      bg: "bg-info/20",
+      Icon: FaShoppingCart,
     },
     {
       label: "Средний чек",
       value: currency.format(avgCheck),
       href: "/reports",
+      text: "text-secondary-700",
+      bg: "bg-secondary-300/40",
+      Icon: FaReceipt,
     },
   ];
 
   return (
     <div className="relative">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
         {isLoading && !data
           ? Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className="h-24 bg-neutral-100 rounded-card animate-pulse"
+                className="h-24 bg-neutral-200 rounded-2xl animate-pulse"
               />
             ))
-          : kpis.map((k) => (
+          : kpis.map(({ label, value, href, text, bg, Icon }) => (
               <Link
-                key={k.label}
-                href={k.href}
-                className="bg-neutral-100 p-4 rounded-card shadow-card flex flex-col"
+                key={label}
+                href={href}
+                className="bg-neutral-200 p-4 md:p-5 rounded-2xl shadow-card flex items-center gap-4"
               >
-                <span className="text-sm text-neutral-600">{k.label}</span>
-                <span className="text-xl font-semibold">{k.value}</span>
+                <span
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${bg} ${text}`}
+                >
+                  <Icon />
+                </span>
+                <span className="flex flex-col">
+                  <span className="text-sm text-neutral-600">{label}</span>
+                  <span className={`text-2xl md:text-3xl font-semibold tabular-nums ${text}`}>{value}</span>
+                </span>
               </Link>
             ))}
       </div>

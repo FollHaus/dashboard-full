@@ -171,6 +171,7 @@ const TopProducts: React.FC = () => {
   }, [categories])
 
   const topProductData = useMemo(() => {
+    const truncate = (s: string) => (s.length > 14 ? s.slice(0, 14) + "…" : s)
     const items = [...productsAgg]
     items.sort((a, b) =>
       metric === "revenue"
@@ -183,7 +184,8 @@ const TopProducts: React.FC = () => {
           ? Number(p.totalRevenue) || 0
           : Number(p.totalUnits) || 0
       return {
-        name: p.productName,
+        name: truncate(p.productName),
+        fullName: p.productName,
         value,
         productId: p.productId,
         productName: p.productName,
@@ -240,6 +242,21 @@ const TopProducts: React.FC = () => {
       __total: number
     }[]
   }, [categoriesAgg, metric, limit])
+
+  const labelAngle = topProductData.length > 5 ? -45 : 0
+  const AxisTick = ({ x, y, payload }: any) => (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        dy={16}
+        textAnchor={labelAngle ? "end" : "middle"}
+        transform={labelAngle ? `rotate(${labelAngle})` : undefined}
+        fontSize={12}
+      >
+        <title>{payload.payload.fullName}</title>
+        {payload.value}
+      </text>
+    </g>
+  )
 
   const formatValue = metric === "revenue" ? formatRub : formatInt
   const total = pieData.length ? Number(pieData[0].__total) : 0
@@ -319,9 +336,9 @@ const TopProducts: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className="bg-neutral-200 p-4 md:p-5 rounded-2xl shadow-card">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2 mb-4">
-        <h3 className="text-lg font-semibold">Топ товаров</h3>
+        <h3 className="text-lg font-semibold flex items-center gap-2">🏆 Топ товаров</h3>
         <div className="flex flex-wrap gap-2">
           <div className="flex gap-1" aria-label="Метрика">
             {metricOptions.map((m) => (
@@ -382,11 +399,21 @@ const TopProducts: React.FC = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={topProductData}
-                  margin={{ top: 16, right: 8, left: 48, bottom: 16 }}
+                  margin={{ top: 16, right: 8, left: 48, bottom: 32 }}
                 >
-                  <XAxis dataKey="name" tick={false} axisLine={false} />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    interval={0}
+                    tick={<AxisTick />}
+                  />
                   <YAxis tick={{ fontSize: 12 }} tickFormatter={formatValue} />
-                  <Tooltip formatter={(v: number) => formatValue(Number(v))} />
+                  <Tooltip
+                    formatter={(v: number) => formatValue(Number(v))}
+                    labelFormatter={(_, p) => p?.[0]?.payload?.fullName}
+                    contentStyle={{ fontSize: 12 }}
+                  />
                   <Bar
                     dataKey="value"
                     name={metricOptions.find((m) => m.value === metric)?.label}
