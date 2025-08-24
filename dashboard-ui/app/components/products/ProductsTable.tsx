@@ -3,7 +3,15 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Button from '@/ui/Button/Button'
-import { FaChevronLeft, FaChevronRight, FaEdit } from 'react-icons/fa'
+import {
+  FaChevronLeft,
+  FaChevronRight,
+  FaEdit,
+  FaTrash,
+  FaEllipsisV,
+  FaPrint,
+  FaFileExport,
+} from 'react-icons/fa'
 import { ProductService } from '@/services/product/product.service'
 import ProductForm from './ProductForm'
 import Modal from '@/ui/Modal/Modal'
@@ -35,25 +43,82 @@ const ProductsTable = () => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [products, setProducts] = useState<IInventory[]>([])
-  const [stats, setStats] = useState({ outOfStock: 0, lowStock: 0 })
+  const [stats, setStats] = useState({
+    outOfStock: 0,
+    lowStock: 0,
+    totalCount: 0,
+    purchaseValue: 0,
+    saleValue: 0,
+  })
   const [error, setError] = useState<string | null>(null)
-  const [stockFilter, setStockFilter] = useState<'all' | 'out' | 'low'>('all')
-
+  const initialStock =
+    (searchParams.get('stock') as 'all' | 'in' | 'low' | 'out' | null) || 'all'
+  const [stockFilter, setStockFilter] = useState<'all' | 'in' | 'low' | 'out'>(
+    initialStock,
+  )
+  const [actionIndex, setActionIndex] = useState<number | null>(null)
   const debouncedTerm = useDebounce(searchTerm, 300)
+
+  const stockOptions = [
+    { value: 'all', label: 'Все' },
+    { value: 'in', label: 'В наличии' },
+    { value: 'low', label: 'Мало' },
+    { value: 'out', label: 'Нет в наличии' },
+  ] as const
+
+  const getCategoryColor = (name: string) => {
+    const colors = [
+      'bg-red-200',
+      'bg-blue-200',
+      'bg-green-200',
+      'bg-yellow-200',
+      'bg-purple-200',
+      'bg-pink-200',
+    ]
+    const code = name.charCodeAt(0)
+    return colors[code % colors.length]
+  }
+
+  const getQuantityColor = (q: number) => {
+    if (q > 100) return 'bg-green-100'
+    if (q >= 20) return 'bg-orange-100'
+    return 'bg-red-100'
+  }
 
   useEffect(() => {
     const params = new URLSearchParams()
     if (page > 1) params.set('page', String(page))
     if (debouncedTerm) params.set('search', debouncedTerm)
+    if (stockFilter !== 'all') params.set('stock', stockFilter)
     const newQuery = params.toString()
     if (newQuery !== searchParams.toString()) {
       router.replace(`?${newQuery}`)
     }
-  }, [page, debouncedTerm, router, searchParams])
+  }, [page, debouncedTerm, stockFilter, router, searchParams])
+
+  useEffect(() => {
+    const saved = localStorage.getItem('stockFilter') as
+      | 'all'
+      | 'in'
+      | 'low'
+      | 'out'
+      | null
+    if (!searchParams.get('stock') && saved) setStockFilter(saved)
+  }, [searchParams])
+
+  useEffect(() => {
+    localStorage.setItem('stockFilter', stockFilter)
+  }, [stockFilter])
 
   useEffect(() => {
     setPage(1)
   }, [debouncedTerm, stockFilter])
+
+  useEffect(() => {
+    const close = () => setActionIndex(null)
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [])
 
   const { data, status, isFetching, isError, refetch } = useInventoryList({
     page,
@@ -90,6 +155,39 @@ const ProductsTable = () => {
     } catch (e: any) {
       setError(e.message)
     }
+  }
+
+  const confirmDelete = (id: number) => {
+    if (window.confirm('Удалить товар?')) handleDelete(id)
+  }
+
+  const handleExport = () => {
+    const headers = [
+      'Название',
+      'Категория',
+      'Артикул',
+      'Остаток',
+      'Цена продажи',
+      'Закупочная цена',
+    ]
+    const rows = products.map(p => [
+      p.name,
+      p.category?.name || '-',
+      p.code,
+      p.quantity,
+      p.price,
+      p.purchasePrice,
+    ])
+    const csv = [headers.join(',')]
+      .concat(rows.map(r => r.join(',')))
+      .join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'inventory.csv'
+    link.click()
+    URL.revokeObjectURL(url)
   }
 
   const handleEditSuccess = (data: {
@@ -131,21 +229,37 @@ const ProductsTable = () => {
   const totalPages = data ? Math.ceil(data.total / data.pageSize) : 1
 
   return (
-    <div>
-      <div className="flex flex-wrap gap-2 mb-4 items-end">
-        <input
-          type="text"
-          placeholder="Поиск..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="px-2 py-1 border border-neutral-300 rounded outline-none"
-        />
-        <Button
-          className="ml-auto bg-primary-500 text-white px-4 py-1"
-          onClick={() => setIsCreating(true)}
-        >
-          Добавить товар
-        </Button>
+    <div className="space-y-4">
+      <div className="bg-white rounded shadow p-4">
+        <h2 className="text-lg mb-2">Фильтры и поиск</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="text"
+            placeholder="Поиск..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="px-2 py-1 border border-neutral-300 rounded outline-none flex-1 min-w-[10rem]"
+          />
+          {stockOptions.map(opt => (
+            <button
+              key={opt.value}
+              className={`px-3 py-1 rounded border text-sm ${
+                stockFilter === opt.value
+                  ? 'bg-primary-500 text-white border-primary-500'
+                  : 'bg-white'
+              }`}
+              onClick={() => setStockFilter(opt.value)}
+            >
+              {opt.label}
+            </button>
+          ))}
+          <Button
+            className="ml-auto bg-primary-500 text-white px-4 py-1"
+            onClick={() => setIsCreating(true)}
+          >
+            Добавить товар
+          </Button>
+        </div>
       </div>
 
       {isError && !data ? (
@@ -159,38 +273,53 @@ const ProductsTable = () => {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div
-            className={`h-24 p-4 bg-white rounded shadow cursor-pointer flex flex-col items-center justify-center ${
-              stockFilter === 'out' ? 'ring-2 ring-primary-500' : ''
-            }`}
-            onClick={() =>
-              setStockFilter(f => (f === 'out' ? 'all' : 'out'))
-            }
-          >
-            <div className="text-sm">Нет в наличии</div>
-            {isInitialLoading ? (
-              <div className="mt-1 h-6 w-8 bg-neutral-200 rounded animate-pulse" />
-            ) : (
-              <div className="text-xl font-semibold">{stats.outOfStock}</div>
-            )}
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="h-28 p-4 bg-red-500 text-white rounded-lg shadow flex flex-col items-center justify-center">
+              <div className="text-lg">Нет в наличии</div>
+              {isInitialLoading ? (
+                <div className="mt-1 h-6 w-8 bg-red-300 rounded animate-pulse" />
+              ) : (
+                <div className="text-3xl font-bold">{stats.outOfStock}</div>
+              )}
+            </div>
+            <div className="h-28 p-4 bg-orange-500 text-white rounded-lg shadow flex flex-col items-center justify-center">
+              <div className="text-lg">Мало на складе</div>
+              {isInitialLoading ? (
+                <div className="mt-1 h-6 w-8 bg-orange-300 rounded animate-pulse" />
+              ) : (
+                <div className="text-3xl font-bold">{stats.lowStock}</div>
+              )}
+            </div>
           </div>
-          <div
-            className={`h-24 p-4 bg-white rounded shadow cursor-pointer flex flex-col items-center justify-center ${
-              stockFilter === 'low' ? 'ring-2 ring-primary-500' : ''
-            }`}
-            onClick={() =>
-              setStockFilter(f => (f === 'low' ? 'all' : 'low'))
-            }
-          >
-            <div className="text-sm">Мало на складе</div>
-            {isInitialLoading ? (
-              <div className="mt-1 h-6 w-8 bg-neutral-200 rounded animate-pulse" />
-            ) : (
-              <div className="text-xl font-semibold">{stats.lowStock}</div>
-            )}
+          <div className="flex flex-wrap items-center gap-4">
+            <span>Товаров: {stats.totalCount}</span>
+            <span>
+              Закупочная стоимость: {formatCurrency(stats.purchaseValue)}
+            </span>
+            <span>
+              Продажная стоимость: {formatCurrency(stats.saleValue)}
+            </span>
+            <div className="ml-auto flex gap-2">
+              <Button
+                className="bg-neutral-200 px-2 py-1"
+                onClick={handleExport}
+                title="Экспорт CSV"
+                aria-label="Экспорт CSV"
+              >
+                <FaFileExport />
+              </Button>
+              <Button
+                className="bg-neutral-200 px-2 py-1"
+                onClick={() => window.print()}
+                title="Печать"
+                aria-label="Печать"
+              >
+                <FaPrint />
+              </Button>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       <div
@@ -199,7 +328,7 @@ const ProductsTable = () => {
         }`}
         style={{ minHeight: pageSize * ROW_HEIGHT }}
       >
-        <table className="min-w-full bg-neutral-100 rounded shadow-md">
+        <table className="min-w-full bg-gray-50 rounded shadow-md">
           <thead>
             <tr className="text-left border-b border-neutral-300">
               <th
@@ -281,44 +410,94 @@ const ProductsTable = () => {
               products.map((prod, index) => (
                 <tr
                   key={prod.id}
-                  className="row border-b border-neutral-200 hover:bg-neutral-200"
+                  className={`row border-b border-neutral-200 hover:bg-neutral-200 odd:bg-white even:bg-gray-50 ${
+                    prod.quantity === 0
+                      ? 'bg-red-100'
+                      : prod.quantity > 0 && isLowStock(prod.quantity, prod.minStock)
+                        ? 'bg-yellow-100'
+                        : ''
+                  }`}
                 >
                   <td className="p-2 col-name" title={prod.name}>
                     <span className="block truncate">{prod.name}</span>
                   </td>
                   <td className="p-2 col-category" title={prod.category?.name || '-'}>
-                    <span className="block truncate">{prod.category?.name || '-'}</span>
+                    <div className="flex items-center gap-2">
+                      {prod.category ? (
+                        <span
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-neutral-700 ${getCategoryColor(
+                            prod.category.name
+                          )}`}
+                        >
+                          {prod.category.name.slice(0, 2).toUpperCase()}
+                        </span>
+                      ) : (
+                        <span className="w-6 h-6" />
+                      )}
+                      <span className="block truncate">
+                        {prod.category?.name || '-'}
+                      </span>
+                    </div>
                   </td>
                   <td className="p-2 col-code" title={prod.code}>
                     <span className="block truncate">{prod.code}</span>
                   </td>
                   <td className="p-2 col-quantity">
                     <div className="flex items-center">
-                      <span className="text-right min-w-[3rem]">{prod.quantity}</span>
-                      {isLowStock(prod.quantity, prod.minStock) && (
-                        <span className="ml-2 rounded-full bg-red-100 text-red-600 text-xs font-medium px-2 py-0.5">
-                          Мало
-                        </span>
-                      )}
+                      <span
+                        className={`text-right min-w-[3rem] px-2 py-0.5 rounded ${getQuantityColor(
+                          prod.quantity
+                        )}`}
+                      >
+                        {prod.quantity}
+                      </span>
                     </div>
                   </td>
                   <td className="p-2 col-sale">{formatCurrency(prod.price)}</td>
-                  <td className="p-2 col-purchase">{formatCurrency(prod.purchasePrice)}</td>
-                  <td className="p-2 col-actions space-x-2 flex justify-end">
-                    <Button
-                      className="bg-primary-500 text-white p-2"
-                      onClick={() => setEditingIndex(index)}
-                      title="Редактировать"
-                      aria-label="Редактировать"
-                    >
-                      <FaEdit />
-                    </Button>
-                    <Button
-                      className="bg-error text-white px-2 py-1"
-                      onClick={() => handleDelete(prod.id)}
-                    >
-                      Удалить
-                    </Button>
+                  <td className="p-2 col-purchase">
+                    {formatCurrency(prod.purchasePrice)}
+                  </td>
+                  <td className="p-2 col-actions relative">
+                    <div className="flex justify-end">
+                      <Button
+                        className="p-2 bg-neutral-200"
+                        onClick={e => {
+                          e.stopPropagation()
+                          setActionIndex(i => (i === index ? null : index))
+                        }}
+                        title="Действия"
+                        aria-label="Действия"
+                      >
+                        <FaEllipsisV />
+                      </Button>
+                      {actionIndex === index && (
+                        <div
+                          className="absolute right-0 mt-8 w-40 bg-white border border-neutral-200 rounded shadow z-10"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <button
+                            className="flex items-center w-full gap-2 px-2 py-1 text-left hover:bg-neutral-100"
+                            onClick={() => {
+                              setEditingIndex(index)
+                              setActionIndex(null)
+                            }}
+                            title="Редактировать"
+                          >
+                            <FaEdit /> Редактировать
+                          </button>
+                          <button
+                            className="flex items-center w-full gap-2 px-2 py-1 text-left hover:bg-neutral-100 text-red-600"
+                            onClick={() => {
+                              confirmDelete(prod.id)
+                              setActionIndex(null)
+                            }}
+                            title="Удалить"
+                          >
+                            <FaTrash /> Удалить
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

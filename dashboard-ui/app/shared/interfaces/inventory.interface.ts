@@ -19,6 +19,9 @@ export interface IInventory {
 export interface InventoryStats {
   outOfStock: number
   lowStock: number
+  totalCount: number
+  purchaseValue: number
+  saleValue: number
 }
 
 export interface InventoryList {

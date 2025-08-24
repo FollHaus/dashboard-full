@@ -66,6 +66,10 @@ export const useInventoryList = (params: InventoryListParams) => {
           filtered = filtered.filter(
             it => it.quantity > 0 && isLowStock(it.quantity, it.minStock),
           )
+        } else if (params.filters?.stock === 'in') {
+          filtered = filtered.filter(
+            it => it.quantity > 0 && !isLowStock(it.quantity, it.minStock),
+          )
         }
 
         if (params.sort) {
