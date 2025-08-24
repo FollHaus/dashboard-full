@@ -27,10 +27,10 @@ export default function Home() {
       </div>
       <div className="grid gap-4">
         <KpiCards />
+        <FinancialSummary />
         <SalesChart />
         <TopProducts />
         <WeeklyTasks />
-        <FinancialSummary />
       </div>
     </Layout>
   );

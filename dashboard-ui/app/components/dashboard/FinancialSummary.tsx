@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { FaBriefcase } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
 import { getPeriodRange } from "@/utils/buckets";
@@ -24,19 +25,28 @@ const FinancialSummary: React.FC = () => {
     keepPreviousData: true,
   });
 
-  const profit = data?.margin ?? 0;
+  const revenue = data?.revenue ?? 0;
+  const purchaseCost = revenue - (data?.margin ?? 0);
+  const profit = revenue - purchaseCost;
   const profitText = currency.format(profit);
-  const color = profit >= 0 ? "text-success" : "text-error";
+  const color =
+    profit > 0
+      ? "text-success"
+      : profit < 0
+        ? "text-error"
+        : "text-neutral-900";
 
   return (
-    <div className="bg-neutral-200 p-4 md:p-5 rounded-2xl shadow-card">
-      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        💼 Финансовый итог
-      </h3>
-      <div className="text-2xl md:text-3xl font-semibold tabular-nums">
-        <span className={color}>{profitText}</span>
-      </div>
-      <div className="text-sm text-neutral-600">Прибыль за период</div>
+    <div className="rounded-2xl shadow-card p-4 md:p-5 bg-neutral-200 flex items-center gap-3">
+      <span className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-300 text-neutral-900">
+        <FaBriefcase />
+      </span>
+      <span className="flex flex-col">
+        <span className="text-sm text-neutral-600">Финансовый итог</span>
+        <span className={`text-2xl md:text-3xl font-semibold tabular-nums ${color}`}>
+          {profitText}
+        </span>
+      </span>
     </div>
   );
 };
