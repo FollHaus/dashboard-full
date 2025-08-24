@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Button from '@/ui/Button/Button'
-import { FaEdit, FaTrash, FaPrint, FaFileExport } from 'react-icons/fa'
+import { FaEdit, FaTrash, FaPrint, FaFileExport, FaSearch } from 'react-icons/fa'
+import { MdRemoveShoppingCart } from 'react-icons/md'
+import { HiOutlineArchiveBoxArrowDown } from 'react-icons/hi2'
 import { createPortal } from 'react-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/utils/toast'
@@ -300,38 +302,37 @@ const ProductsTable = () => {
   const totalPages = data ? Math.ceil(data.total / data.pageSize) : 1
 
   return (
-    <div className="space-y-4">
+    <>
+      <div className="space-y-4">
       <div className="bg-white rounded shadow p-4">
         <h2 className="text-lg mb-2">Фильтры и поиск</h2>
         <div className="flex flex-wrap items-center gap-2">
-          <input
-            type="text"
-            placeholder="Поиск..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="px-2 py-1 border border-neutral-300 rounded outline-none flex-1 min-w-[10rem]"
-          />
+          <div className="relative flex-1 min-w-[10rem]">
+            <FaSearch
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              aria-hidden="true"
+            />
+            <input
+              type="text"
+              placeholder="Поиск..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-3 h-11 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+            />
+          </div>
           {stockOptions.map(opt => (
             <button
               key={opt.value}
-              className={`px-3 py-1 rounded border text-sm ${
+              className={`px-3 py-1 rounded border text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 ${
                 stockFilter === opt.value
-                  ? 'bg-primary-500 text-white border-primary-500'
-                  : 'bg-white'
+                  ? 'bg-brand-600 text-white border-brand-600'
+                  : 'bg-white border-gray-300 text-gray-700'
               }`}
               onClick={() => setStockFilter(opt.value)}
             >
               {opt.label}
             </button>
           ))}
-          <button
-            aria-label="Добавить товар"
-            title="Добавить товар"
-            className="ml-auto inline-flex items-center justify-center w-10 h-10 rounded-full bg-secondary-600 text-white hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-secondary-500"
-            onClick={() => setIsCreating(true)}
-          >
-            +
-          </button>
         </div>
       </div>
 
@@ -339,7 +340,7 @@ const ProductsTable = () => {
         <div className="text-center text-error py-4">
           Ошибка загрузки
           <Button
-            className="ml-2 bg-primary-500 text-white px-4 py-1"
+            className="ml-2 bg-brand-600 text-white px-4 py-1"
             onClick={() => refetch()}
           >
             Повторить
@@ -348,20 +349,26 @@ const ProductsTable = () => {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-4">
-            <div className="h-28 p-4 bg-red-500 text-white rounded-lg shadow flex flex-col items-center justify-center">
-              <div className="text-lg">Нет в наличии</div>
+            <div className="rounded-2xl p-4 md:p-5 shadow-sm border border-red-100 bg-red-50 text-red-700 flex flex-col justify-center">
+              <div className="flex items-center gap-2">
+                <MdRemoveShoppingCart className="w-5 h-5 text-red-600" aria-hidden="true" />
+                <span className="text-sm text-gray-600">Нет в наличии</span>
+              </div>
               {isInitialLoading ? (
-                <div className="mt-1 h-6 w-8 bg-red-300 rounded animate-pulse" />
+                <div className="mt-2 h-7 w-10 bg-red-100 rounded animate-pulse" />
               ) : (
-                <div className="text-3xl font-bold">{stats.outOfStock}</div>
+                <div className="mt-2 text-2xl md:text-3xl font-semibold">{stats.outOfStock}</div>
               )}
             </div>
-            <div className="h-28 p-4 bg-orange-500 text-white rounded-lg shadow flex flex-col items-center justify-center">
-              <div className="text-lg">Мало на складе</div>
+            <div className="rounded-2xl p-4 md:p-5 shadow-sm border border-orange-100 bg-orange-50 text-orange-700 flex flex-col justify-center">
+              <div className="flex items-center gap-2">
+                <HiOutlineArchiveBoxArrowDown className="w-5 h-5 text-orange-600" aria-hidden="true" />
+                <span className="text-sm text-gray-600">Мало на складе</span>
+              </div>
               {isInitialLoading ? (
-                <div className="mt-1 h-6 w-8 bg-orange-300 rounded animate-pulse" />
+                <div className="mt-2 h-7 w-10 bg-orange-100 rounded animate-pulse" />
               ) : (
-                <div className="text-3xl font-bold">{stats.lowStock}</div>
+                <div className="mt-2 text-2xl md:text-3xl font-semibold">{stats.lowStock}</div>
               )}
             </div>
           </div>
@@ -483,7 +490,7 @@ const ProductsTable = () => {
               products.map((prod, index) => (
                 <tr
                   key={prod.id}
-                  className="row border-b border-neutral-200 hover:bg-neutral-200 odd:bg-white even:bg-gray-50"
+                  className="row border-b border-neutral-200 odd:bg-white even:bg-gray-50 hover:bg-gray-50 transition-colors"
                 >
                   <td
                     className="w-1/6 px-3 py-2 text-left truncate"
@@ -542,7 +549,7 @@ const ProductsTable = () => {
                       aria-expanded={openMenuProductId === prod.id}
                       aria-label="Действия"
                       title="Действия"
-                      className="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-secondary-500 disabled:opacity-50"
+                      className="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50"
                       onClick={e => {
                         e.stopPropagation()
                         if (openMenuProductId === prod.id) {
@@ -634,80 +641,86 @@ const ProductsTable = () => {
           ›
         </button>
       </div>
-      {editingIndex !== null && (
-        <Modal
-          isOpen={editingIndex !== null}
-          onClose={() => setEditingIndex(null)}
-        >
-          <EditProductForm
-            product={{
-              id: products[editingIndex].id,
-              name: products[editingIndex].name,
-              article: products[editingIndex].code,
-              minStock: products[editingIndex].minStock,
-              purchasePrice: products[editingIndex].purchasePrice,
-              salePrice: products[editingIndex].price,
-              remains: products[editingIndex].quantity,
-            }}
-            onSuccess={handleEditSuccess}
-            onCancel={() => setEditingIndex(null)}
-          />
-        </Modal>
-      )}
-      {isCreating && (
-        <Modal isOpen={isCreating} onClose={() => setIsCreating(false)}>
-          <div className="add-product-modal">
-            <ProductForm
-              onSuccess={() => {
-                refetch()
-                setIsCreating(false)
-              }}
-              onCancel={() => setIsCreating(false)}
-            />
-          </div>
-        </Modal>
-      )}
-      {confirmingProduct && (
-        <Modal
-          isOpen={!!confirmingProduct}
-          onClose={() => {
-            setConfirmingProduct(null)
-            menuButtonRef.current?.focus()
-          }}
-          className="max-w-sm w-full rounded-2xl p-6 shadow-xl"
-        >
-          <p className="mb-4">
-            Удалить товар «{confirmingProduct.name}»? Действие необратимо.
-          </p>
-          <div className="flex justify-end gap-2">
-            <button
-              className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-              onClick={async () => {
-                await handleDelete(confirmingProduct.id)
-                setConfirmingProduct(null)
-                menuButtonRef.current?.focus()
-              }}
-              disabled={deletingId === confirmingProduct.id}
-              title="Удалить"
-            >
-              {deletingId === confirmingProduct.id ? 'Удаление...' : 'Удалить'}
-            </button>
-            <button
-              className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 focus:ring-2 focus:ring-blue-500"
-              onClick={() => {
-                setConfirmingProduct(null)
-                menuButtonRef.current?.focus()
-              }}
-              title="Отмена"
-            >
-              Отмена
-            </button>
-          </div>
-        </Modal>
-      )}
       {error && <p className="text-error mt-2">{error}</p>}
     </div>
-  )
+    <button
+      aria-label="Добавить товар"
+      title="Добавить товар"
+      className="fixed z-50 bottom-4 right-4 md:bottom-6 md:right-6 inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full shadow-lg bg-brand-600 hover:bg-brand-700 focus:ring-2 focus:ring-brand-500 text-white"
+      onClick={() => setIsCreating(true)}
+    >
+      +
+    </button>
+    {editingIndex !== null && (
+      <Modal isOpen={editingIndex !== null} onClose={() => setEditingIndex(null)}>
+        <EditProductForm
+          product={{
+            id: products[editingIndex].id,
+            name: products[editingIndex].name,
+            article: products[editingIndex].code,
+            minStock: products[editingIndex].minStock,
+            purchasePrice: products[editingIndex].purchasePrice,
+            salePrice: products[editingIndex].price,
+            remains: products[editingIndex].quantity,
+          }}
+          onSuccess={handleEditSuccess}
+          onCancel={() => setEditingIndex(null)}
+        />
+      </Modal>
+    )}
+    {isCreating && (
+      <Modal isOpen={isCreating} onClose={() => setIsCreating(false)}>
+        <div className="add-product-modal">
+          <ProductForm
+            onSuccess={() => {
+              refetch()
+              setIsCreating(false)
+            }}
+            onCancel={() => setIsCreating(false)}
+          />
+        </div>
+      </Modal>
+    )}
+    {confirmingProduct && (
+      <Modal
+        isOpen={!!confirmingProduct}
+        onClose={() => {
+          setConfirmingProduct(null)
+          menuButtonRef.current?.focus()
+        }}
+        className="max-w-sm w-full rounded-2xl p-6 shadow-xl"
+      >
+        <p className="mb-4">
+          Удалить товар «{confirmingProduct.name}»? Действие необратимо.
+        </p>
+        <div className="flex justify-end gap-2">
+          <button
+            className="px-4 py-2 rounded border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+            onClick={async () => {
+              await handleDelete(confirmingProduct.id)
+              setConfirmingProduct(null)
+              menuButtonRef.current?.focus()
+            }}
+            disabled={deletingId === confirmingProduct.id}
+            title="Удалить"
+          >
+            {deletingId === confirmingProduct.id ? 'Удаление...' : 'Удалить'}
+          </button>
+          <button
+            className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 focus:ring-2 focus:ring-brand-500"
+            onClick={() => {
+              setConfirmingProduct(null)
+              menuButtonRef.current?.focus()
+            }}
+            title="Отмена"
+          >
+            Отмена
+          </button>
+        </div>
+      </Modal>
+    )}
+  </>
+)
 }
 
 export default ProductsTable
