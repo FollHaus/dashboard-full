@@ -23,6 +23,7 @@ import {
   stockTone,
 } from '@/utils/inventoryStats'
 import EditProductForm from './EditProductForm'
+import WarehouseKpiCards from './WarehouseKpiCards'
 import './ProductsTable.css'
 
 interface ProductsTableProps {
@@ -397,15 +398,13 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
               )}
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <span>Товаров: {stats.totalCount}</span>
-            <span>
-              Закупочная стоимость: {formatCurrency(stats.purchaseValue)}
-            </span>
-            <span>
-              Продажная стоимость: {formatCurrency(stats.saleValue)}
-            </span>
-          <div className="ml-auto flex gap-2">
+          <WarehouseKpiCards
+            totalCount={stats.totalCount}
+            purchaseValue={stats.purchaseValue}
+            saleValue={stats.saleValue}
+            isLoading={isInitialLoading}
+          />
+          <div className="flex justify-end gap-2 mt-4">
             <Button
               className="bg-neutral-200 px-2 py-1"
               onClick={handleExport}
@@ -423,7 +422,6 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
               <FaPrint aria-hidden="true" />
             </Button>
           </div>
-        </div>
       </>
       )}
 
