@@ -105,8 +105,10 @@ describe('ProductsTable', () => {
     renderTable()
     const menuBtn = (await screen.findAllByRole('button', { name: 'Действия' }))[0]
     await userEvent.click(menuBtn)
-    const deleteBtn = await screen.findByRole('button', { name: 'Удалить' })
-    await userEvent.click(deleteBtn)
+    const deleteMenuItem = await screen.findByRole('menuitem', { name: 'Удалить' })
+    await userEvent.click(deleteMenuItem)
+    const confirmBtn = await screen.findByRole('button', { name: 'Удалить' })
+    await userEvent.click(confirmBtn)
     await waitFor(() => {
       expect(screen.queryByText('Product 1')).not.toBeInTheDocument()
     })
@@ -117,8 +119,8 @@ describe('ProductsTable', () => {
     await screen.findByText('Product 1')
     const menuBtn = (await screen.findAllByRole('button', { name: 'Действия' }))[0]
     await userEvent.click(menuBtn)
-    const editBtn = await screen.findByRole('button', { name: 'Редактировать' })
-    await userEvent.click(editBtn)
+    const editMenuItem = await screen.findByRole('menuitem', { name: 'Редактировать' })
+    await userEvent.click(editMenuItem)
     const nameInput = await screen.findByLabelText('Название товара')
     await userEvent.clear(nameInput)
     await userEvent.type(nameInput, 'Новый')
