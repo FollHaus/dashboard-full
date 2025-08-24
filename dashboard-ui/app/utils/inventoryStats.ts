@@ -10,6 +10,12 @@ export const isLowStock = (
   remains <=
   (Number.isFinite(minStock as number) ? (minStock as number) : fallback)
 
+export function stockTone(qty: number) {
+  if (qty < 20) return 'bg-red-50 text-red-700'
+  if (qty <= 100) return 'bg-orange-50 text-orange-700'
+  return 'bg-green-50 text-green-700'
+}
+
 export interface InventoryStats {
   outOfStock: number
   lowStock: number
