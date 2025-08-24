@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Button from '@/ui/Button/Button'
 import {
@@ -8,10 +8,12 @@ import {
   FaChevronRight,
   FaEdit,
   FaTrash,
-  FaEllipsisV,
   FaPrint,
   FaFileExport,
 } from 'react-icons/fa'
+import { createPortal } from 'react-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { toast } from '@/utils/toast'
 import { ProductService } from '@/services/product/product.service'
 import ProductForm from './ProductForm'
 import Modal from '@/ui/Modal/Modal'
@@ -56,7 +58,17 @@ const ProductsTable = () => {
   const [stockFilter, setStockFilter] = useState<'all' | 'in' | 'low' | 'out'>(
     initialStock,
   )
-  const [actionIndex, setActionIndex] = useState<number | null>(null)
+  const [openMenuProductId, setOpenMenuProductId] = useState<number | null>(
+    null,
+  )
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 })
+  const menuRef = useRef<HTMLDivElement | null>(null)
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null)
+  const [confirmingProduct, setConfirmingProduct] = useState<IInventory | null>(
+    null,
+  )
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const queryClient = useQueryClient()
   const debouncedTerm = useDebounce(searchTerm, 300)
 
   const stockOptions = [
@@ -115,10 +127,56 @@ const ProductsTable = () => {
   }, [debouncedTerm, stockFilter])
 
   useEffect(() => {
-    const close = () => setActionIndex(null)
-    document.addEventListener('click', close)
-    return () => document.removeEventListener('click', close)
-  }, [])
+    if (!openMenuProductId) return
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuProductId(null)
+        menuButtonRef.current?.focus()
+      }
+    }
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpenMenuProductId(null)
+        menuButtonRef.current?.focus()
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [openMenuProductId])
+
+  useEffect(() => {
+    if (!openMenuProductId) return
+    const updatePosition = () => {
+      const rect = menuButtonRef.current?.getBoundingClientRect()
+      if (rect) {
+        setMenuPosition({
+          top: rect.bottom + window.scrollY,
+          left: rect.left + window.scrollX,
+        })
+      }
+    }
+    const handleResize = () => {
+      setOpenMenuProductId(null)
+      menuButtonRef.current?.focus()
+    }
+    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('resize', handleResize)
+    updatePosition()
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [openMenuProductId])
+
+  useEffect(() => {
+    if (!openMenuProductId) return
+    const first = menuRef.current?.querySelector<HTMLElement>('button[role="menuitem"]')
+    first?.focus()
+  }, [openMenuProductId])
 
   const { data, status, isFetching, isError, refetch } = useInventoryList({
     page,
@@ -145,6 +203,7 @@ const ProductsTable = () => {
   }
 
   const handleDelete = async (id: number) => {
+    setDeletingId(id)
     try {
       await ProductService.delete(id)
       setProducts(prev => {
@@ -152,13 +211,35 @@ const ProductsTable = () => {
         setStats(calculateInventoryStats(updated, DEFAULT_MIN_STOCK))
         return updated
       })
+      toast.success('Товар удалён')
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['inventory-snapshot'] })
     } catch (e: any) {
       setError(e.message)
+      toast.error('Не удалось удалить')
+    } finally {
+      setDeletingId(null)
     }
   }
 
-  const confirmDelete = (id: number) => {
-    if (window.confirm('Удалить товар?')) handleDelete(id)
+  const handleMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const items = menuRef.current?.querySelectorAll<HTMLButtonElement>(
+      'button[role="menuitem"]',
+    )
+    if (!items || items.length === 0) return
+    const arr = Array.from(items)
+    const index = arr.indexOf(document.activeElement as HTMLButtonElement)
+    if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
+      e.preventDefault()
+      arr[(index + 1) % arr.length].focus()
+    } else if (e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) {
+      e.preventDefault()
+      arr[(index - 1 + arr.length) % arr.length].focus()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      setOpenMenuProductId(null)
+      menuButtonRef.current?.focus()
+    }
   }
 
   const handleExport = () => {
@@ -253,12 +334,15 @@ const ProductsTable = () => {
               {opt.label}
             </button>
           ))}
-          <Button
-            className="ml-auto bg-primary-500 text-white px-4 py-1"
+          <button
+            className="ml-auto inline-flex items-center gap-2 rounded-full bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
             onClick={() => setIsCreating(true)}
+            aria-label="Добавить товар"
+            title="Добавить товар"
           >
-            Добавить товар
-          </Button>
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/20">+</span>
+            <span className="hidden sm:inline">Добавить товар</span>
+          </button>
         </div>
       </div>
 
@@ -457,46 +541,75 @@ const ProductsTable = () => {
                   <td className="p-2 col-purchase">
                     {formatCurrency(prod.purchasePrice)}
                   </td>
-                  <td className="p-2 col-actions relative">
+                  <td className="p-2 col-actions">
                     <div className="flex justify-end">
-                      <Button
-                        className="p-2 bg-neutral-200"
+                      <button
+                        aria-haspopup="menu"
+                        aria-expanded={openMenuProductId === prod.id}
+                        aria-label="Действия"
+                        className="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                         onClick={e => {
                           e.stopPropagation()
-                          setActionIndex(i => (i === index ? null : index))
+                          if (openMenuProductId === prod.id) {
+                            setOpenMenuProductId(null)
+                            menuButtonRef.current?.focus()
+                          } else {
+                            const rect = e.currentTarget.getBoundingClientRect()
+                            setMenuPosition({
+                              top: rect.bottom + window.scrollY,
+                              left: rect.left + window.scrollX,
+                            })
+                            menuButtonRef.current = e.currentTarget
+                            setOpenMenuProductId(prod.id)
+                          }
                         }}
                         title="Действия"
-                        aria-label="Действия"
+                        disabled={deletingId === prod.id}
                       >
-                        <FaEllipsisV />
-                      </Button>
-                      {actionIndex === index && (
-                        <div
-                          className="absolute right-0 mt-8 w-40 bg-white border border-neutral-200 rounded shadow z-10"
-                          onClick={e => e.stopPropagation()}
-                        >
-                          <button
-                            className="flex items-center w-full gap-2 px-2 py-1 text-left hover:bg-neutral-100"
-                            onClick={() => {
-                              setEditingIndex(index)
-                              setActionIndex(null)
+                        ⋮
+                      </button>
+                      {openMenuProductId === prod.id &&
+                        createPortal(
+                          <div
+                            ref={menuRef}
+                            className="z-50 bg-white rounded-xl shadow-lg border border-gray-200 py-1 w-44"
+                            style={{
+                              position: 'absolute',
+                              top: menuPosition.top,
+                              left: menuPosition.left,
                             }}
-                            title="Редактировать"
+                            role="menu"
+                            onKeyDown={handleMenuKeyDown}
                           >
-                            <FaEdit /> Редактировать
-                          </button>
-                          <button
-                            className="flex items-center w-full gap-2 px-2 py-1 text-left hover:bg-neutral-100 text-red-600"
-                            onClick={() => {
-                              confirmDelete(prod.id)
-                              setActionIndex(null)
-                            }}
-                            title="Удалить"
-                          >
-                            <FaTrash /> Удалить
-                          </button>
-                        </div>
-                      )}
+                            <button
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 focus:bg-gray-50 disabled:opacity-50"
+                              role="menuitem"
+                              onClick={() => {
+                                setOpenMenuProductId(null)
+                                setEditingIndex(index)
+                              }}
+                              title="Редактировать"
+                              disabled={deletingId === prod.id}
+                            >
+                              <FaEdit aria-hidden="true" />
+                              <span>Редактировать</span>
+                            </button>
+                            <button
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 focus:bg-gray-50 text-red-600 disabled:opacity-50"
+                              role="menuitem"
+                              onClick={() => {
+                                setOpenMenuProductId(null)
+                                setConfirmingProduct(prod)
+                              }}
+                              title="Удалить"
+                              disabled={deletingId === prod.id}
+                            >
+                              <FaTrash aria-hidden="true" />
+                              <span>Удалить</span>
+                            </button>
+                          </div>,
+                          document.body,
+                        )}
                     </div>
                   </td>
                 </tr>
@@ -561,6 +674,44 @@ const ProductsTable = () => {
               }}
               onCancel={() => setIsCreating(false)}
             />
+          </div>
+        </Modal>
+      )}
+      {confirmingProduct && (
+        <Modal
+          isOpen={!!confirmingProduct}
+          onClose={() => {
+            setConfirmingProduct(null)
+            menuButtonRef.current?.focus()
+          }}
+          className="max-w-sm w-full rounded-2xl p-6 shadow-xl"
+        >
+          <p className="mb-4">
+            Удалить товар «{confirmingProduct.name}»? Действие необратимо.
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+              onClick={async () => {
+                await handleDelete(confirmingProduct.id)
+                setConfirmingProduct(null)
+                menuButtonRef.current?.focus()
+              }}
+              disabled={deletingId === confirmingProduct.id}
+              title="Удалить"
+            >
+              {deletingId === confirmingProduct.id ? 'Удаление...' : 'Удалить'}
+            </button>
+            <button
+              className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 focus:ring-2 focus:ring-blue-500"
+              onClick={() => {
+                setConfirmingProduct(null)
+                menuButtonRef.current?.focus()
+              }}
+              title="Отмена"
+            >
+              Отмена
+            </button>
           </div>
         </Modal>
       )}
