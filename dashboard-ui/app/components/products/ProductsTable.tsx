@@ -261,6 +261,7 @@ const ProductsTable = () => {
 
   const handleEditSuccess = (data: {
     name: string
+    article: string
     minStock: number
     purchasePrice: number
     salePrice: number
@@ -272,6 +273,7 @@ const ProductsTable = () => {
     const updated = {
       ...product,
       name: data.name,
+      code: data.article,
       minStock: data.minStock,
       purchasePrice: data.purchasePrice,
       price: data.salePrice,
@@ -641,6 +643,7 @@ const ProductsTable = () => {
             product={{
               id: products[editingIndex].id,
               name: products[editingIndex].name,
+              article: products[editingIndex].code,
               minStock: products[editingIndex].minStock,
               purchasePrice: products[editingIndex].purchasePrice,
               salePrice: products[editingIndex].price,

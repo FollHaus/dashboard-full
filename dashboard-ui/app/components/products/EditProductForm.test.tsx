@@ -10,6 +10,7 @@ const renderForm = (overrides: any = {}) => {
   const product = {
     id: 1,
     name: 'Товар',
+    article: 'A1',
     minStock: 1,
     purchasePrice: 1,
     salePrice: 2,
@@ -40,6 +41,27 @@ describe('EditProductForm validation', () => {
     await userEvent.type(nameInput, 'Мотоблок')
     await userEvent.click(screen.getByRole('button', { name: 'Сохранить' }))
     await waitFor(() => expect(onSuccess).toHaveBeenCalled())
+  })
+
+  it('validates article field', async () => {
+    vi.spyOn(ProductService, 'update').mockResolvedValue({})
+    renderForm()
+    const input = screen.getByLabelText('Артикул')
+    await userEvent.clear(input)
+    await userEvent.type(input, 'a!')
+    await userEvent.click(screen.getByRole('button', { name: 'Сохранить' }))
+    expect(
+      await screen.findByText('Введите корректный артикул'),
+    ).toBeInTheDocument()
+    await userEvent.clear(input)
+    await userEvent.type(input, 'AB-1')
+    await userEvent.click(screen.getByRole('button', { name: 'Сохранить' }))
+    await waitFor(() =>
+      expect(ProductService.update).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ articleNumber: 'AB-1' }),
+      ),
+    )
   })
 
   it('validates minStock integer', async () => {

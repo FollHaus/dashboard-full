@@ -12,6 +12,7 @@ import { isLowStock } from '@/utils/inventoryStats'
 interface ProductData {
   id: number
   name: string
+  article: string
   minStock?: number
   purchasePrice: number
   salePrice: number
@@ -33,6 +34,7 @@ const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
   const initial = useRef<ProductData>(product)
 
   const [name, setName] = useState(product.name)
+  const [article, setArticle] = useState(product.article)
   const [minStock, setMinStock] = useState<string>(
     product.minStock !== undefined ? String(product.minStock) : '',
   )
@@ -45,6 +47,7 @@ const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
   const [remains, setRemains] = useState<string>(String(product.remains))
 
   const [nameError, setNameError] = useState<string | null>(null)
+  const [articleError, setArticleError] = useState<string | null>(null)
   const [minStockError, setMinStockError] = useState<string | null>(null)
   const [purchasePriceError, setPurchasePriceError] = useState<string | null>(
     null,
@@ -56,6 +59,7 @@ const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
   useEffect(() => {
     initial.current = product
     setName(product.name)
+    setArticle(product.article)
     setMinStock(
       product.minStock !== undefined ? String(product.minStock) : '',
     )
@@ -63,6 +67,7 @@ const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
     setSalePrice(String(product.salePrice))
     setRemains(String(product.remains))
     setNameError(null)
+    setArticleError(null)
     setMinStockError(null)
     setPurchasePriceError(null)
     setSalePriceError(null)
@@ -78,6 +83,19 @@ const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
       valid = false
     } else {
       setNameError(null)
+    }
+
+    const trimmedArticle = article.trim()
+    if (
+      !trimmedArticle ||
+      trimmedArticle.length < 2 ||
+      trimmedArticle.length > 64 ||
+      !/^[\p{L}\p{N}\-_.]+$/u.test(trimmedArticle)
+    ) {
+      setArticleError('Введите корректный артикул')
+      valid = false
+    } else {
+      setArticleError(null)
     }
 
     if (minStock === '') {
@@ -127,6 +145,7 @@ const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
 
   const isPristine =
     name === initial.current.name &&
+    article === initial.current.article &&
     minStock ===
       (initial.current.minStock !== undefined
         ? String(initial.current.minStock)
@@ -149,6 +168,7 @@ const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
 
     const body = {
       name: name.trim(),
+      articleNumber: article.trim(),
       minStock: Number(minStock),
       purchasePrice: toNum(purchasePrice),
       salePrice: toNum(salePrice),
@@ -186,6 +206,7 @@ const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
       const updated = {
         ...item,
         name: body.name,
+        code: body.articleNumber,
         minStock: body.minStock,
         purchasePrice: body.purchasePrice,
         price: body.salePrice,
@@ -233,7 +254,15 @@ const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
       queryClient.invalidateQueries({ queryKey: ['inventory-snapshot'] })
       queryClient.invalidateQueries({ queryKey: ['product', product.id] })
-      onSuccess({ id: product.id, ...body })
+      onSuccess({
+        id: product.id,
+        name: body.name,
+        article: body.articleNumber,
+        minStock: body.minStock,
+        purchasePrice: body.purchasePrice,
+        salePrice: body.salePrice,
+        remains: body.remains,
+      })
     } catch (err: any) {
       const payload = err?.response?.data?.message
       if (Array.isArray(payload)) {
@@ -242,6 +271,9 @@ const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
           switch (e.property) {
             case 'name':
               setNameError('Введите от 2 до 150 символов')
+              break
+            case 'articleNumber':
+              setArticleError('Введите корректный артикул')
               break
             case 'minStock':
               setMinStockError(msg)
@@ -274,6 +306,7 @@ const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
     isPristine ||
     !!(
       nameError ||
+      articleError ||
       minStockError ||
       purchasePriceError ||
       salePriceError ||
@@ -296,6 +329,26 @@ const EditProductForm = ({ product, onSuccess, onCancel }: Props) => {
           )
         }}
         error={nameError ? { message: nameError } as any : undefined}
+      />
+      <Field
+        id="article"
+        label="Артикул"
+        placeholder="Например, ABC-123"
+        value={article}
+        onChange={e => {
+          setArticle(e.target.value)
+          const trimmed = e.target.value.trim()
+          setArticleError(
+            !trimmed ||
+              trimmed.length < 2 ||
+              trimmed.length > 64 ||
+              !/^[\p{L}\p{N}\-_.]+$/u.test(trimmed)
+              ? 'Введите корректный артикул'
+              : null,
+          )
+        }}
+        error={articleError ? ({ message: articleError } as any) : undefined}
+        aria-invalid={articleError ? true : undefined}
       />
       <Field
         id="minStock"
