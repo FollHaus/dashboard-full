@@ -25,19 +25,11 @@
 }
 
 .inventory-table .col-quantity {
-  min-width: 100px;
+  min-width: 3rem;
 }
 
 .inventory-table .col-sale {
-  width: 120px;
-}
-
-.inventory-table .col-purchase {
-  width: 140px;
-}
-
-.inventory-table .col-actions {
-  width: 140px;
+  min-width: 6rem;
 }
 
 .inventory-table.loading::after {
