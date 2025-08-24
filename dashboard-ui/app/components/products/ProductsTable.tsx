@@ -399,11 +399,11 @@ const ProductsTable = () => {
         }`}
         style={{ minHeight: pageSize * ROW_HEIGHT }}
       >
-        <table className="min-w-full bg-gray-50 rounded shadow-md">
+        <table className="table-fixed w-full border-collapse bg-gray-50 rounded shadow-md">
           <thead>
-            <tr className="text-left border-b border-neutral-300">
+            <tr className="border-b border-neutral-300">
               <th
-                className="px-3 py-2 cursor-pointer col-name text-sm font-medium text-gray-600 uppercase tracking-wide"
+                className="w-1/6 px-3 py-2 cursor-pointer text-left text-sm font-medium text-gray-600 uppercase tracking-wide truncate"
                 onClick={() => handleSort('name')}
               >
                 <span className="inline-flex items-center">
@@ -413,14 +413,14 @@ const ProductsTable = () => {
                   </span>
                 </span>
               </th>
-              <th className="px-3 py-2 col-category text-sm font-medium text-gray-600 uppercase tracking-wide">
+              <th className="w-1/6 px-3 py-2 text-left text-sm font-medium text-gray-600 uppercase tracking-wide truncate">
                 Категория
               </th>
-              <th className="px-3 py-2 col-code text-sm font-medium text-gray-600 uppercase tracking-wide">
+              <th className="w-1/6 px-3 py-2 text-left text-sm font-medium text-gray-600 uppercase tracking-wide truncate">
                 Артикул
               </th>
               <th
-                className="px-3 py-2 cursor-pointer col-quantity text-sm font-medium text-gray-600 uppercase tracking-wide"
+                className="w-1/6 px-3 py-2 cursor-pointer text-right text-sm font-medium text-gray-600 uppercase tracking-wide"
                 onClick={() => handleSort('quantity')}
               >
                 <span className="inline-flex items-center">
@@ -431,7 +431,7 @@ const ProductsTable = () => {
                 </span>
               </th>
               <th
-                className="px-3 py-2 cursor-pointer col-sale text-sm font-medium text-gray-600 uppercase tracking-wide"
+                className="w-1/6 px-3 py-2 cursor-pointer text-right text-sm font-medium text-gray-600 uppercase tracking-wide"
                 onClick={() => handleSort('price')}
               >
                 <span className="inline-flex items-center">
@@ -441,37 +441,38 @@ const ProductsTable = () => {
                   </span>
                 </span>
               </th>
+              <th className="w-1/6 px-3 py-2 text-right text-sm font-medium text-gray-600 uppercase tracking-wide">
+                <span className="sr-only">Действия</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {isInitialLoading &&
               Array.from({ length: pageSize }).map((_, i) => (
                 <tr key={i} className="row animate-pulse">
-                  <td className="px-3 py-2 col-name">
+                  <td className="w-1/6 px-3 py-2 text-left">
                     <div className="h-4 bg-neutral-200 rounded w-3/4" />
                   </td>
-                  <td className="px-3 py-2 col-category">
+                  <td className="w-1/6 px-3 py-2 text-left">
                     <div className="h-4 bg-neutral-200 rounded w-1/2" />
                   </td>
-                  <td className="px-3 py-2 col-code">
+                  <td className="w-1/6 px-3 py-2 text-left">
                     <div className="h-4 bg-neutral-200 rounded w-1/3" />
                   </td>
-                  <td className="px-3 py-2 col-quantity">
-                    <div className="flex items-center justify-end">
-                      <div className="h-4 bg-neutral-200 rounded min-w-[3rem]" />
-                    </div>
+                  <td className="w-1/6 px-3 py-2 text-right">
+                    <div className="h-4 bg-neutral-200 rounded w-1/2 ml-auto" />
                   </td>
-                  <td className="px-3 py-2 col-sale">
-                    <div className="flex items-center justify-end gap-2">
-                      <div className="h-4 bg-neutral-200 rounded w-1/4" />
-                      <div className="w-8 h-8 bg-neutral-200 rounded-full" />
-                    </div>
+                  <td className="w-1/6 px-3 py-2 text-right">
+                    <div className="h-4 bg-neutral-200 rounded w-1/4 ml-auto" />
+                  </td>
+                  <td className="w-1/6 px-3 py-2 text-right">
+                    <div className="w-8 h-8 bg-neutral-200 rounded-full ml-auto" />
                   </td>
                 </tr>
               ))}
             {!isInitialLoading && products.length === 0 && (
               <tr className="row">
-                <td colSpan={5} className="px-3 py-2 text-center">
+                <td colSpan={6} className="px-3 py-2 text-center">
                   Товары не найдены
                 </td>
               </tr>
@@ -482,10 +483,16 @@ const ProductsTable = () => {
                   key={prod.id}
                   className="row border-b border-neutral-200 hover:bg-neutral-200 odd:bg-white even:bg-gray-50"
                 >
-                  <td className="px-3 py-2 col-name" title={prod.name}>
-                    <span className="block truncate">{prod.name}</span>
+                  <td
+                    className="w-1/6 px-3 py-2 text-left truncate"
+                    title={prod.name}
+                  >
+                    {prod.name}
                   </td>
-                  <td className="px-3 py-2 col-category" title={prod.category?.name || '-'}>
+                  <td
+                    className="w-1/6 px-3 py-2 text-left truncate"
+                    title={prod.category?.name || '-'}
+                  >
                     <div className="flex items-center gap-2">
                       {prod.category ? (
                         <span
@@ -498,15 +505,18 @@ const ProductsTable = () => {
                       ) : (
                         <span className="w-6 h-6" />
                       )}
-                      <span className="block truncate">
+                      <span className="truncate">
                         {prod.category?.name || '-'}
                       </span>
                     </div>
                   </td>
-                  <td className="px-3 py-2 col-code" title={prod.code}>
-                    <span className="block truncate">{prod.code}</span>
+                  <td
+                    className="w-1/6 px-3 py-2 text-left truncate"
+                    title={prod.code}
+                  >
+                    {prod.code}
                   </td>
-                  <td className="px-3 py-2 col-quantity">
+                  <td className="w-1/6 px-3 py-2 text-right">
                     <div
                       className={`inline-flex items-center justify-end min-w-[3rem] px-2 py-1 rounded-lg whitespace-nowrap ${stockTone(
                         prod.quantity,
@@ -520,79 +530,77 @@ const ProductsTable = () => {
                       )}
                     </div>
                   </td>
-                  <td className="px-3 py-2 col-sale">
-                    <div className="flex items-center justify-end gap-2">
-                      <span className="min-w-[6rem] text-right whitespace-nowrap">
-                        {formatCurrency(prod.price)}
-                      </span>
-                      <button
-                        aria-haspopup="menu"
-                        aria-expanded={openMenuProductId === prod.id}
-                        aria-label="Действия"
-                        title="Действия"
-                        className="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-secondary-500 disabled:opacity-50"
-                        onClick={e => {
-                          e.stopPropagation()
-                          if (openMenuProductId === prod.id) {
-                            setOpenMenuProductId(null)
-                            menuButtonRef.current?.focus()
-                          } else {
-                            const rect = e.currentTarget.getBoundingClientRect()
-                            setMenuPosition({
-                              top: rect.bottom + window.scrollY,
-                              left: rect.left + window.scrollX,
-                            })
-                            menuButtonRef.current = e.currentTarget
-                            setOpenMenuProductId(prod.id)
-                          }
-                        }}
-                        disabled={deletingId === prod.id}
-                      >
-                        ⋮
-                      </button>
-                      {openMenuProductId === prod.id &&
-                        createPortal(
-                          <div
-                            ref={menuRef}
-                            className="z-50 bg-white rounded-xl shadow-lg border border-gray-200 py-1 w-44"
-                            style={{
-                              position: 'absolute',
-                              top: menuPosition.top,
-                              left: menuPosition.left,
+                  <td className="w-1/6 px-3 py-2 text-right tabular-nums">
+                    {formatCurrency(prod.price)}
+                  </td>
+                  <td className="w-1/6 px-3 py-2 text-right">
+                    <button
+                      aria-haspopup="menu"
+                      aria-expanded={openMenuProductId === prod.id}
+                      aria-label="Действия"
+                      title="Действия"
+                      className="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-secondary-500 disabled:opacity-50"
+                      onClick={e => {
+                        e.stopPropagation()
+                        if (openMenuProductId === prod.id) {
+                          setOpenMenuProductId(null)
+                          menuButtonRef.current?.focus()
+                        } else {
+                          const rect = e.currentTarget.getBoundingClientRect()
+                          setMenuPosition({
+                            top: rect.bottom + window.scrollY,
+                            left: rect.left + window.scrollX,
+                          })
+                          menuButtonRef.current = e.currentTarget
+                          setOpenMenuProductId(prod.id)
+                        }
+                      }}
+                      disabled={deletingId === prod.id}
+                    >
+                      ⋮
+                    </button>
+                    {openMenuProductId === prod.id &&
+                      createPortal(
+                        <div
+                          ref={menuRef}
+                          className="z-50 bg-white rounded-xl shadow-lg border border-gray-200 py-1 w-44"
+                          style={{
+                            position: 'absolute',
+                            top: menuPosition.top,
+                            left: menuPosition.left,
+                          }}
+                          role="menu"
+                          onKeyDown={handleMenuKeyDown}
+                        >
+                          <button
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 focus:bg-gray-50 disabled:opacity-50"
+                            role="menuitem"
+                            onClick={() => {
+                              setOpenMenuProductId(null)
+                              setEditingIndex(index)
                             }}
-                            role="menu"
-                            onKeyDown={handleMenuKeyDown}
+                            title="Редактировать"
+                            disabled={deletingId === prod.id}
                           >
-                            <button
-                              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 focus:bg-gray-50 disabled:opacity-50"
-                              role="menuitem"
-                              onClick={() => {
-                                setOpenMenuProductId(null)
-                                setEditingIndex(index)
-                              }}
-                              title="Редактировать"
-                              disabled={deletingId === prod.id}
-                            >
-                              <FaEdit aria-hidden="true" />
-                              <span>Редактировать</span>
-                            </button>
-                            <button
-                              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 focus:bg-gray-50 text-red-600 disabled:opacity-50"
-                              role="menuitem"
-                              onClick={() => {
-                                setOpenMenuProductId(null)
-                                setConfirmingProduct(prod)
-                              }}
-                              title="Удалить"
-                              disabled={deletingId === prod.id}
-                            >
-                              <FaTrash aria-hidden="true" />
-                              <span>Удалить</span>
-                            </button>
-                          </div>,
-                          document.body,
-                        )}
-                    </div>
+                            <FaEdit aria-hidden="true" />
+                            <span>Редактировать</span>
+                          </button>
+                          <button
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 focus:bg-gray-50 text-red-600 disabled:opacity-50"
+                            role="menuitem"
+                            onClick={() => {
+                              setOpenMenuProductId(null)
+                              setConfirmingProduct(prod)
+                            }}
+                            title="Удалить"
+                            disabled={deletingId === prod.id}
+                          >
+                            <FaTrash aria-hidden="true" />
+                            <span>Удалить</span>
+                          </button>
+                        </div>,
+                        document.body,
+                      )}
                   </td>
                 </tr>
               ))}

@@ -7,31 +7,6 @@
   height: 44px;
 }
 
-.inventory-table table {
-  table-layout: fixed;
-  width: 100%;
-}
-
-.inventory-table .col-name {
-  width: 240px;
-}
-
-.inventory-table .col-category {
-  width: 160px;
-}
-
-.inventory-table .col-code {
-  width: 120px;
-}
-
-.inventory-table .col-quantity {
-  min-width: 3rem;
-}
-
-.inventory-table .col-sale {
-  min-width: 6rem;
-}
-
 .inventory-table.loading::after {
   content: '';
   position: absolute;
