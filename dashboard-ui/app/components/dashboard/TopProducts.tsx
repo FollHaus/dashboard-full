@@ -252,8 +252,8 @@ const TopProducts: React.FC = () => {
         transform={labelAngle ? `rotate(${labelAngle})` : undefined}
         fontSize={12}
       >
-        <title>{payload.payload.fullName}</title>
-        {payload.value}
+        <title>{payload?.payload?.fullName ?? payload?.value}</title>
+        {payload?.value}
       </text>
     </g>
   )
