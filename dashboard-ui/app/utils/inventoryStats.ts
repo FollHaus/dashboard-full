@@ -1,6 +1,6 @@
 import { IInventory } from '@/shared/interfaces/inventory.interface'
 
-export const DEFAULT_MIN_STOCK = 2
+export const DEFAULT_MIN_STOCK = 3
 
 export const isLowStock = (
   remains: number,
@@ -10,9 +10,16 @@ export const isLowStock = (
   remains <=
   (Number.isFinite(minStock as number) ? (minStock as number) : fallback)
 
-export function stockTone(qty: number) {
-  if (qty < 20) return 'bg-red-50 text-red-700'
-  if (qty <= 100) return 'bg-orange-50 text-orange-700'
+export function stockTone(
+  remains: number,
+  minStock: number | undefined | null,
+  fallback = DEFAULT_MIN_STOCK,
+) {
+  const min = Number.isFinite(minStock as number)
+    ? (minStock as number)
+    : fallback
+  if (remains < min) return 'bg-red-50 text-red-700'
+  if (remains === min) return 'bg-orange-50 text-orange-700'
   return 'bg-green-50 text-green-700'
 }
 

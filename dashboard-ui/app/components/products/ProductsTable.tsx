@@ -520,6 +520,7 @@ const ProductsTable = () => {
                     <div
                       className={`inline-flex items-center justify-end min-w-[3rem] px-2 py-1 rounded-lg whitespace-nowrap ${stockTone(
                         prod.quantity,
+                        prod.minStock,
                       )}`}
                     >
                       <span className="tabular-nums">{prod.quantity}</span>
