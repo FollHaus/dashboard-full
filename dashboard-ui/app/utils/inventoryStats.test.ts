@@ -11,5 +11,8 @@ describe('calculateInventoryStats', () => {
     ])
     expect(stats.outOfStock).toBe(1)
     expect(stats.lowStock).toBe(2)
+    expect(stats.totalCount).toBe(4)
+    expect(stats.purchaseValue).toBe(0)
+    expect(stats.saleValue).toBe(0)
   })
 })
