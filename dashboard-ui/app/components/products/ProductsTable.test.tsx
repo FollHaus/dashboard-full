@@ -48,7 +48,7 @@ const renderTable = () => {
   const queryClient = new QueryClient()
   render(
     <QueryClientProvider client={queryClient}>
-      <ProductsTable />
+      <ProductsTable isAddOpen={false} onCloseAdd={() => {}} />
     </QueryClientProvider>,
   )
 }

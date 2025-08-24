@@ -25,7 +25,12 @@ import {
 import EditProductForm from './EditProductForm'
 import './ProductsTable.css'
 
-const ProductsTable = () => {
+interface ProductsTableProps {
+  isAddOpen: boolean
+  onCloseAdd: () => void
+}
+
+const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -39,7 +44,6 @@ const ProductsTable = () => {
   const [sortField, setSortField] = useState<'name' | 'quantity' | 'price'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
   const [products, setProducts] = useState<IInventory[]>([])
   const [stats, setStats] = useState({
     outOfStock: 0,
@@ -303,7 +307,7 @@ const ProductsTable = () => {
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-4 pb-24">
       <div className="bg-white rounded shadow p-4">
         <h2 className="text-lg mb-2">Фильтры и поиск</h2>
         <div className="flex flex-wrap items-center gap-2">
@@ -664,14 +668,6 @@ const ProductsTable = () => {
       </div>
       {error && <p className="text-error mt-2">{error}</p>}
     </div>
-    <button
-      aria-label="Добавить товар"
-      title="Добавить товар"
-      className="fixed z-50 bottom-4 right-4 md:bottom-6 md:right-6 inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full shadow-lg bg-brand-600 hover:bg-brand-700 focus:ring-2 focus:ring-brand-500 text-white"
-      onClick={() => setIsCreating(true)}
-    >
-      +
-    </button>
     {editingIndex !== null && (
       <Modal isOpen={editingIndex !== null} onClose={() => setEditingIndex(null)}>
         <EditProductForm
@@ -689,15 +685,15 @@ const ProductsTable = () => {
         />
       </Modal>
     )}
-    {isCreating && (
-      <Modal isOpen={isCreating} onClose={() => setIsCreating(false)}>
+    {isAddOpen && (
+      <Modal isOpen={isAddOpen} onClose={onCloseAdd}>
         <div className="add-product-modal">
           <ProductForm
             onSuccess={() => {
               refetch()
-              setIsCreating(false)
+              onCloseAdd()
             }}
-            onCancel={() => setIsCreating(false)}
+            onCancel={onCloseAdd}
           />
         </div>
       </Modal>
