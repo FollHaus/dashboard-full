@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 import { CategoryService } from '@/services/category/category.service'
 import { ICategory } from '@/shared/interfaces/category.interface'
@@ -15,6 +16,31 @@ const periodPresets = [
   { label: 'Произвольный диапазон', value: 'custom' },
 ]
 
+function formatDate(d: Date) {
+  return d.toISOString().split('T')[0]
+}
+
+function getRange(preset: string) {
+  const now = new Date()
+  let start = new Date(now)
+  let end = new Date(now)
+  switch (preset) {
+    case '7d':
+      start.setDate(now.getDate() - 6)
+      break
+    case '30d':
+      start.setDate(now.getDate() - 29)
+      break
+    case 'month':
+      start = new Date(now.getFullYear(), now.getMonth(), 1)
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+      break
+    default:
+      break
+  }
+  return { from: formatDate(start), to: formatDate(end) }
+}
+
 interface KPI {
   title: string
   value: number
@@ -23,6 +49,9 @@ interface KPI {
 }
 
 export default function NewReportPage() {
+  const router = useRouter()
+  const STORAGE_KEY = 'report.filters'
+
   const [period, setPeriod] = useState('today')
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
@@ -53,6 +82,45 @@ export default function NewReportPage() {
     })
   }, [])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const stored = localStorage.getItem(STORAGE_KEY)
+    const parsed = stored ? JSON.parse(stored) : null
+    const preset = params.get('preset') || parsed?.preset
+    const from = params.get('from') || parsed?.from
+    const to = params.get('to') || parsed?.to
+    if (preset) setPeriod(preset)
+    if (from) setStart(from)
+    if (to) setEnd(to)
+  }, [])
+
+  const periodInitialized = useRef(false)
+  useEffect(() => {
+    if (periodInitialized.current) {
+      if (period !== 'custom') {
+        const range = getRange(period)
+        setStart(range.from)
+        setEnd(range.to)
+      }
+    } else {
+      periodInitialized.current = true
+    }
+  }, [period])
+
+  useEffect(() => {
+    if (!start || !end) return
+    const params = new URLSearchParams(window.location.search)
+    params.set('from', start)
+    params.set('to', end)
+    params.set('preset', period)
+    router.replace(`?${params.toString()}`, { scroll: false })
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ from: start, to: end, preset: period }),
+    )
+  }, [start, end, period, router])
+
   const handleCategoryChange = (
     e: React.ChangeEvent<HTMLSelectElement>,
   ) => {
@@ -81,7 +149,31 @@ export default function NewReportPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="rounded-2xl bg-neutral-200 p-4 shadow-card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">Фильтры</h2>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  /* период и даты уже синхронизируются через эффекты */
+                }}
+                className="px-3 py-1 bg-primary-500 text-white rounded"
+              >
+                Применить
+              </button>
+              <button
+                onClick={() => {
+                  const range = getRange('today')
+                  setPeriod('today')
+                  setStart(range.from)
+                  setEnd(range.to)
+                }}
+                className="px-3 py-1 bg-white border rounded"
+              >
+                Сбросить
+              </button>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-4">
             <div className="flex gap-2">
               {periodPresets.map(p => (
@@ -131,6 +223,8 @@ export default function NewReportPage() {
               </select>
             </div>
           </div>
+        </div>
+        <div className="flex justify-end">
           <button
             className="bg-primary-500 text-white px-4 py-1 rounded"
             onClick={exportCSV}
