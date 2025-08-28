@@ -7,8 +7,12 @@ vi.mock('@/services/task/task.service', () => ({
   TaskService: {
     create: vi.fn(() => Promise.resolve({})),
     update: vi.fn(() => Promise.resolve({})),
+    getAll: vi.fn(() => Promise.resolve([])),
   },
 }))
+
+const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }))
+vi.mock('@/utils/toast', () => ({ toast }))
 
 const push = vi.fn()
 vi.mock('next/navigation', () => ({
@@ -18,10 +22,15 @@ vi.mock('next/navigation', () => ({
 describe('TaskForm', () => {
   it('submits new task (happy path)', async () => {
     render(<TaskForm />)
-    await userEvent.type(screen.getByPlaceholderText('Заголовок'), 'Test')
+    await userEvent.type(
+      screen.getByPlaceholderText('Введите название задачи…'),
+      'Test',
+    )
     const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement
     await userEvent.type(dateInput, '2099-01-01')
-    await userEvent.click(screen.getByRole('button', { name: 'Сохранить' }))
+    const save = screen.getByRole('button', { name: 'Сохранить' })
+    await screen.findByDisplayValue('Test')
+    await userEvent.click(save)
 
     const { TaskService } = await import('@/services/task/task.service')
     expect(TaskService.create).toHaveBeenCalled()
@@ -30,8 +39,12 @@ describe('TaskForm', () => {
 
   it('shows validation error', async () => {
     render(<TaskForm />)
-    await userEvent.click(screen.getByRole('button', { name: 'Сохранить' }))
-    expect(await screen.findByText('Введите заголовок')).toBeInTheDocument()
+    const input = screen.getByLabelText('Название задачи')
+    await userEvent.type(input, 'a')
+    await userEvent.clear(input)
+    expect(
+      screen.getByText('Название задачи должно содержать от 2 до 150 символов'),
+    ).toBeInTheDocument()
   })
 
   it('handles submit error', async () => {
@@ -39,11 +52,14 @@ describe('TaskForm', () => {
     ;(TaskService.create as any).mockRejectedValueOnce(new Error('fail'))
 
     render(<TaskForm />)
-    await userEvent.type(screen.getByPlaceholderText('Заголовок'), 'Test')
+    await userEvent.type(
+      screen.getByPlaceholderText('Введите название задачи…'),
+      'Test',
+    )
     const dateInput = document.querySelector('input[type="date"]') as HTMLInputElement
     await userEvent.type(dateInput, '2099-01-01')
-    await userEvent.click(screen.getByRole('button', { name: 'Сохранить' }))
-
-    expect(await screen.findByText('fail')).toBeInTheDocument()
+    const save = screen.getByRole('button', { name: 'Сохранить' })
+    await userEvent.click(save)
+    expect(toast.error).toHaveBeenCalled()
   })
 })
