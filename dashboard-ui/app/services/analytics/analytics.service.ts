@@ -83,6 +83,13 @@ export const AnalyticsService = {
     const res = await axios.get<number>(`/analytics/product-remains`)
     return res.data
   },
+  async getLowStock(threshold?: number, categories?: number[]) {
+    const params: any = {}
+    if (threshold) params.threshold = threshold
+    if (categories && categories.length) params.categories = categories.join(',')
+    const res = await axios.get(`/analytics/low-stock`, { params })
+    return res.data
+  },
   async getOpenTasks() {
     const res = await axios.get<number>(`/analytics/open-tasks`)
     return res.data
