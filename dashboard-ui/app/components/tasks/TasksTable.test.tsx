@@ -51,4 +51,16 @@ describe('TasksTable', () => {
       expect(screen.queryByText('Task 1')).not.toBeInTheDocument()
     })
   })
+
+  it('opens task info modal on row click and closes with ESC', async () => {
+    render(<TasksTable />)
+    const cell = await screen.findByText('Task 1')
+    await userEvent.click(cell)
+    const dialog = await screen.findByRole('dialog', { name: /task 1/i })
+    expect(dialog).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+  })
 })

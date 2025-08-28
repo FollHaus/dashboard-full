@@ -13,6 +13,7 @@ import {
   TaskPriority,
   TaskStatus,
 } from '@/shared/interfaces/task.interface'
+import TaskInfoModal from './TaskInfoModal'
 
 const chipBase =
   'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap'
@@ -32,6 +33,8 @@ const TasksTable = () => {
   const menuItemsRef = useRef<HTMLElement[]>([])
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [viewTask, setViewTask] = useState<ITask | null>(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
   const pathname = usePathname()
 
   useEffect(() => {
@@ -244,10 +247,33 @@ const TasksTable = () => {
             return (
               <tr
                 key={task.id}
+                tabIndex={-1}
                 className="border-b border-neutral-200 hover:bg-neutral-200/50 transition-colors odd:bg-neutral-100 even:bg-neutral-200"
+                onClick={e => {
+                  if ((e.target as HTMLElement).closest('button')) return
+                  returnFocusRef.current = e.currentTarget as HTMLElement
+                  setViewTask(task)
+                }}
               >
-                <td className="p-2 max-w-[32ch] truncate" title={task.title}>
-                  <Link href={`/tasks/${task.id}`}>{task.title}</Link>
+                <td
+                  className="p-2 max-w-[32ch] truncate"
+                  title={task.title}
+                >
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      aria-label="Информация"
+                      className="shrink-0"
+                      onClick={e => {
+                        e.stopPropagation()
+                        returnFocusRef.current = e.currentTarget as HTMLElement
+                        setViewTask(task)
+                      }}
+                    >
+                      <span aria-hidden>ℹ️</span>
+                    </button>
+                    <span>{task.title}</span>
+                  </div>
                 </td>
                 <td className="p-2">
                   {task.executor ? (
@@ -378,6 +404,15 @@ const TasksTable = () => {
           </div>,
           document.body
         )}
+      {viewTask && (
+        <TaskInfoModal
+          task={viewTask}
+          onClose={() => {
+            setViewTask(null)
+            returnFocusRef.current?.focus()
+          }}
+        />
+      )}
     </div>
   )
 }
