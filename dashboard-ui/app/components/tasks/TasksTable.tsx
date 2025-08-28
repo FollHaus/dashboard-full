@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { createPortal } from 'react-dom'
 import { HiDotsVertical } from 'react-icons/hi'
 
@@ -21,9 +22,17 @@ const TasksTable = () => {
   const [date, setDate] = useState('')
   const [priority, setPriority] = useState('')
   const [status, setStatus] = useState('')
-  const [menuId, setMenuId] = useState<number | null>(null)
+  const [openMenuTaskId, setOpenMenuTaskId] = useState<number | null>(null)
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(
+    null
+  )
+  const anchorRef = useRef<HTMLButtonElement | null>(null)
+  const menuRef = useRef<HTMLUListElement | null>(null)
+  const menuItemsRef = useRef<HTMLElement[]>([])
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const pathname = usePathname()
 
   useEffect(() => {
     TaskService.getAll()
@@ -31,19 +40,65 @@ const TasksTable = () => {
       .catch(e => setError(e.message))
   }, [])
 
+  const closeMenu = () => {
+    setOpenMenuTaskId(null)
+    setAnchorRect(null)
+    setMenuPos(null)
+    anchorRef.current?.focus()
+  }
+
   useEffect(() => {
-    if (menuId === null) return
-    const handleClick = () => setMenuId(null)
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuId(null)
+    if (openMenuTaskId === null) return
+    const handlePointer = (e: PointerEvent) => {
+      const target = e.target as Node
+      if (
+        menuRef.current?.contains(target) ||
+        anchorRef.current?.contains(target)
+      )
+        return
+      closeMenu()
     }
-    document.addEventListener('click', handleClick)
-    document.addEventListener('keydown', handleEsc)
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeMenu()
+    }
+    const handleScroll = () => closeMenu()
+    const handleResize = () => closeMenu()
+    document.addEventListener('pointerdown', handlePointer)
+    document.addEventListener('keydown', handleKey)
+    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('resize', handleResize)
     return () => {
-      document.removeEventListener('click', handleClick)
-      document.removeEventListener('keydown', handleEsc)
+      document.removeEventListener('pointerdown', handlePointer)
+      document.removeEventListener('keydown', handleKey)
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleResize)
     }
-  }, [menuId])
+  }, [openMenuTaskId])
+
+  useLayoutEffect(() => {
+    if (!anchorRect || !menuRef.current) return
+    const { width, height } = menuRef.current.getBoundingClientRect()
+    let top = anchorRect.bottom + 4
+    let left = anchorRect.right - width
+    if (left + width > window.innerWidth) left = window.innerWidth - width
+    if (left < 0) left = 0
+    if (top + height > window.innerHeight)
+      top = anchorRect.top - height - 4
+    setMenuPos({ top, left })
+  }, [anchorRect, openMenuTaskId])
+
+  useEffect(() => {
+    if (openMenuTaskId !== null && menuRef.current) {
+      menuItemsRef.current = Array.from(
+        menuRef.current.querySelectorAll<HTMLElement>('[role="menuitem"]')
+      )
+      menuItemsRef.current[0]?.focus()
+    }
+  }, [openMenuTaskId])
+
+  useEffect(() => {
+    closeMenu()
+  }, [pathname])
 
   const handleDelete = async (id: number) => {
     try {
@@ -57,19 +112,48 @@ const TasksTable = () => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const filtered = tasks.filter(task => {
-    const matchesDate = !date || task.deadline.slice(0, 10) === date
-    const matchesPriority = !priority || task.priority === priority
-    let matchesStatus = true
-    if (status === 'В работе') matchesStatus = task.status === TaskStatus.InProgress
-    else if (status === 'Завершённые') matchesStatus = task.status === TaskStatus.Completed
-    else if (status === 'Просроченные') {
-      const d = new Date(task.deadline)
-      d.setHours(0, 0, 0, 0)
-      matchesStatus = d < today && task.status !== TaskStatus.Completed
+  const filtered = useMemo(() => {
+    return tasks.filter(task => {
+      const matchesDate = !date || task.deadline.slice(0, 10) === date
+      const matchesPriority = !priority || task.priority === priority
+      let matchesStatus = true
+      if (status === 'В работе')
+        matchesStatus = task.status === TaskStatus.InProgress
+      else if (status === 'Завершённые')
+        matchesStatus = task.status === TaskStatus.Completed
+      else if (status === 'Просроченные') {
+        const d = new Date(task.deadline)
+        d.setHours(0, 0, 0, 0)
+        matchesStatus = d < today && task.status !== TaskStatus.Completed
+      }
+      return matchesDate && matchesPriority && matchesStatus
+    })
+  }, [tasks, date, priority, status, today])
+
+  useEffect(() => {
+    if (openMenuTaskId !== null && !filtered.some(t => t.id === openMenuTaskId))
+      closeMenu()
+  }, [filtered, openMenuTaskId])
+
+  const handleMenuKeyDown = (e: React.KeyboardEvent) => {
+    const items = menuItemsRef.current
+    const index = items.indexOf(document.activeElement as any)
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      items[(index + 1) % items.length]?.focus()
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      items[(index - 1 + items.length) % items.length]?.focus()
+    } else if (e.key === 'Tab') {
+      e.preventDefault()
+      if (e.shiftKey)
+        items[(index - 1 + items.length) % items.length]?.focus()
+      else items[(index + 1) % items.length]?.focus()
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      ;(document.activeElement as HTMLElement)?.click()
     }
-    return matchesDate && matchesPriority && matchesStatus
-  })
+  }
 
   return (
     <div>
@@ -194,48 +278,29 @@ const TasksTable = () => {
                     {task.status}
                   </span>
                 </td>
-                <td className="p-2 relative" onClick={e => e.stopPropagation()}>
+                <td className="p-2">
                   <button
+                    ref={openMenuTaskId === task.id ? anchorRef : null}
                     aria-haspopup="menu"
-                    aria-label="Действия"
+                    aria-expanded={openMenuTaskId === task.id}
+                    aria-controls="task-actions-menu"
                     title="Действия"
                     onClick={e => {
-                      e.stopPropagation()
-                      setMenuId(task.id)
+                      const rect = e.currentTarget.getBoundingClientRect()
+                      const width = 176
+                      let left = rect.right - width
+                      if (left + width > window.innerWidth) left = window.innerWidth - width
+                      if (left < 0) left = 0
+                      const top = rect.bottom + 4
+                      setMenuPos({ top, left })
+                      setAnchorRect(rect)
+                      anchorRef.current = e.currentTarget
+                      setOpenMenuTaskId(task.id)
                     }}
                     className="p-1 rounded hover:bg-neutral-200"
                   >
                     <HiDotsVertical />
                   </button>
-                  {menuId === task.id && (
-                    <ul
-                      role="menu"
-                      className="absolute right-0 mt-1 w-32 bg-white border border-neutral-300 rounded shadow-md z-50"
-                      onClick={e => e.stopPropagation()}
-                    >
-                      <li>
-                        <Link
-                          href={`/tasks/${task.id}`}
-                          className="block px-4 py-2 hover:bg-neutral-100"
-                          role="menuitem"
-                        >
-                          Редактировать
-                        </Link>
-                      </li>
-                      <li>
-                        <button
-                          role="menuitem"
-                          onClick={() => {
-                            setMenuId(null)
-                            setConfirmId(task.id)
-                          }}
-                          className="w-full text-left px-4 py-2 hover:bg-neutral-100"
-                        >
-                          Удалить
-                        </button>
-                      </li>
-                    </ul>
-                  )}
                 </td>
               </tr>
             )
@@ -243,6 +308,42 @@ const TasksTable = () => {
         </tbody>
       </table>
       {error && <p className="text-error mt-2">{error}</p>}
+      {openMenuTaskId !== null &&
+        menuPos &&
+        createPortal(
+          <ul
+            id="task-actions-menu"
+            role="menu"
+            ref={menuRef}
+            style={{ position: 'fixed', top: menuPos.top, left: menuPos.left }}
+            className="z-50 bg-white rounded-xl shadow-lg border border-neutral-300 py-1 w-44"
+            onKeyDown={handleMenuKeyDown}
+          >
+            <li>
+              <Link
+                href={`/tasks/${openMenuTaskId}`}
+                role="menuitem"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-neutral-200 focus:bg-neutral-200"
+                onClick={() => closeMenu()}
+              >
+                Редактировать
+              </Link>
+            </li>
+            <li>
+              <button
+                role="menuitem"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-neutral-200 focus:bg-neutral-200 text-error hover:bg-error/10 focus:bg-error/10"
+                onClick={() => {
+                  closeMenu()
+                  setConfirmId(openMenuTaskId)
+                }}
+              >
+                Удалить
+              </button>
+            </li>
+          </ul>,
+          document.body
+        )}
       {confirmId !== null &&
         createPortal(
           <div
