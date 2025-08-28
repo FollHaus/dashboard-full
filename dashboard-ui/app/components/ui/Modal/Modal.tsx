@@ -60,15 +60,16 @@ const Modal = ({ isOpen, onClose, children, className, ariaLabelledby }: Props) 
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           onClick={handleClick}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
+          <div className="absolute inset-0 bg-neutral-950/40 pointer-events-none" />
           <motion.div
             ref={ref}
-            className={`bg-white rounded p-4 max-w-lg w-full ${className ?? ''}`}
+            className={`relative w-full max-w-xl rounded-3xl bg-neutral-200 p-5 md:p-6 shadow-card ${className ?? ''}`}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
