@@ -53,7 +53,7 @@ const KpiCards: React.FC = () => {
     {
       label: "Выручка",
       value: currency.format(revenue),
-      href: "/reports",
+      href: "/reports/new",
       text: "text-success",
       bg: "bg-success/20",
       Icon: FaRubleSign,
@@ -61,7 +61,7 @@ const KpiCards: React.FC = () => {
     {
       label: "Кол-во продаж",
       value: salesCount.toLocaleString("ru-RU"),
-      href: "/reports",
+      href: "/reports/new",
       text: "text-info",
       bg: "bg-info/20",
       Icon: FaShoppingCart,
@@ -69,7 +69,7 @@ const KpiCards: React.FC = () => {
     {
       label: "Средний чек",
       value: currency.format(avgCheck),
-      href: "/reports",
+      href: "/reports/new",
       text: "text-secondary-700",
       bg: "bg-secondary-300/40",
       Icon: FaReceipt,

@@ -23,7 +23,7 @@ const Header: FC = () => {
           <Link href='/tasks' className={styles.link}>
             Задачи
           </Link>
-          <Link href='/reports' className={styles.link}>
+          <Link href='/reports/new' className={styles.link}>
             Отчёты
           </Link>
         </>
