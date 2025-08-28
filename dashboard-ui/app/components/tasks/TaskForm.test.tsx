@@ -2,6 +2,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import TaskForm from './TaskForm'
 import { vi } from 'vitest'
+import { TaskPriority, TaskStatus, ITask } from '@/shared/interfaces/task.interface'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 vi.mock('@/services/task/task.service', () => ({
   TaskService: {
@@ -14,14 +16,15 @@ vi.mock('@/services/task/task.service', () => ({
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }))
 vi.mock('@/utils/toast', () => ({ toast }))
 
-const push = vi.fn()
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push }),
-}))
+const renderWithClient = (ui: React.ReactElement) => {
+  const client = new QueryClient()
+  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>)
+}
 
 describe('TaskForm', () => {
   it('submits new task (happy path)', async () => {
-    render(<TaskForm />)
+    const onSuccess = vi.fn()
+    renderWithClient(<TaskForm onSuccess={onSuccess} />)
     await userEvent.type(
       screen.getByPlaceholderText('Введите название задачи…'),
       'Test',
@@ -34,11 +37,34 @@ describe('TaskForm', () => {
 
     const { TaskService } = await import('@/services/task/task.service')
     expect(TaskService.create).toHaveBeenCalled()
-    expect(push).toHaveBeenCalledWith('/tasks')
+    expect(onSuccess).toHaveBeenCalled()
+  })
+
+  it('submits existing task', async () => {
+    const task: ITask = {
+      id: 1,
+      title: 'Old',
+      description: 'Desc',
+      executor: 'Exec',
+      deadline: '2099-01-01T00:00:00.000Z',
+      priority: TaskPriority.Medium,
+      status: TaskStatus.Pending,
+    }
+    const onSuccess = vi.fn()
+    renderWithClient(<TaskForm task={task} onSuccess={onSuccess} />)
+    await screen.findByDisplayValue('Old')
+    const input = screen.getByLabelText('Название задачи')
+    await userEvent.clear(input)
+    await userEvent.type(input, 'New')
+    const save = screen.getByRole('button', { name: 'Сохранить' })
+    await userEvent.click(save)
+    const { TaskService } = await import('@/services/task/task.service')
+    expect(TaskService.update).toHaveBeenCalled()
+    expect(onSuccess).toHaveBeenCalled()
   })
 
   it('shows validation error', async () => {
-    render(<TaskForm />)
+    renderWithClient(<TaskForm />)
     const input = screen.getByLabelText('Название задачи')
     await userEvent.type(input, 'a')
     await userEvent.clear(input)
@@ -51,7 +77,7 @@ describe('TaskForm', () => {
     const { TaskService } = await import('@/services/task/task.service')
     ;(TaskService.create as any).mockRejectedValueOnce(new Error('fail'))
 
-    render(<TaskForm />)
+    renderWithClient(<TaskForm />)
     await userEvent.type(
       screen.getByPlaceholderText('Введите название задачи…'),
       'Test',

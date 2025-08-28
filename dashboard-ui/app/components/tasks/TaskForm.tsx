@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import cn from 'classnames'
 import {
   ITask,
@@ -14,6 +14,8 @@ import { toast } from '@/utils/toast'
 
 interface Props {
   task?: ITask
+  onSuccess?: (task: ITask) => void
+  onCancel?: () => void
 }
 
 const inputClasses =
@@ -31,8 +33,8 @@ const statusClasses: Record<TaskStatus, string> = {
   [TaskStatus.Pending]: 'bg-neutral-300 text-neutral-900',
 }
 
-const TaskForm = ({ task }: Props) => {
-  const router = useRouter()
+const TaskForm = ({ task, onSuccess, onCancel }: Props) => {
+  const queryClient = useQueryClient()
   const [executors, setExecutors] = useState<string[]>([])
 
   useEffect(() => {
@@ -49,6 +51,7 @@ const TaskForm = ({ task }: Props) => {
     handleSubmit,
     watch,
     formState: { errors, isValid, isSubmitting },
+    reset,
   } = useForm<ITask>({
     mode: 'onChange',
     defaultValues: {
@@ -60,6 +63,21 @@ const TaskForm = ({ task }: Props) => {
       status: task?.status || TaskStatus.Pending,
     },
   })
+
+  useEffect(() => {
+    if (task) {
+      reset({
+        title: task.title,
+        description: task.description || '',
+        executor: task.executor || '',
+        deadline: task.deadline ? task.deadline.slice(0, 10) : '',
+        priority: task.priority,
+        status: task.status,
+      })
+      // ensure textarea height adjusts when editing
+      setTimeout(autoResize, 0)
+    }
+  }, [task, reset])
 
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const autoResize = () => {
@@ -77,12 +95,14 @@ const TaskForm = ({ task }: Props) => {
       description: data.description?.trim() || '',
     }
     try {
-      if (task) await TaskService.update(task.id, payload)
-      else await TaskService.create(payload as Omit<ITask, 'id'>)
-      toast.success('Сохранено')
-      router.push('/tasks')
+      const res = task
+        ? await TaskService.update(task.id, payload)
+        : await TaskService.create(payload as Omit<ITask, 'id'>)
+      toast.success(task ? 'Задача обновлена' : 'Задача создана')
+      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      onSuccess?.(res)
     } catch (e) {
-      toast.error('Проверьте поля')
+      toast.error('Не удалось сохранить')
     }
   }
 
@@ -243,7 +263,7 @@ const TaskForm = ({ task }: Props) => {
       <div className="flex gap-2 justify-end mt-4 md:mt-6">
         <button
           type="button"
-          onClick={() => router.push('/tasks')}
+          onClick={onCancel}
           className="rounded-2xl px-4 py-2 bg-neutral-200 text-neutral-900 hover:bg-neutral-300"
           aria-label="Отмена"
         >
@@ -252,7 +272,7 @@ const TaskForm = ({ task }: Props) => {
         <button
           type="submit"
           disabled={!isValid || isSubmitting}
-          className="rounded-2xl px-4 py-2 bg-success text-neutral-50 hover:brightness-95 focus:ring-2 focus:ring-success shadow-card disabled:opacity-50"
+          className="cursor-pointer inline-flex items-center justify-center rounded-2xl px-4 py-2 bg-success text-neutral-50 font-medium shadow-card hover:brightness-95 focus:ring-2 focus:ring-success transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Сохранить"
         >
           {isSubmitting ? '...' : 'Сохранить'}

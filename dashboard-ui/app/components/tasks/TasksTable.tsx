@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createPortal } from 'react-dom'
 import { HiDotsVertical } from 'react-icons/hi'
 
 import Button from '@/ui/Button/Button'
+import Modal from '@/ui/Modal/Modal'
 import { TaskService } from '@/services/task/task.service'
 import {
   ITask,
@@ -14,6 +14,7 @@ import {
   TaskStatus,
 } from '@/shared/interfaces/task.interface'
 import TaskInfoModal from './TaskInfoModal'
+import TaskForm from './TaskForm'
 
 const chipBase =
   'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap'
@@ -34,8 +35,19 @@ const TasksTable = () => {
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [viewTask, setViewTask] = useState<ITask | null>(null)
+  const [isAddOpen, setIsAddOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<ITask | null>(null)
   const returnFocusRef = useRef<HTMLElement | null>(null)
   const pathname = usePathname()
+
+  const closeAdd = () => {
+    setIsAddOpen(false)
+    returnFocusRef.current?.focus()
+  }
+  const closeEdit = () => {
+    setEditingTask(null)
+    returnFocusRef.current?.focus()
+  }
 
   useEffect(() => {
     TaskService.getAll()
@@ -194,11 +206,17 @@ const TasksTable = () => {
             <option value="Завершённые">Завершённые</option>
           </select>
         </div>
-        <Link href="/tasks/new" className="ml-auto">
-          <Button className="rounded-2xl px-4 py-2 shadow-card bg-info text-neutral-50 hover:brightness-95 focus:ring-2 focus:ring-info">
+        <div className="ml-auto">
+          <Button
+            className="rounded-2xl px-4 py-2 shadow-card bg-info text-neutral-50 hover:brightness-95 focus:ring-2 focus:ring-info"
+            onClick={e => {
+              returnFocusRef.current = e.currentTarget
+              setIsAddOpen(true)
+            }}
+          >
             Добавить задачу
           </Button>
-        </Link>
+        </div>
       </div>
 
       <table className="min-w-full bg-neutral-100 rounded shadow-md">
@@ -332,14 +350,20 @@ const TasksTable = () => {
             onKeyDown={handleMenuKeyDown}
           >
             <li>
-              <Link
-                href={`/tasks/${openMenuTaskId}`}
+              <button
                 role="menuitem"
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-neutral-200 focus:bg-neutral-200"
-                onClick={() => closeMenu()}
+                onClick={() => {
+                  const task = tasks.find(t => t.id === openMenuTaskId)
+                  if (task) {
+                    returnFocusRef.current = anchorRef.current
+                    setEditingTask(task)
+                  }
+                  closeMenu()
+                }}
               >
                 Редактировать
-              </Link>
+              </button>
             </li>
             <li>
               <button
@@ -398,6 +422,29 @@ const TasksTable = () => {
             returnFocusRef.current?.focus()
           }}
         />
+      )}
+      {isAddOpen && (
+        <Modal isOpen onClose={closeAdd} ariaLabelledby="task-form-title">
+          <TaskForm
+            onSuccess={task => {
+              setTasks(prev => [...prev, task])
+              closeAdd()
+            }}
+            onCancel={closeAdd}
+          />
+        </Modal>
+      )}
+      {editingTask && (
+        <Modal isOpen onClose={closeEdit} ariaLabelledby="task-form-title">
+          <TaskForm
+            task={editingTask}
+            onSuccess={task => {
+              setTasks(prev => prev.map(t => (t.id === task.id ? task : t)))
+              closeEdit()
+            }}
+            onCancel={closeEdit}
+          />
+        </Modal>
       )}
     </div>
   )
