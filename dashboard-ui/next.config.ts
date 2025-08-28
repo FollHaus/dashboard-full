@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
   images: {
     domains: ['localhost'],
   },
+  async redirects() {
+    return [
+      {
+        source: '/reports',
+        destination: '/reports/new',
+        permanent: false,
+      },
+    ]
+  },
 }
 
 export default nextConfig
