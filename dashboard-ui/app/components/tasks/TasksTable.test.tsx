@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import TasksTable from './TasksTable'
@@ -33,15 +33,20 @@ describe('TasksTable', () => {
   it('filters by priority', async () => {
     render(<TasksTable />)
     await screen.findByText('Task 1')
-    const select = screen.getByRole('combobox')
+    const select = screen.getByRole('combobox', { name: /приоритет/i })
     await userEvent.selectOptions(select, 'Высокий')
     expect(screen.getByText('Task 1')).toBeInTheDocument()
   })
 
   it('deletes a task', async () => {
     render(<TasksTable />)
-    const deleteBtn = await screen.findByRole('button', { name: /удалить/i })
-    await userEvent.click(deleteBtn)
+    const menuBtn = await screen.findByRole('button', { name: /действия/i })
+    await userEvent.click(menuBtn)
+    const deleteItem = await screen.findByRole('menuitem', { name: /удалить/i })
+    await userEvent.click(deleteItem)
+    const dialog = await screen.findByRole('dialog')
+    const confirm = within(dialog).getByRole('button', { name: /удалить/i })
+    await userEvent.click(confirm)
     await waitFor(() => {
       expect(screen.queryByText('Task 1')).not.toBeInTheDocument()
     })
