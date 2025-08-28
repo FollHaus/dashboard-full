@@ -248,7 +248,7 @@ const TasksTable = () => {
               <tr
                 key={task.id}
                 tabIndex={-1}
-                className="border-b border-neutral-200 hover:bg-neutral-200/50 transition-colors odd:bg-neutral-100 even:bg-neutral-200"
+                className="cursor-pointer border-b border-neutral-200 hover:bg-neutral-200/60 transition-colors odd:bg-neutral-100 even:bg-neutral-200"
                 onClick={e => {
                   if ((e.target as HTMLElement).closest('button')) return
                   returnFocusRef.current = e.currentTarget as HTMLElement
@@ -259,21 +259,7 @@ const TasksTable = () => {
                   className="p-2 max-w-[32ch] truncate"
                   title={task.title}
                 >
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      aria-label="Информация"
-                      className="shrink-0"
-                      onClick={e => {
-                        e.stopPropagation()
-                        returnFocusRef.current = e.currentTarget as HTMLElement
-                        setViewTask(task)
-                      }}
-                    >
-                      <span aria-hidden>ℹ️</span>
-                    </button>
-                    <span>{task.title}</span>
-                  </div>
+                  {task.title}
                 </td>
                 <td className="p-2">
                   {task.executor ? (
@@ -323,7 +309,7 @@ const TasksTable = () => {
                       anchorRef.current = e.currentTarget
                       setOpenMenuTaskId(task.id)
                     }}
-                    className="p-1 rounded hover:bg-neutral-200"
+                    className="p-1 rounded hover:bg-neutral-200 cursor-default"
                   >
                     <HiDotsVertical />
                   </button>
