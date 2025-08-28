@@ -13,6 +13,7 @@ export default function Select({
   loading,
   error,
   onRetry,
+  dropdownClassName,
 }: ISelectProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -65,7 +66,11 @@ export default function Select({
         )}
       </div>
       {open && (
-        <div className='absolute z-10 mt-1 max-h-60 overflow-auto bg-white border border-neutral-300 rounded shadow w-full'>
+        <div
+          className={`absolute z-10 mt-1 overflow-auto bg-white border border-neutral-300 rounded shadow w-full ${
+            dropdownClassName || 'max-h-60'
+          }`}
+        >
           {loading ? (
             <div className='p-2 text-sm text-neutral-500'>Loading...</div>
           ) : error ? (

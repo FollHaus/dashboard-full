@@ -11,4 +11,9 @@ export interface ISelectProps {
   loading?: boolean
   error?: string
   onRetry?: () => void
+  /**
+   * Additional classes for the dropdown menu. Allows
+   * consumers to control max height/overflow behaviour.
+   */
+  dropdownClassName?: string
 }
