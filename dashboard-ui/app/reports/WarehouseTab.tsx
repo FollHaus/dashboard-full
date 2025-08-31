@@ -8,7 +8,6 @@ import {
   Pie,
   Cell,
   Tooltip,
-  TooltipProps,
   BarChart,
   CartesianGrid,
   XAxis,
@@ -45,18 +44,6 @@ const compactFmt = new Intl.NumberFormat('ru-RU', {
 
 const pieColors = ['#c8b08d', '#9c9480', '#d4af37', '#cc7357', '#6b7d47']
 
-const PieTooltip: FC<TooltipProps<number, string>> = ({ active, payload }) => {
-  if (active && payload && payload.length) {
-    const p = payload[0]
-    return (
-      <div className='bg-neutral-100 text-neutral-900 text-sm p-2 rounded shadow-card'>
-        {`${p.name} / ${numberFmt.format(p.value as number)} / ${(p.percent * 100).toFixed(1)}%`}
-      </div>
-    )
-  }
-  return null
-}
-
 const WarehouseTab: FC<Props> = ({ filters }) => {
   const { data: products, isLoading, error, refetch } = useQuery<
     ProductWithRelations[],
@@ -70,7 +57,7 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
     totalRemains,
     lowCount,
     nonMovingPercent,
-    categoryData,
+    pieData,
     topData,
     tableRows,
   } = useMemo(() => {
@@ -127,9 +114,11 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
       const cat = p.category?.name || 'Без категории'
       categoryMap.set(cat, (categoryMap.get(cat) || 0) + (p.remains || 0))
     })
-    const categoryData = Array.from(categoryMap.entries()).map(([name, value]) => ({
-      name,
-      value,
+    const total = Array.from(categoryMap.values()).reduce((s, x) => s + x, 0)
+    const pieData = Array.from(categoryMap.entries()).map(([category, remains]) => ({
+      category,
+      remains,
+      percent: total > 0 ? remains / total : 0,
     }))
 
     const topData = [...list]
@@ -141,7 +130,7 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
       totalRemains,
       lowCount,
       nonMovingPercent,
-      categoryData,
+       pieData,
       topData,
       tableRows,
     }
@@ -154,7 +143,7 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
 
   return (
     <div className='flex flex-col gap-6 md:gap-8'>
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4'>
+      <div className='kpi-wrap grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
         {isLoading ? (
           Array.from({ length: 3 }).map((_, i) => (
             <div
@@ -174,41 +163,51 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
             {
               label: 'Общий остаток',
               value: totalRemains,
+              icon: '📦',
             },
             {
               label: 'Мало на складе',
               value: lowCount,
+              icon: '⚠️',
             },
             {
-              label: 'Неликвиды (%)',
+              label: 'Неликвиды',
               value: nonMovingPercent,
               percent: true,
+              icon: '🧊',
             },
           ].map(k => (
             <div
               key={k.label}
-              className='rounded-2xl bg-neutral-200 shadow-card p-4 flex flex-col items-center justify-center'
+              className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 flex items-center gap-3'
             >
-              <div
-                className='text-2xl md:text-3xl font-semibold tabular-nums text-neutral-900'
-                title={
-                  k.percent
-                    ? `${k.value.toFixed(1)}%`
-                    : numberFmt.format(k.value)
-                }
-              >
-                {k.percent
-                  ? `${k.value.toFixed(1)}%`
-                  : compactFmt.format(k.value)}
+              <div className='w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-neutral-300'>
+                <span className='text-xl' aria-hidden='true'>
+                  {k.icon}
+                </span>
               </div>
-              <div className='text-sm text-neutral-800'>{k.label}</div>
+              <div className='flex-1 min-w-0'>
+                <div className='text-sm text-neutral-800 truncate'>{k.label}</div>
+                <div
+                  className='text-2xl md:text-3xl font-semibold tabular-nums whitespace-nowrap overflow-hidden text-ellipsis'
+                  title={
+                    k.percent
+                      ? `${k.value.toFixed(1)}%`
+                      : numberFmt.format(k.value)
+                  }
+                >
+                  {k.percent
+                    ? `${k.value.toFixed(1)}%`
+                    : compactFmt.format(k.value)}
+                </div>
+              </div>
             </div>
           ))
         )}
       </div>
 
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-        <div className='rounded-2xl bg-neutral-200 shadow-card p-5 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start justify-start'>
+        <section className='rounded-2xl bg-neutral-200 shadow-card p-5 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4'>
           <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 col-span-full'>
             <span>🥧</span>
             <span>Остатки по категориям</span>
@@ -222,48 +221,55 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
                 Повторить
               </button>
             </div>
-          ) : categoryData.length ? (
+          ) : pieData.length ? (
             <>
-              <div className='h-80 w-full'>
-                <ResponsiveContainer width='100%' height='100%'>
-                  <PieChart width='100%' height='100%'>
-                    <Pie
-                      data={categoryData}
-                      dataKey='value'
-                      nameKey='name'
-                      outerRadius='70%'
-                    >
-                      {categoryData.map((_, i) => (
-                        <Cell key={i} fill={pieColors[i % pieColors.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<PieTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className='min-w-0'>
+                <div className='h-80 w-full'>
+                  <ResponsiveContainer width='100%' height={320}>
+                    <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                      <Pie
+                        data={pieData}
+                        dataKey='remains'
+                        nameKey='category'
+                        innerRadius='45%'
+                        outerRadius='75%'
+                        paddingAngle={1}
+                        label={false}
+                        labelLine={false}
+                        isAnimationActive={false}
+                      >
+                        {pieData.map((_, i) => (
+                          <Cell key={i} fill={pieColors[i % pieColors.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(v, _n, { payload }) => [
+                          numberFmt.format(v as number),
+                          `${payload.category} (${((payload.percent ?? 0) * 100).toFixed(1)}%)`,
+                        ]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-              <div className='max-h-80 overflow-auto flex flex-col gap-2'>
-                {categoryData.map((c, i) => (
-                  <div key={c.name} className='flex items-center gap-2 text-sm text-neutral-900'>
-                    <span
-                      className='w-3 h-3 rounded-full flex-shrink-0'
-                      style={{ backgroundColor: pieColors[i % pieColors.length] }}
-                    />
-                    <span className='flex-1 truncate'>{c.name}</span>
-                    <span className='tabular-nums'>
-                      {numberFmt.format(c.value)} ({
-                        totalRemains
-                          ? ((c.value / totalRemains) * 100).toFixed(1)
-                          : 0
-                      }%)
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <aside className='lg:block'>
+                <div className='max-h-80 overflow-auto pr-2 flex flex-col gap-2'>
+                  {pieData.map((c, i) => (
+                    <div key={c.category} className='flex items-center gap-2 text-sm text-neutral-900'>
+                      <span
+                        className='w-3 h-3 rounded-full flex-shrink-0'
+                        style={{ backgroundColor: pieColors[i % pieColors.length] }}
+                      />
+                      <span className='flex-1 truncate'>{c.category}</span>
+                    </div>
+                  ))}
+                </div>
+              </aside>
             </>
           ) : (
             <div className='col-span-full text-sm text-neutral-500'>Нет данных</div>
           )}
-        </div>
+        </section>
 
         <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
           <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 mb-4'>
