@@ -44,7 +44,7 @@ $ yarn run start:dev
 $ yarn run start:prod
 ```
 
-The server listens on port `4000` by default. Set the `PORT` environment variable to use a different port.
+The server listens on port `4000` by default and automatically selects the next free port if this one is taken. Set the `PORT` environment variable to use a different starting port.
 
 ## Run tests
 

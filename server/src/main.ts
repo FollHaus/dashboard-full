@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
-import { ValidationPipe } from '@nestjs/common'
+import { ValidationPipe, INestApplication } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 
 async function bootstrap() {
@@ -36,8 +36,22 @@ async function bootstrap() {
         )
         console.log('> BOOTSTRAP: перед listen')
         const port = config.get<number>('PORT') || 4000
-        await app.listen(port)
-        console.log(`> BOOTSTRAP: после listen на порту ${port}`)
+        await listenWithRetry(app, port)
+}
+
+async function listenWithRetry(app: INestApplication, port: number): Promise<void> {
+        try {
+                await app.listen(port)
+                console.log(`> BOOTSTRAP: после listen на порту ${port}`)
+        } catch (error: any) {
+                if (error.code === 'EADDRINUSE') {
+                        const nextPort = port + 1
+                        console.warn(`> BOOTSTRAP: порт ${port} занят, пробуем ${nextPort}`)
+                        await listenWithRetry(app, nextPort)
+                        return
+                }
+                throw error
+        }
 }
 
 bootstrap()
