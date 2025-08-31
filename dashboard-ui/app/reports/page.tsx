@@ -8,6 +8,7 @@ import Layout from '@/ui/Layout'
 import Select from '@/ui/Select/Select'
 import { CategoryService } from '@/services/category/category.service'
 import { AnalyticsService } from '@/services/analytics/analytics.service'
+import jsPDF from 'jspdf'
 import SalesTab from './SalesTab'
 import WarehouseTab from './WarehouseTab'
 import TasksTab from './TasksTab'
@@ -151,14 +152,6 @@ export default function ReportsPage() {
   const kpiCards = kpis
     ? [
         {
-          label: 'Выручка',
-          value: kpis.revenue,
-          currency: true,
-          icon: '💰',
-          iconClass: 'bg-success/10 text-success',
-          valueClass: 'text-success',
-        },
-        {
           label: 'Количество продаж',
           value: kpis.orders,
           icon: '📦',
@@ -191,7 +184,7 @@ export default function ReportsPage() {
       ]
     : []
 
-  const handleExport = async () => {
+  const handleExportCsv = async () => {
     if (!appliedFilters.from || !appliedFilters.to) return
     setExporting(true)
     try {
@@ -229,6 +222,59 @@ export default function ReportsPage() {
       link.href = URL.createObjectURL(blob)
       link.download = `report-${appliedFilters.from}-${appliedFilters.to}.csv`
       link.click()
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handleExportPdf = async () => {
+    if (!appliedFilters.from || !appliedFilters.to) return
+    setExporting(true)
+    try {
+      const [sales, top] = await Promise.all([
+        AnalyticsService.getDailyRevenue(
+          appliedFilters.from,
+          appliedFilters.to,
+          appliedFilters.categories,
+        ),
+        AnalyticsService.getTopProducts(
+          10,
+          appliedFilters.from,
+          appliedFilters.to,
+          appliedFilters.categories,
+        ),
+      ])
+      const doc = new jsPDF()
+      let y = 10
+      doc.text(
+        `Период: ${appliedFilters.from} - ${appliedFilters.to}`,
+        10,
+        y,
+      )
+      y += 10
+      if (appliedFilters.categories.length) {
+        const names = categoryOptions
+          .filter(c => appliedFilters.categories.includes(c.id))
+          .map(c => c.name)
+          .join('; ')
+        doc.text(`Категории: ${names}`, 10, y)
+        y += 10
+      }
+      y += 5
+      doc.text('Дата | Значение', 10, y)
+      y += 10
+      sales.forEach(s => {
+        doc.text(`${s.date}: ${s.total}`, 10, y)
+        y += 8
+      })
+      y += 10
+      doc.text('Товар | Выручка', 10, y)
+      y += 10
+      top.forEach(t => {
+        doc.text(`${t.productName}: ${t.totalRevenue}`, 10, y)
+        y += 8
+      })
+      doc.save(`report-${appliedFilters.from}-${appliedFilters.to}.pdf`)
     } finally {
       setExporting(false)
     }
@@ -296,32 +342,40 @@ export default function ReportsPage() {
           </div>
         </div>
 
-        <div className='flex justify-end'>
+        <div className='flex justify-end gap-2'>
           <button
-            onClick={handleExport}
-            className='px-4 py-2 bg-primary-500 text-neutral-50 rounded disabled:opacity-50'
+            onClick={handleExportCsv}
+            className='px-4 py-2 rounded bg-info text-neutral-50 disabled:opacity-50 cursor-pointer'
             disabled={exporting || kpisLoading}
           >
             Экспорт CSV
           </button>
+          <button
+            onClick={handleExportPdf}
+            className='px-4 py-2 rounded bg-warning text-neutral-950 disabled:opacity-50 cursor-pointer'
+            disabled={exporting || kpisLoading}
+          >
+            Экспорт PDF
+          </button>
         </div>
 
-        <div className='flex gap-3 border-b border-neutral-300 mb-3'>
+        <div className='flex gap-3 border-b border-neutral-300 mb-4'>
           {[
-            { key: 'sales', label: 'Продажи' },
-            { key: 'warehouse', label: 'Склад' },
-            { key: 'tasks', label: 'Задачи' },
+            { key: 'sales', label: 'Продажи', icon: '📈' },
+            { key: 'warehouse', label: 'Склад', icon: '📦' },
+            { key: 'tasks', label: 'Задачи', icon: '✅' },
           ].map(t => (
             <button
               key={t.key}
               onClick={() => setActive(t.key as any)}
-              className={`px-3 py-2 rounded-t-lg text-sm font-medium cursor-pointer transition-colors ${
+              className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
                 active === t.key
-                  ? 'bg-neutral-200 text-neutral-900 border border-neutral-300 border-b-transparent'
-                  : 'text-neutral-800 hover:bg-neutral-100'
+                  ? 'bg-info text-neutral-50'
+                  : 'bg-neutral-200 text-neutral-900 hover:bg-neutral-300'
               }`}
-              aria-current={active === t.key ? 'page' : undefined}
+              aria-selected={active === t.key}
             >
+              <span className='mr-1'>{t.icon}</span>
               {t.label}
             </button>
           ))}
@@ -331,7 +385,7 @@ export default function ReportsPage() {
           <>
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6'>
               {kpisLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
+                Array.from({ length: 4 }).map((_, i) => (
                   <div
                     key={i}
                     className='rounded-2xl bg-neutral-200 p-4 shadow-card animate-pulse h-20'
