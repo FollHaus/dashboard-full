@@ -49,7 +49,7 @@ const TaskFiltersToolbar = ({ filters, setFilters }: Props) => {
   )}`
 
   return (
-    <div className="flex flex-wrap items-center gap-2 md:gap-3 rounded-2xl bg-neutral-200 shadow-card px-3 py-2 mb-4">
+    <div className="flex flex-wrap items-center gap-2 md:gap-3 rounded-2xl bg-neutral-200 shadow-card px-3 py-2 mb-3">
       <div className="relative" ref={dateRef}>
         <button
           type="button"

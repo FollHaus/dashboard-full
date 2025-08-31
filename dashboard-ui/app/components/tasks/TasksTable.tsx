@@ -6,7 +6,6 @@ import { createPortal } from 'react-dom'
 import { HiDotsVertical } from 'react-icons/hi'
 import { useQuery } from '@tanstack/react-query'
 
-import Button from '@/ui/Button/Button'
 import Modal from '@/ui/Modal/Modal'
 import { TaskService } from '@/services/task/task.service'
 import {
@@ -23,9 +22,11 @@ const chipBase =
 
 interface TasksTableProps {
   filters: TaskFilters
+  isAddOpen: boolean
+  onCloseAdd: () => void
 }
 
-const TasksTable = ({ filters }: TasksTableProps) => {
+const TasksTable = ({ filters, isAddOpen, onCloseAdd }: TasksTableProps) => {
   const [tasks, setTasks] = useState<ITask[]>([])
 
   const { data, error } = useQuery<ITask[], Error>({
@@ -48,15 +49,9 @@ const TasksTable = ({ filters }: TasksTableProps) => {
   const menuItemsRef = useRef<HTMLElement[]>([])
   const [confirmId, setConfirmId] = useState<number | null>(null)
   const [viewTask, setViewTask] = useState<ITask | null>(null)
-  const [isAddOpen, setIsAddOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<ITask | null>(null)
   const returnFocusRef = useRef<HTMLElement | null>(null)
   const pathname = usePathname()
-
-  const closeAdd = () => {
-    setIsAddOpen(false)
-    returnFocusRef.current?.focus()
-  }
   const closeEdit = () => {
     setEditingTask(null)
     returnFocusRef.current?.focus()
@@ -183,18 +178,6 @@ const TasksTable = ({ filters }: TasksTableProps) => {
 
   return (
     <div>
-      <div className="flex justify-end mb-4">
-        <Button
-          className="rounded-2xl px-4 py-2 shadow-card bg-info text-neutral-50 hover:brightness-95 focus:ring-2 focus:ring-info"
-          onClick={e => {
-            returnFocusRef.current = e.currentTarget
-            setIsAddOpen(true)
-          }}
-        >
-          Добавить задачу
-        </Button>
-      </div>
-
       <table className="min-w-full bg-neutral-100 rounded shadow-md">
         <thead>
           <tr className="text-left border-b border-neutral-300">
@@ -401,13 +384,13 @@ const TasksTable = ({ filters }: TasksTableProps) => {
         />
       )}
       {isAddOpen && (
-        <Modal isOpen onClose={closeAdd} ariaLabelledby="task-form-title">
+        <Modal isOpen onClose={onCloseAdd} ariaLabelledby="task-form-title">
           <TaskForm
             onSuccess={task => {
               setTasks(prev => [...prev, task])
-              closeAdd()
+              onCloseAdd()
             }}
-            onCancel={closeAdd}
+            onCancel={onCloseAdd}
           />
         </Modal>
       )}
