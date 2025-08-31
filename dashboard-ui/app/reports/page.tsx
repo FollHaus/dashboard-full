@@ -7,7 +7,6 @@ import { useQuery } from '@tanstack/react-query'
 import Layout from '@/ui/Layout'
 import { CategoryService } from '@/services/category/category.service'
 import { AnalyticsService } from '@/services/analytics/analytics.service'
-import jsPDF from 'jspdf'
 import SalesTab from './SalesTab'
 import WarehouseTab from './WarehouseTab'
 import TasksTab from './TasksTab'
@@ -87,8 +86,6 @@ export default function ReportsPage() {
   const rangeRef = useRef<HTMLDivElement>(null)
   const [catOpen, setCatOpen] = useState(false)
   const catRef = useRef<HTMLDivElement>(null)
-  const [exportOpen, setExportOpen] = useState(false)
-  const exportRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     CategoryService.getAll().then(setCategoryOptions)
@@ -102,15 +99,11 @@ export default function ReportsPage() {
       if (catRef.current && !catRef.current.contains(e.target as Node)) {
         setCatOpen(false)
       }
-      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
-        setExportOpen(false)
-      }
     }
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setRangeOpen(false)
         setCatOpen(false)
-        setExportOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClick)
@@ -221,7 +214,7 @@ export default function ReportsPage() {
       ]
     : []
 
-  const handleExportCsv = async () => {
+  const handleExport = async () => {
     if (!appliedFilters.from || !appliedFilters.to) return
     setExporting(true)
     try {
@@ -264,183 +257,104 @@ export default function ReportsPage() {
     }
   }
 
-  const handleExportPdf = async () => {
-    if (!appliedFilters.from || !appliedFilters.to) return
-    setExporting(true)
-    try {
-      const [sales, top] = await Promise.all([
-        AnalyticsService.getDailyRevenue(
-          appliedFilters.from,
-          appliedFilters.to,
-          appliedFilters.categories,
-        ),
-        AnalyticsService.getTopProducts(
-          10,
-          appliedFilters.from,
-          appliedFilters.to,
-          appliedFilters.categories,
-        ),
-      ])
-      const doc = new jsPDF()
-      let y = 10
-      doc.text(
-        `Период: ${appliedFilters.from} - ${appliedFilters.to}`,
-        10,
-        y,
-      )
-      y += 10
-      if (appliedFilters.categories.length) {
-        const names = categoryOptions
-          .filter(c => appliedFilters.categories.includes(c.id))
-          .map(c => c.name)
-          .join('; ')
-        doc.text(`Категории: ${names}`, 10, y)
-        y += 10
-      }
-      y += 5
-      doc.text('Дата | Значение', 10, y)
-      y += 10
-      sales.forEach(s => {
-        doc.text(`${s.date}: ${s.total}`, 10, y)
-        y += 8
-      })
-      y += 10
-      doc.text('Товар | Выручка', 10, y)
-      y += 10
-      top.forEach(t => {
-        doc.text(`${t.productName}: ${t.totalRevenue}`, 10, y)
-        y += 8
-      })
-      doc.save(`report-${appliedFilters.from}-${appliedFilters.to}.pdf`)
-    } finally {
-      setExporting(false)
-    }
-  }
-
   return (
     <Layout>
       <div className='flex flex-col gap-6 md:gap-8'>
-        <div className='rounded-2xl bg-neutral-200 shadow-card px-4 py-3 mb-6'>
-          <div className='flex flex-wrap items-center gap-2 md:gap-3'>
-            <div className='flex items-center gap-1'>
-              <span aria-hidden>🎯</span>
-              {presets.map(p => (
-                <button
-                  key={p.value}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
-                    preset === p.value
-                      ? 'bg-success/20 text-success'
-                      : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-300'
-                  }`}
-                  onClick={() => setPreset(p.value)}
-                  aria-pressed={preset === p.value}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-            <div className='relative' ref={rangeRef}>
-              <span className='absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none'>
-                📅
-              </span>
-              <input
-                readOnly
-                aria-label='Период'
-                onClick={() => setRangeOpen(o => !o)}
-                value={`${formatDisplayDate(from)} — ${formatDisplayDate(to)}`}
-                className='h-10 pl-9 pr-3 rounded-xl border border-neutral-300 bg-neutral-100 focus:ring-2 focus:ring-primary-300 focus:border-primary-400 cursor-pointer'
-              />
-              {rangeOpen && (
-                <div className='absolute z-50 mt-1 bg-white border border-neutral-300 rounded-xl p-3 shadow-card flex gap-2'>
-                  <input
-                    type='date'
-                    value={from}
-                    onChange={e => {
-                      setFrom(e.target.value)
-                      setPreset('custom')
-                    }}
-                    className='border border-neutral-300 rounded-lg px-2 py-1'
-                  />
-                  <span className='self-center'>—</span>
-                  <input
-                    type='date'
-                    value={to}
-                    onChange={e => {
-                      setTo(e.target.value)
-                      setPreset('custom')
-                    }}
-                    className='border border-neutral-300 rounded-lg px-2 py-1'
-                  />
-                </div>
-              )}
-            </div>
-            <div className='relative' ref={catRef}>
+        <div className='flex flex-wrap items-center gap-2 md:gap-3 px-2 md:px-0 mb-4'>
+          <div className='flex items-center gap-1'>
+            <span aria-hidden>🎯</span>
+            {presets.map(p => (
               <button
-                type='button'
-                onClick={() => setCatOpen(o => !o)}
-                aria-haspopup='listbox'
-                className='h-10 px-3 rounded-xl border border-neutral-300 bg-neutral-100 inline-flex items-center gap-2 cursor-pointer'
+                key={p.value}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
+                  preset === p.value
+                    ? 'bg-success/20 text-success'
+                    : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-300'
+                }`}
+                onClick={() => setPreset(p.value)}
+                aria-pressed={preset === p.value}
               >
-                <span aria-hidden>🗂</span>
-                <span>
-                  Категории{categories.length ? ` (${categories.length})` : ''}
-                </span>
-                <span>▼</span>
+                {p.label}
               </button>
-              {catOpen && (
-                <div className='absolute z-50 mt-1 bg-white border border-neutral-300 rounded-xl shadow-card max-h-64 overflow-auto w-48 p-2 space-y-1'>
-                  {categoryOptions.map(c => (
-                    <label
-                      key={c.id}
-                      className='flex items-center gap-2 cursor-pointer hover:bg-neutral-100 rounded px-2 py-1'
-                    >
-                      <input
-                        type='checkbox'
-                        checked={categories.includes(c.id)}
-                        onChange={() => {
-                          if (categories.includes(c.id)) {
-                            setCategories(categories.filter(id => id !== c.id))
-                          } else {
-                            setCategories([...categories, c.id])
-                          }
-                        }}
-                        className='cursor-pointer'
-                      />
-                      <span className='truncate'>{c.name}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className='ml-auto'></div>
-            <div className='relative' ref={exportRef}>
-              <button
-                type='button'
-                onClick={() => setExportOpen(o => !o)}
-                className='h-10 px-3 rounded-xl bg-info text-neutral-50 hover:brightness-95 focus:ring-2 focus:ring-info cursor-pointer disabled:opacity-50'
-                disabled={exporting || kpisLoading}
-              >
-                Экспорт
-              </button>
-              {exportOpen && (
-                <div className='absolute right-0 z-50 mt-1 bg-white border border-neutral-300 rounded-xl shadow-card overflow-hidden'>
-                  <button
-                    onClick={handleExportCsv}
-                    className='block w-full text-left px-3 py-2 hover:bg-neutral-100 cursor-pointer disabled:opacity-50'
-                    disabled={exporting || kpisLoading}
+            ))}
+          </div>
+          <div className='relative' ref={rangeRef}>
+            <span className='absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none'>📅</span>
+            <input
+              readOnly
+              aria-label='Период'
+              onClick={() => setRangeOpen(o => !o)}
+              value={`${formatDisplayDate(from)} — ${formatDisplayDate(to)}`}
+              className='h-10 pl-9 pr-3 rounded-xl border border-neutral-300 bg-neutral-100 focus:ring-2 focus:ring-primary-300 focus:border-primary-400 cursor-pointer'
+            />
+            {rangeOpen && (
+              <div className='absolute z-50 mt-1 bg-white border border-neutral-300 rounded-xl p-3 shadow-card flex gap-2'>
+                <input
+                  type='date'
+                  value={from}
+                  onChange={e => {
+                    setFrom(e.target.value)
+                    setPreset('custom')
+                  }}
+                  className='border border-neutral-300 rounded-lg px-2 py-1'
+                />
+                <span className='self-center'>—</span>
+                <input
+                  type='date'
+                  value={to}
+                  onChange={e => {
+                    setTo(e.target.value)
+                    setPreset('custom')
+                  }}
+                  className='border border-neutral-300 rounded-lg px-2 py-1'
+                />
+              </div>
+            )}
+          </div>
+          <div className='relative' ref={catRef}>
+            <button
+              type='button'
+              onClick={() => setCatOpen(o => !o)}
+              aria-haspopup='listbox'
+              className='h-10 px-3 rounded-xl border border-neutral-300 bg-neutral-100 inline-flex items-center gap-2 cursor-pointer'
+            >
+              <span aria-hidden>🗂</span>
+              <span>Категории{categories.length ? ` (${categories.length})` : ''}</span>
+            </button>
+            {catOpen && (
+              <div className='absolute z-50 mt-1 bg-white border border-neutral-300 rounded-xl shadow-card max-h-64 overflow-auto w-48 p-2 space-y-1'>
+                {categoryOptions.map(c => (
+                  <label
+                    key={c.id}
+                    className='flex items-center gap-2 cursor-pointer hover:bg-neutral-100 rounded px-2 py-1'
                   >
-                    CSV
-                  </button>
-                  <button
-                    onClick={handleExportPdf}
-                    className='block w-full text-left px-3 py-2 hover:bg-neutral-100 cursor-pointer disabled:opacity-50'
-                    disabled={exporting || kpisLoading}
-                  >
-                    PDF
-                  </button>
-                </div>
-              )}
-            </div>
+                    <input
+                      type='checkbox'
+                      checked={categories.includes(c.id)}
+                      onChange={() => {
+                        if (categories.includes(c.id)) {
+                          setCategories(categories.filter(id => id !== c.id))
+                        } else {
+                          setCategories([...categories, c.id])
+                        }
+                      }}
+                      className='cursor-pointer'
+                    />
+                    <span className='truncate'>{c.name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className='flex gap-2 ml-auto'>
+            <button
+              type='button'
+              onClick={handleExport}
+              className='h-10 px-3 rounded-xl bg-info text-neutral-50 hover:brightness-95 focus:ring-2 focus:ring-info cursor-pointer disabled:opacity-50'
+              disabled={exporting || kpisLoading}
+            >
+              Экспорт
+            </button>
             <button
               onClick={applyFilters}
               className='h-10 px-3 rounded-xl bg-primary-500 text-neutral-50 hover:bg-primary-400 focus:ring-2 focus:ring-primary-300 cursor-pointer disabled:opacity-50'
@@ -457,7 +371,7 @@ export default function ReportsPage() {
           </div>
         </div>
 
-        <div className='flex gap-3 border-b border-neutral-300 mb-4'>
+        <div className='flex gap-3 border-b border-neutral-300 mb-3' role='tablist'>
           {[
             { key: 'sales', label: 'Продажи', icon: '📈' },
             { key: 'warehouse', label: 'Склад', icon: '📦' },
@@ -465,6 +379,7 @@ export default function ReportsPage() {
           ].map(t => (
             <button
               key={t.key}
+              role='tab'
               onClick={() => setActive(t.key as any)}
               className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
                 active === t.key
@@ -511,10 +426,18 @@ export default function ReportsPage() {
                       <div className='text-sm text-neutral-800 truncate'>{k.label}</div>
                       <div
                         className={`max-w-full overflow-hidden text-ellipsis whitespace-nowrap tabular-nums font-semibold text-xl sm:text-2xl md:text-3xl ${k.valueClass}`}
+                        title={
+                          k.currency
+                            ? formatCurrency(k.value)
+                            : new Intl.NumberFormat('ru-RU').format(k.value)
+                        }
                       >
                         {k.currency
-                          ? formatCurrency(k.value)
-                          : new Intl.NumberFormat('ru-RU').format(k.value)}
+                          ? formatCurrency(k.value, { compact: true })
+                          : new Intl.NumberFormat('ru-RU', {
+                              notation: 'compact',
+                              compactDisplay: 'short',
+                            }).format(k.value)}
                       </div>
                     </div>
                   </div>
