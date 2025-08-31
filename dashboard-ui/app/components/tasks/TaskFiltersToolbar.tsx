@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import useDebounce from '@/hooks/useDebounce'
 import { TaskFilters } from '@/hooks/useTaskFilters'
+import SearchInput from '@/components/ui/SearchInput'
+import { Calendar, Zap, RotateCcw } from 'lucide-react'
 
 interface Props {
   filters: TaskFilters
@@ -58,7 +60,7 @@ const TaskFiltersToolbar = ({ filters, setFilters }: Props) => {
           title={rangeDisplay}
           onClick={() => setDateOpen(o => !o)}
         >
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">📅</span>
+          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-800 pointer-events-none" />
           {rangeDisplay}
         </button>
         {dateOpen && (
@@ -84,7 +86,7 @@ const TaskFiltersToolbar = ({ filters, setFilters }: Props) => {
         )}
       </div>
       <div className="flex items-center">
-        <span className="mr-1.5">⚡</span>
+        <Zap className="w-4 h-4 mr-1.5 text-neutral-800" />
         <select
           value={filters.priority}
           onChange={e => setFilters({ priority: e.target.value })}
@@ -99,7 +101,7 @@ const TaskFiltersToolbar = ({ filters, setFilters }: Props) => {
         </select>
       </div>
       <div className="flex items-center">
-        <span className="mr-1.5">🔄</span>
+        <RotateCcw className="w-4 h-4 mr-1.5 text-neutral-800" />
         <select
           value={filters.status}
           onChange={e => setFilters({ status: e.target.value })}
@@ -114,14 +116,11 @@ const TaskFiltersToolbar = ({ filters, setFilters }: Props) => {
           <option value="Просроченные">Просроченные</option>
         </select>
       </div>
-      <div className="flex items-center flex-1 min-w-[200px]">
-        <span className="mr-1.5">🔍</span>
-        <input
-          type="text"
+      <div className="flex-1 min-w-[200px]">
+        <SearchInput
           value={searchInput}
           onChange={e => setSearchInput(e.target.value)}
           placeholder="Поиск…"
-          className="h-10 flex-1 min-w-[200px] rounded-xl border border-neutral-300 bg-neutral-100 px-3 cursor-pointer focus:ring-2 focus:ring-primary-300"
           aria-label="Поиск"
           title="Поиск"
         />
