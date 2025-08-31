@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, KeyboardEvent } from 'react'
+import { CheckCircle2, RotateCcw, Download } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 
@@ -163,6 +164,15 @@ export default function ReportsPage() {
     localStorage.removeItem(STORAGE_KEY)
   }
 
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'BUTTON') {
+      applyFilters()
+    }
+    if (e.key === 'Escape') {
+      resetFilters()
+    }
+  }
+
   const {
     data: kpis,
     isLoading: kpisLoading,
@@ -260,7 +270,10 @@ export default function ReportsPage() {
   return (
     <Layout>
       <div className='flex flex-col gap-6 md:gap-8'>
-        <div className='flex flex-wrap items-center gap-2 md:gap-3 px-2 md:px-0 mb-4'>
+      <div
+        className='flex flex-wrap items-center gap-2 md:gap-3 px-2 md:px-0 mb-4'
+        onKeyDown={handleKeyDown}
+      >
           <div className='flex items-center gap-1'>
             <span aria-hidden>🎯</span>
             {presets.map(p => (
@@ -346,27 +359,36 @@ export default function ReportsPage() {
               </div>
             )}
           </div>
-          <div className='flex gap-2 ml-auto'>
+          <div className='ml-auto flex items-center gap-2'>
             <button
               type='button'
-              onClick={handleExport}
-              className='h-10 px-3 rounded-xl bg-info text-neutral-50 hover:brightness-95 focus:ring-2 focus:ring-info cursor-pointer disabled:opacity-50'
-              disabled={exporting || kpisLoading}
-            >
-              Экспорт
-            </button>
-            <button
+              aria-label='Применить фильтры'
+              title='Применить фильтры'
+              className='h-10 w-10 flex items-center justify-center rounded-xl bg-primary-500 text-neutral-50 hover:bg-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
               onClick={applyFilters}
-              className='h-10 px-3 rounded-xl bg-primary-500 text-neutral-50 hover:bg-primary-400 focus:ring-2 focus:ring-primary-300 cursor-pointer disabled:opacity-50'
               disabled={kpisLoading}
             >
-              Применить
+              <CheckCircle2 className='w-5 h-5' />
             </button>
             <button
+              type='button'
+              aria-label='Сбросить фильтры'
+              title='Сбросить фильтры'
+              className='h-10 w-10 flex items-center justify-center rounded-xl bg-neutral-100 text-neutral-900 hover:bg-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-300 disabled:opacity-50 disabled:cursor-not-allowed'
               onClick={resetFilters}
-              className='h-10 px-3 rounded-xl bg-neutral-100 text-neutral-900 hover:bg-neutral-300 cursor-pointer'
+              disabled={kpisLoading}
             >
-              Сбросить
+              <RotateCcw className='w-5 h-5' />
+            </button>
+            <button
+              type='button'
+              aria-label='Экспорт отчёта'
+              title='Экспорт отчёта'
+              className='h-10 w-10 flex items-center justify-center rounded-xl bg-info text-neutral-50 hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-info disabled:opacity-50 disabled:cursor-not-allowed'
+              onClick={handleExport}
+              disabled={exporting || kpisLoading}
+            >
+              <Download className='w-5 h-5' />
             </button>
           </div>
         </div>
