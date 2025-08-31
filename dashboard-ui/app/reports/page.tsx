@@ -145,12 +145,44 @@ export default function ReportsPage() {
 
   const kpiCards = kpis
     ? [
-        { label: 'Выручка', value: kpis.revenue, currency: true },
-        { label: 'Количество заказов', value: kpis.orders },
-        { label: 'Проданные единицы', value: kpis.unitsSold },
-        { label: 'Средний чек', value: kpis.avgCheck, currency: true },
-        { label: 'Маржа', value: kpis.margin, currency: true },
-        { label: 'Выполненные задачи', value: kpis.completedTasks },
+        {
+          label: 'Выручка',
+          value: kpis.revenue,
+          currency: true,
+          icon: '💰',
+          iconClass: 'bg-success/10 text-success',
+          valueClass: 'text-success',
+        },
+        {
+          label: 'Количество заказов',
+          value: kpis.orders,
+          icon: '📦',
+          iconClass: 'bg-primary-300 text-neutral-900',
+          valueClass: 'text-neutral-900',
+        },
+        {
+          label: 'Средний чек',
+          value: kpis.avgCheck,
+          currency: true,
+          icon: '🛒',
+          iconClass: 'bg-warning/10 text-warning',
+          valueClass: 'text-warning',
+        },
+        {
+          label: 'Маржа',
+          value: kpis.margin,
+          currency: true,
+          icon: '📊',
+          iconClass: 'bg-success/10 text-success',
+          valueClass: kpis.margin >= 0 ? 'text-success' : 'text-error',
+        },
+        {
+          label: 'Выполненные задачи',
+          value: kpis.completedTasks,
+          icon: '✅',
+          iconClass: 'bg-info/10 text-info',
+          valueClass: 'text-info',
+        },
       ]
     : []
 
@@ -199,17 +231,17 @@ export default function ReportsPage() {
 
   return (
     <Layout>
-      <div className='space-y-6'>
-        <div className='rounded-2xl bg-neutral-200 p-4 shadow-card'>
+      <div className='flex flex-col gap-6 md:gap-8'>
+        <div className='rounded-2xl bg-neutral-200 p-4 shadow-card mb-6'>
           <div className='grid grid-cols-1 md:grid-cols-12 gap-3'>
             <div className='md:col-span-6 flex flex-wrap gap-2'>
               {presets.map(p => (
                 <button
                   key={p.value}
-                  className={`px-3 py-1 text-sm rounded-full border cursor-pointer transition-colors ${
+                  className={`px-3 py-1 text-sm rounded-full cursor-pointer transition-colors ${
                     preset === p.value
-                      ? 'bg-primary-500 text-white border-primary-500'
-                      : 'bg-white border-neutral-300'
+                      ? 'bg-primary-500 text-neutral-50'
+                      : 'bg-neutral-200 text-neutral-900'
                   }`}
                   onClick={() => setPreset(p.value)}
                   aria-pressed={preset === p.value}
@@ -245,7 +277,7 @@ export default function ReportsPage() {
           <div className='flex justify-end gap-2 mt-3'>
             <button
               onClick={applyFilters}
-              className='px-4 py-2 bg-primary-500 text-white rounded disabled:opacity-50'
+              className='px-4 py-2 bg-primary-500 text-neutral-50 rounded disabled:opacity-50'
               disabled={kpisLoading}
             >
               Применить
@@ -262,7 +294,7 @@ export default function ReportsPage() {
         <div className='flex justify-end'>
           <button
             onClick={handleExport}
-            className='px-4 py-2 bg-primary-500 text-white rounded disabled:opacity-50'
+            className='px-4 py-2 bg-primary-500 text-neutral-50 rounded disabled:opacity-50'
             disabled={exporting || kpisLoading}
           >
             Экспорт CSV
@@ -292,16 +324,16 @@ export default function ReportsPage() {
 
         {active === 'sales' && (
           <>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6'>
               {kpisLoading ? (
-                Array.from({ length: 6 }).map((_, i) => (
+                Array.from({ length: 5 }).map((_, i) => (
                   <div
                     key={i}
                     className='rounded-2xl bg-neutral-200 p-4 shadow-card animate-pulse h-20'
                   />
                 ))
               ) : kpisError ? (
-                <div className='col-span-full text-red-600 text-sm'>
+                <div className='col-span-full text-error text-sm'>
                   Ошибка загрузки{' '}
                   <button className='underline' onClick={() => refetchKpis()}>
                     Повторить
@@ -309,11 +341,21 @@ export default function ReportsPage() {
                 </div>
               ) : (
                 kpiCards.map(k => (
-                  <div key={k.label} className='rounded-2xl bg-neutral-200 p-4 shadow-card'>
-                    <div className='text-2xl font-semibold'>
-                      {k.currency ? formatCurrency(k.value) : k.value}
+                  <div
+                    key={k.label}
+                    className='rounded-2xl shadow-card p-4 md:p-5 flex items-center gap-3 bg-neutral-200'
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${k.iconClass}`}>
+                      {k.icon}
                     </div>
-                    <div className='text-sm'>{k.label}</div>
+                    <div className='flex flex-col'>
+                      <span className={`text-2xl md:text-3xl font-semibold tabular-nums ${k.valueClass}`}>
+                        {k.currency
+                          ? formatCurrency(k.value)
+                          : new Intl.NumberFormat('ru-RU').format(k.value)}
+                      </span>
+                      <span className='text-sm text-neutral-800'>{k.label}</span>
+                    </div>
                   </div>
                 ))
               )}
