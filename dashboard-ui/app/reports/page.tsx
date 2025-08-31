@@ -1,11 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 
 import Layout from '@/ui/Layout'
-import Select from '@/ui/Select/Select'
 import { CategoryService } from '@/services/category/category.service'
 import { AnalyticsService } from '@/services/analytics/analytics.service'
 import jsPDF from 'jspdf'
@@ -55,6 +54,11 @@ function getRange(preset: Preset) {
   return { from: formatDate(start), to: formatDate(end) }
 }
 
+function formatDisplayDate(date: string) {
+  if (!date) return ''
+  return date.split('-').reverse().join('.')
+}
+
 interface Filters {
   from: string
   to: string
@@ -79,9 +83,42 @@ export default function ReportsPage() {
   const [active, setActive] = useState<'sales' | 'warehouse' | 'tasks'>('sales')
   const [categoryOptions, setCategoryOptions] = useState<ICategory[]>([])
   const [exporting, setExporting] = useState(false)
+  const [rangeOpen, setRangeOpen] = useState(false)
+  const rangeRef = useRef<HTMLDivElement>(null)
+  const [catOpen, setCatOpen] = useState(false)
+  const catRef = useRef<HTMLDivElement>(null)
+  const [exportOpen, setExportOpen] = useState(false)
+  const exportRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     CategoryService.getAll().then(setCategoryOptions)
+  }, [])
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (rangeRef.current && !rangeRef.current.contains(e.target as Node)) {
+        setRangeOpen(false)
+      }
+      if (catRef.current && !catRef.current.contains(e.target as Node)) {
+        setCatOpen(false)
+      }
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false)
+      }
+    }
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setRangeOpen(false)
+        setCatOpen(false)
+        setExportOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleEsc)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleEsc)
+    }
   }, [])
 
   useEffect(() => {
@@ -283,16 +320,17 @@ export default function ReportsPage() {
   return (
     <Layout>
       <div className='flex flex-col gap-6 md:gap-8'>
-        <div className='rounded-2xl bg-neutral-200 p-4 shadow-card mb-6'>
-          <div className='grid grid-cols-1 md:grid-cols-12 gap-3'>
-            <div className='md:col-span-6 flex flex-wrap gap-2'>
+        <div className='rounded-2xl bg-neutral-200 shadow-card px-4 py-3 mb-6'>
+          <div className='flex flex-wrap items-center gap-2 md:gap-3'>
+            <div className='flex items-center gap-1'>
+              <span aria-hidden>🎯</span>
               {presets.map(p => (
                 <button
                   key={p.value}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
                     preset === p.value
-                      ? 'bg-primary-500 text-neutral-50'
-                      : 'bg-neutral-200 text-neutral-900 hover:bg-neutral-300'
+                      ? 'bg-success/20 text-success'
+                      : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-300'
                   }`}
                   onClick={() => setPreset(p.value)}
                   aria-pressed={preset === p.value}
@@ -301,62 +339,122 @@ export default function ReportsPage() {
                 </button>
               ))}
             </div>
-            <div className='md:col-span-3 flex gap-2'>
+            <div className='relative' ref={rangeRef}>
+              <span className='absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none'>
+                📅
+              </span>
               <input
-                type='date'
-                value={from}
-                onChange={e => setFrom(e.target.value)}
-                className='border border-neutral-300 rounded-lg px-3 py-2 w-full'
+                readOnly
+                aria-label='Период'
+                onClick={() => setRangeOpen(o => !o)}
+                value={`${formatDisplayDate(from)} — ${formatDisplayDate(to)}`}
+                className='h-10 pl-9 pr-3 rounded-xl border border-neutral-300 bg-neutral-100 focus:ring-2 focus:ring-primary-300 focus:border-primary-400 cursor-pointer'
               />
-              <input
-                type='date'
-                value={to}
-                onChange={e => setTo(e.target.value)}
-                className='border border-neutral-300 rounded-lg px-3 py-2 w-full'
-              />
+              {rangeOpen && (
+                <div className='absolute z-50 mt-1 bg-white border border-neutral-300 rounded-xl p-3 shadow-card flex gap-2'>
+                  <input
+                    type='date'
+                    value={from}
+                    onChange={e => {
+                      setFrom(e.target.value)
+                      setPreset('custom')
+                    }}
+                    className='border border-neutral-300 rounded-lg px-2 py-1'
+                  />
+                  <span className='self-center'>—</span>
+                  <input
+                    type='date'
+                    value={to}
+                    onChange={e => {
+                      setTo(e.target.value)
+                      setPreset('custom')
+                    }}
+                    className='border border-neutral-300 rounded-lg px-2 py-1'
+                  />
+                </div>
+              )}
             </div>
-            <div className='md:col-span-3 max-h-40 overflow-auto'>
-              <Select
-                options={categoryOptions.map(c => ({ value: c.id, label: c.name }))}
-                value={categories}
-                onChange={setCategories}
-                placeholder='Категории'
-                dropdownClassName='max-h-40 overflow-auto'
-              />
+            <div className='relative' ref={catRef}>
+              <button
+                type='button'
+                onClick={() => setCatOpen(o => !o)}
+                aria-haspopup='listbox'
+                className='h-10 px-3 rounded-xl border border-neutral-300 bg-neutral-100 inline-flex items-center gap-2 cursor-pointer'
+              >
+                <span aria-hidden>🗂</span>
+                <span>
+                  Категории{categories.length ? ` (${categories.length})` : ''}
+                </span>
+                <span>▼</span>
+              </button>
+              {catOpen && (
+                <div className='absolute z-50 mt-1 bg-white border border-neutral-300 rounded-xl shadow-card max-h-64 overflow-auto w-48 p-2 space-y-1'>
+                  {categoryOptions.map(c => (
+                    <label
+                      key={c.id}
+                      className='flex items-center gap-2 cursor-pointer hover:bg-neutral-100 rounded px-2 py-1'
+                    >
+                      <input
+                        type='checkbox'
+                        checked={categories.includes(c.id)}
+                        onChange={() => {
+                          if (categories.includes(c.id)) {
+                            setCategories(categories.filter(id => id !== c.id))
+                          } else {
+                            setCategories([...categories, c.id])
+                          }
+                        }}
+                        className='cursor-pointer'
+                      />
+                      <span className='truncate'>{c.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-          <div className='flex justify-end gap-2 mt-3'>
+            <div className='ml-auto'></div>
+            <div className='relative' ref={exportRef}>
+              <button
+                type='button'
+                onClick={() => setExportOpen(o => !o)}
+                className='h-10 px-3 rounded-xl bg-info text-neutral-50 hover:brightness-95 focus:ring-2 focus:ring-info cursor-pointer disabled:opacity-50'
+                disabled={exporting || kpisLoading}
+              >
+                Экспорт
+              </button>
+              {exportOpen && (
+                <div className='absolute right-0 z-50 mt-1 bg-white border border-neutral-300 rounded-xl shadow-card overflow-hidden'>
+                  <button
+                    onClick={handleExportCsv}
+                    className='block w-full text-left px-3 py-2 hover:bg-neutral-100 cursor-pointer disabled:opacity-50'
+                    disabled={exporting || kpisLoading}
+                  >
+                    CSV
+                  </button>
+                  <button
+                    onClick={handleExportPdf}
+                    className='block w-full text-left px-3 py-2 hover:bg-neutral-100 cursor-pointer disabled:opacity-50'
+                    disabled={exporting || kpisLoading}
+                  >
+                    PDF
+                  </button>
+                </div>
+              )}
+            </div>
             <button
               onClick={applyFilters}
-              className='px-4 py-2 rounded-lg text-sm font-medium bg-primary-500 text-neutral-50 disabled:opacity-50'
+              className='h-10 px-3 rounded-xl bg-primary-500 text-neutral-50 hover:bg-primary-400 focus:ring-2 focus:ring-primary-300 cursor-pointer disabled:opacity-50'
               disabled={kpisLoading}
             >
               Применить
             </button>
             <button
               onClick={resetFilters}
-              className='px-4 py-2 rounded-lg text-sm font-medium bg-neutral-200 text-neutral-900 hover:bg-neutral-300'
+              className='h-10 px-3 rounded-xl bg-neutral-100 text-neutral-900 hover:bg-neutral-300 cursor-pointer'
             >
               Сбросить
             </button>
           </div>
-        </div>
-
-        <div className='flex justify-end gap-2'>
-          <button
-            onClick={handleExportCsv}
-            className='px-4 py-2 rounded bg-info text-neutral-50 disabled:opacity-50 cursor-pointer'
-            disabled={exporting || kpisLoading}
-          >
-            Экспорт CSV
-          </button>
-          <button
-            onClick={handleExportPdf}
-            className='px-4 py-2 rounded bg-warning text-neutral-950 disabled:opacity-50 cursor-pointer'
-            disabled={exporting || kpisLoading}
-          >
-            Экспорт PDF
-          </button>
         </div>
 
         <div className='flex gap-3 border-b border-neutral-300 mb-4'>
