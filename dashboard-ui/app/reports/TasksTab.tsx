@@ -8,7 +8,6 @@ import {
   Pie,
   Cell,
   Tooltip,
-  Legend,
   LineChart,
   CartesianGrid,
   Line,
@@ -39,9 +38,9 @@ interface TaskWithDates extends ITask {
 const numberFmt = new Intl.NumberFormat('ru-RU')
 
 const statusColors: Record<TaskStatus, string> = {
-  [TaskStatus.InProgress]: '#3b82f6',
-  [TaskStatus.Pending]: '#a3a3a3',
-  [TaskStatus.Completed]: '#10b981',
+  [TaskStatus.InProgress]: '#3b82f6', // Выполняется
+  [TaskStatus.Completed]: '#10b981', // Готово
+  [TaskStatus.Pending]: '#9ca3af', // Ожидает
 }
 
 const TasksTab: FC<Props> = ({ filters }) => {
@@ -71,15 +70,17 @@ const TasksTab: FC<Props> = ({ filters }) => {
         t.status !== TaskStatus.Completed &&
         new Date(t.deadline) < new Date(),
     ).length
-    const inProgress = list.filter(
-      t => t.status === TaskStatus.InProgress || t.status === TaskStatus.Pending,
+    const inProgressCount = list.filter(
+      t => t.status === TaskStatus.InProgress,
     ).length
+    const waitingCount = list.filter(t => t.status === TaskStatus.Pending).length
+    const inProgress = inProgressCount + waitingCount
 
     const pieData = [
-      { name: TaskStatus.InProgress, value: list.filter(t => t.status === TaskStatus.InProgress).length },
-      { name: TaskStatus.Pending, value: list.filter(t => t.status === TaskStatus.Pending).length },
-      { name: TaskStatus.Completed, value: completed },
-    ]
+      { status: TaskStatus.InProgress, value: inProgressCount },
+      { status: TaskStatus.Completed, value: completed },
+      { status: TaskStatus.Pending, value: waitingCount },
+    ].filter(x => x.value > 0)
 
     const end = filters.to ? new Date(filters.to) : new Date()
     const start = new Date(end)
@@ -196,7 +197,7 @@ const TasksTab: FC<Props> = ({ filters }) => {
             <span>Статусы задач</span>
           </h3>
           {isLoading ? (
-            <div className='h-64 animate-pulse bg-neutral-300 rounded' />
+            <div className='h-72 animate-pulse bg-neutral-300 rounded' />
           ) : error ? (
             <div className='text-sm text-error'>
               Ошибка{' '}
@@ -204,32 +205,45 @@ const TasksTab: FC<Props> = ({ filters }) => {
                 Повторить
               </button>
             </div>
-          ) : pieData.some(p => p.value > 0) ? (
-            <div className='h-64'>
-              <ResponsiveContainer width='100%' height='100%'>
-                <PieChart>
-                  <Pie data={pieData} dataKey='value' nameKey='name' outerRadius={80}>
-                    {pieData.map(p => (
-                      <Cell key={p.name} fill={statusColors[p.name as TaskStatus]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={v => numberFmt.format(v as number)}
-                    labelFormatter={l => String(l)}
-                  />
-                  <Legend
-                    content={({ payload }) => (
-                      <div className='flex flex-col gap-1 overflow-y-auto max-h-52 ml-4'>
-                        {payload?.map(p => (
-                          <span key={p.value} className='text-sm'>
-                            {p.value}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+          ) : pieData.length > 0 ? (
+            <div className='grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-4'>
+              <div className='h-72 w-full'>
+                <ResponsiveContainer width='100%' height='100%'>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      dataKey='value'
+                      nameKey='status'
+                      innerRadius='45%'
+                      outerRadius='75%'
+                      paddingAngle={2}
+                      isAnimationActive={false}
+                    >
+                      {pieData.map((entry, idx) => (
+                        <Cell key={idx} fill={statusColors[entry.status]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(v, _n, { payload }) => [
+                        numberFmt.format(v as number),
+                        `${payload.status} (${(payload.percent * 100).toFixed(1)}%)`,
+                      ]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <aside className='flex flex-col gap-2 justify-start overflow-auto max-h-72'>
+                {pieData.map((item, i) => (
+                  <div key={i} className='flex items-center gap-2 text-sm'>
+                    <span
+                      className='w-3 h-3 rounded-full'
+                      style={{ backgroundColor: statusColors[item.status] }}
+                    />
+                    <span className='text-neutral-900'>{item.status}</span>
+                    <span className='text-neutral-700'>{numberFmt.format(item.value)}</span>
+                  </div>
+                ))}
+              </aside>
             </div>
           ) : (
             <div className='text-sm text-neutral-500'>Нет данных</div>
