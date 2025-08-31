@@ -155,20 +155,36 @@ const SalesTab: FC<Props> = ({ filters }) => {
     chartData.every(d => d.revenue === 0 && d.count === 0)
 
   const topChartData = useMemo(() => {
-    if (!topProducts) return []
-    const total = topProducts.reduce(
-      (s, x) => s + (x.totalRevenue || 0),
-      0,
-    )
-    return topProducts
-      .sort((a, b) => (b.totalRevenue || 0) - (a.totalRevenue || 0))
+    const items = topProducts ?? []
+
+    const toNum = (v: unknown) => {
+      const n =
+        typeof v === 'string'
+          ? Number(v.replace(/\s|₽|,/g, ''))
+          : Number(v)
+      return Number.isFinite(n) ? n : 0
+    }
+
+    const total = items.reduce((s, x) => s + toNum(x.totalRevenue), 0)
+
+    return items
+      .map(x => {
+        const rev = toNum(x.totalRevenue)
+        return {
+          name: String(x.productName ?? ''),
+          revenue: rev,
+          share: total > 0 ? rev / total : 0,
+        }
+      })
+      .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10)
-      .map(p => ({
-        name: p.productName,
-        revenue: p.totalRevenue || 0,
-        share: total > 0 ? (p.totalRevenue || 0) / total : 0,
-      }))
-  }, [topProducts])
+  }, [
+    topProducts,
+    filters.preset,
+    filters.from,
+    filters.to,
+    filters.categories,
+  ])
 
   const truncate = (s: string) => (s.length > 16 ? `${s.slice(0, 16)}…` : s)
 
@@ -308,11 +324,14 @@ const SalesTab: FC<Props> = ({ filters }) => {
                   tickFormatter={v => truncate(v as string)}
                 />
                 <Tooltip
-                  formatter={(value, _name, item) => {
-                    const share = item?.payload?.share || 0
-                    const percent = `${(share * 100).toFixed(1)}%`
-                    return [`${percent} • ${formatCurrency(value as number)}`, 'Выручка']
-                  }}
+                  formatter={(val, _name, { payload }) => [
+                    new Intl.NumberFormat('ru-RU', {
+                      style: 'currency',
+                      currency: 'RUB',
+                      maximumFractionDigits: 0,
+                    }).format(val as number),
+                    `Выручка (${(payload.share * 100).toFixed(1)}%)`,
+                  ]}
                   labelFormatter={label => label as string}
                 />
                 <Bar dataKey='revenue' fill='#10b981'>
@@ -328,7 +347,11 @@ const SalesTab: FC<Props> = ({ filters }) => {
                           fill='#5a564c'
                           fontSize={12}
                         >
-                          {`${(share * 100).toFixed(1)}% • ${formatCurrency(value as number)}`}
+                          {`${(share * 100).toFixed(1)}% • ${new Intl.NumberFormat('ru-RU', {
+                            style: 'currency',
+                            currency: 'RUB',
+                            maximumFractionDigits: 0,
+                          }).format(value as number)}`}
                         </text>
                       )
                     }}
