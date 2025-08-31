@@ -14,26 +14,20 @@ import {
   TaskPriority,
   TaskStatus,
 } from '@/shared/interfaces/task.interface'
-import useDebounce from '@/hooks/useDebounce'
-import { useTaskFilters } from '@/hooks/useTaskFilters'
+import { TaskFilters } from '@/hooks/useTaskFilters'
+import TaskFiltersToolbar from './TaskFiltersToolbar'
 import TaskInfoModal from './TaskInfoModal'
 import TaskForm from './TaskForm'
 
 const chipBase =
   'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap'
 
-function formatDisplay(date: string) {
-  if (!date) return ''
-  return date.split('-').reverse().join('.')
+interface TasksTableProps {
+  filters: TaskFilters
 }
 
-const TasksTable = () => {
-  const { filters, setFilters } = useTaskFilters()
+const TasksTable = ({ filters }: TasksTableProps) => {
   const [tasks, setTasks] = useState<ITask[]>([])
-  const [searchInput, setSearchInput] = useState(filters.search)
-  const debouncedSearch = useDebounce(searchInput, 350)
-  const [dateOpen, setDateOpen] = useState(false)
-  const dateRef = useRef<HTMLDivElement | null>(null)
 
   const { data, error } = useQuery<ITask[], Error>({
     queryKey: ['tasks', filters],
@@ -44,30 +38,6 @@ const TasksTable = () => {
   useEffect(() => {
     if (data) setTasks(data)
   }, [data])
-
-  useEffect(() => {
-    setFilters({ search: debouncedSearch })
-  }, [debouncedSearch, setFilters])
-
-  useEffect(() => {
-    setSearchInput(filters.search)
-  }, [filters.search])
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (dateRef.current && !dateRef.current.contains(e.target as Node))
-        setDateOpen(false)
-    }
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setDateOpen(false)
-    }
-    document.addEventListener('mousedown', handleClick)
-    document.addEventListener('keydown', handleKey)
-    return () => {
-      document.removeEventListener('mousedown', handleClick)
-      document.removeEventListener('keydown', handleKey)
-    }
-  }, [])
 
   const [openMenuTaskId, setOpenMenuTaskId] = useState<number | null>(null)
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
@@ -212,92 +182,9 @@ const TasksTable = () => {
     }
   }
 
-  const rangeDisplay = `${formatDisplay(filters.from)} — ${formatDisplay(
-    filters.to,
-  )}`
-
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-2 md:gap-3 rounded-2xl bg-neutral-200 shadow-card px-3 py-2 mb-4">
-        <div className="relative" ref={dateRef}>
-          <button
-            type="button"
-            className="h-10 pl-9 pr-3 rounded-xl border border-neutral-300 bg-neutral-100 focus:ring-2 focus:ring-primary-300 cursor-pointer"
-            aria-label="Дата"
-            title={rangeDisplay}
-            onClick={() => setDateOpen(o => !o)}
-          >
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-              📅
-            </span>
-            {rangeDisplay}
-          </button>
-          {dateOpen && (
-            <div className="absolute z-10 mt-1 p-2 bg-white shadow-lg rounded-xl border border-neutral-300 flex items-center gap-2">
-              <input
-                type="date"
-                value={filters.from}
-                onChange={e => setFilters({ from: e.target.value })}
-                className="h-8 border border-neutral-300 rounded px-2 focus:ring-2 focus:ring-primary-300"
-                aria-label="Дата начала"
-                title="Дата начала"
-              />
-              <span aria-hidden>—</span>
-              <input
-                type="date"
-                value={filters.to}
-                onChange={e => setFilters({ to: e.target.value })}
-                className="h-8 border border-neutral-300 rounded px-2 focus:ring-2 focus:ring-primary-300"
-                aria-label="Дата окончания"
-                title="Дата окончания"
-              />
-            </div>
-          )}
-        </div>
-        <div className="flex items-center">
-          <span className="mr-1.5">⚡</span>
-          <select
-            value={filters.priority}
-            onChange={e => setFilters({ priority: e.target.value })}
-            className="h-10 px-3 rounded-xl border border-neutral-300 bg-neutral-100 cursor-pointer focus:ring-2 focus:ring-primary-300"
-            aria-label="Приоритет"
-            title="Приоритет"
-          >
-            <option value="">Все</option>
-            <option value="Высокий">Высокий</option>
-            <option value="Средний">Средний</option>
-            <option value="Низкий">Низкий</option>
-          </select>
-        </div>
-        <div className="flex items-center">
-          <span className="mr-1.5">🔄</span>
-          <select
-            value={filters.status}
-            onChange={e => setFilters({ status: e.target.value })}
-            className="h-10 px-3 rounded-xl border border-neutral-300 bg-neutral-100 cursor-pointer focus:ring-2 focus:ring-primary-300"
-            aria-label="Статус"
-            title="Статус"
-          >
-            <option value="">Все</option>
-            <option value="Выполняется">Выполняется</option>
-            <option value="Ожидает">Ожидает</option>
-            <option value="Готово">Готово</option>
-            <option value="Просроченные">Просроченные</option>
-          </select>
-        </div>
-        <div className="flex items-center flex-1 min-w-[200px]">
-          <span className="mr-1.5">🔍</span>
-          <input
-            type="text"
-            value={searchInput}
-            onChange={e => setSearchInput(e.target.value)}
-            placeholder="Поиск…"
-            className="h-10 flex-1 min-w-[200px] rounded-xl border border-neutral-300 bg-neutral-100 px-3 cursor-pointer focus:ring-2 focus:ring-primary-300"
-            aria-label="Поиск"
-            title="Поиск"
-          />
-        </div>
-      </div>
+      <TaskFiltersToolbar />
       <div className="flex justify-end mb-4">
         <Button
           className="rounded-2xl px-4 py-2 shadow-card bg-info text-neutral-50 hover:brightness-95 focus:ring-2 focus:ring-info"

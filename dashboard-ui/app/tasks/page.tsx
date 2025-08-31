@@ -1,5 +1,5 @@
 import Layout from '@/ui/Layout'
-import TasksTable from '@/components/tasks/TasksTable'
+import TasksContent from './TasksContent'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function TasksPage() {
   return (
     <Layout>
-      <TasksTable />
+      <TasksContent />
     </Layout>
   )
 }
