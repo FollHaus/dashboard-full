@@ -49,9 +49,9 @@ export default function Select({
     .join(', ')
 
   return (
-    <div className='relative' ref={ref}>
+    <div className='relative w-full' ref={ref}>
       <div
-        className='border border-neutral-300 rounded px-2 py-1 min-w-[200px] cursor-pointer flex items-center justify-between'
+        className='border border-neutral-300 rounded-lg px-3 py-2 w-full cursor-pointer flex items-center justify-between min-w-0'
         onClick={toggle}
       >
         <span className='truncate'>{selectedLabels || placeholder}</span>

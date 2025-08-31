@@ -19,6 +19,7 @@ const presets = [
   { label: '7 дней', value: '7d' },
   { label: '30 дней', value: '30d' },
   { label: 'Этот месяц', value: 'month' },
+  { label: 'Год', value: 'year' },
   { label: 'Произвольный', value: 'custom' },
 ] as const
 
@@ -42,6 +43,10 @@ function getRange(preset: Preset) {
     case 'month':
       start = new Date(now.getFullYear(), now.getMonth(), 1)
       end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+      break
+    case 'year':
+      start = new Date(now.getFullYear(), 0, 1)
+      end = new Date(now.getFullYear(), 11, 31)
       break
     default:
       break
@@ -154,7 +159,7 @@ export default function ReportsPage() {
           valueClass: 'text-success',
         },
         {
-          label: 'Количество заказов',
+          label: 'Количество продаж',
           value: kpis.orders,
           icon: '📦',
           iconClass: 'bg-primary-300 text-neutral-900',
@@ -238,10 +243,10 @@ export default function ReportsPage() {
               {presets.map(p => (
                 <button
                   key={p.value}
-                  className={`px-3 py-1 text-sm rounded-full cursor-pointer transition-colors ${
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     preset === p.value
                       ? 'bg-primary-500 text-neutral-50'
-                      : 'bg-neutral-200 text-neutral-900'
+                      : 'bg-neutral-200 text-neutral-900 hover:bg-neutral-300'
                   }`}
                   onClick={() => setPreset(p.value)}
                   aria-pressed={preset === p.value}
@@ -255,36 +260,36 @@ export default function ReportsPage() {
                 type='date'
                 value={from}
                 onChange={e => setFrom(e.target.value)}
-                className='border border-neutral-300 rounded px-2 py-1 w-full'
+                className='border border-neutral-300 rounded-lg px-3 py-2 w-full'
               />
               <input
                 type='date'
                 value={to}
                 onChange={e => setTo(e.target.value)}
-                className='border border-neutral-300 rounded px-2 py-1 w-full'
+                className='border border-neutral-300 rounded-lg px-3 py-2 w-full'
               />
             </div>
-            <div className='md:col-span-3'>
+            <div className='md:col-span-3 max-h-40 overflow-auto'>
               <Select
                 options={categoryOptions.map(c => ({ value: c.id, label: c.name }))}
                 value={categories}
                 onChange={setCategories}
                 placeholder='Категории'
-                dropdownClassName='max-h-40'
+                dropdownClassName='max-h-40 overflow-auto'
               />
             </div>
           </div>
           <div className='flex justify-end gap-2 mt-3'>
             <button
               onClick={applyFilters}
-              className='px-4 py-2 bg-primary-500 text-neutral-50 rounded disabled:opacity-50'
+              className='px-4 py-2 rounded-lg text-sm font-medium bg-primary-500 text-neutral-50 disabled:opacity-50'
               disabled={kpisLoading}
             >
               Применить
             </button>
             <button
               onClick={resetFilters}
-              className='px-4 py-2 border border-neutral-300 rounded'
+              className='px-4 py-2 rounded-lg text-sm font-medium bg-neutral-200 text-neutral-900 hover:bg-neutral-300'
             >
               Сбросить
             </button>
@@ -343,18 +348,22 @@ export default function ReportsPage() {
                 kpiCards.map(k => (
                   <div
                     key={k.label}
-                    className='rounded-2xl shadow-card p-4 md:p-5 flex items-center gap-3 bg-neutral-200'
+                    className='rounded-2xl shadow-card p-4 md:p-5 bg-neutral-200 flex items-center gap-3'
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${k.iconClass}`}>
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${k.iconClass}`}
+                    >
                       {k.icon}
                     </div>
-                    <div className='flex flex-col'>
-                      <span className={`text-2xl md:text-3xl font-semibold tabular-nums ${k.valueClass}`}>
+                    <div className='flex-1 min-w-0'>
+                      <div className='text-sm text-neutral-800 truncate'>{k.label}</div>
+                      <div
+                        className={`max-w-full overflow-hidden text-ellipsis whitespace-nowrap tabular-nums font-semibold text-xl sm:text-2xl md:text-3xl ${k.valueClass}`}
+                      >
                         {k.currency
                           ? formatCurrency(k.value)
                           : new Intl.NumberFormat('ru-RU').format(k.value)}
-                      </span>
-                      <span className='text-sm text-neutral-800'>{k.label}</span>
+                      </div>
                     </div>
                   </div>
                 ))
