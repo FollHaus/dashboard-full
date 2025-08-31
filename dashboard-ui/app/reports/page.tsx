@@ -86,7 +86,7 @@ export default function ReportsPage() {
     const range = getRange(pr)
     const f = params.get('from') || parsed?.from || range.from
     const t = params.get('to') || parsed?.to || range.to
-    const cats = params.getAll('categories').map(Number)
+    const cats = params.getAll('categories[]').map(Number)
     const catArr = cats.length ? cats : parsed?.categories || []
     setPreset(pr)
     setFrom(f)
@@ -110,7 +110,7 @@ export default function ReportsPage() {
     params.set('from', from)
     params.set('to', to)
     params.set('preset', preset)
-    categories.forEach(c => params.append('categories', String(c)))
+    categories.forEach(c => params.append('categories[]', String(c)))
     router.replace(`?${params.toString()}`, { scroll: false })
     localStorage.setItem(STORAGE_KEY, JSON.stringify(filters))
   }
