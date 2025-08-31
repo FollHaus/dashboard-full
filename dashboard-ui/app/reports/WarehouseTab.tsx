@@ -13,7 +13,6 @@ import {
   XAxis,
   YAxis,
   Bar,
-  LabelList,
 } from 'recharts'
 
 import { ProductService } from '@/services/product/product.service'
@@ -58,7 +57,7 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
     lowCount,
     nonMovingPercent,
     pieData,
-    topData,
+    top5,
     tableRows,
   } = useMemo(() => {
     const list: ProductWithRelations[] = (products ?? []).filter(p =>
@@ -129,17 +128,20 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
       }))
       .filter(d => d.remains > 0)
 
-    const topData = [...list]
-      .sort((a, b) => (b.remains || 0) - (a.remains || 0))
+    const top5 = list
+      .map(x => ({
+        name: String(x.name ?? ''),
+        remains: Number(x.remains ?? 0),
+      }))
+      .sort((a, b) => b.remains - a.remains)
       .slice(0, 5)
-      .map(p => ({ name: p.name, value: p.remains || 0 }))
 
     return {
       totalRemains,
       lowCount,
       nonMovingPercent,
        pieData,
-      topData,
+      top5,
       tableRows,
     }
   }, [products, filters])
@@ -287,13 +289,13 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
           )}
         </section>
 
-        <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
+        <section className='col-span-1 w-full min-w-0 rounded-2xl bg-neutral-200 shadow-card p-5'>
           <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 mb-4'>
             <span>📊</span>
             <span>ТОП-5 товаров по остаткам</span>
           </h3>
           {isLoading ? (
-            <div className='h-64 animate-pulse bg-neutral-300 rounded' />
+            <div className='w-full h-[340px] animate-pulse bg-neutral-300 rounded' />
           ) : error ? (
             <div className='text-sm text-error'>
               Ошибка{' '}
@@ -301,46 +303,57 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
                 Повторить
               </button>
             </div>
-          ) : topData.length ? (
-            <div className='h-64'>
-              <ResponsiveContainer width='100%' height='100%'>
-                <BarChart
-                  layout='vertical'
-                  data={topData}
-                  margin={{ left: 40, right: 16 }}
-                >
-                  <CartesianGrid strokeDasharray='3 3' stroke='#e5e7eb' />
-                  <XAxis
-                    type='number'
-                    tick={{ fontSize: 12 }}
-                    allowDecimals={false}
-                  />
-                  <YAxis
-                    dataKey='name'
-                    type='category'
-                    width={150}
-                    tick={{ fontSize: 12 }}
-                    tickFormatter={v =>
-                      String(v).length > 16
-                        ? `${String(v).slice(0, 16)}…`
-                        : String(v)
-                    }
-                  />
-                  <Tooltip formatter={v => numberFmt.format(v as number)} />
-                  <Bar dataKey='value' fill='#3b82f6'>
-                    <LabelList
-                      dataKey='value'
-                      position='right'
-                      formatter={v => numberFmt.format(v as number)}
+          ) : top5.length ? (
+            <div className='w-full min-w-0'>
+              <div className='w-full h-[340px] overflow-visible'>
+                <ResponsiveContainer width='100%' height={340}>
+                  <BarChart
+                    data={top5}
+                    layout='vertical'
+                    margin={{ top: 8, right: 16, bottom: 8, left: 8 }}
+                    barCategoryGap={12}
+                  >
+                    <CartesianGrid stroke='#e6e0d4' strokeDasharray='3 3' />
+                    <XAxis
+                      type='number'
+                      allowDecimals={false}
+                      stroke='#645c4d'
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={v => numberFmt.format(v ?? 0)}
                     />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+                    <YAxis
+                      type='category'
+                      dataKey='name'
+                      width={160}
+                      stroke='#645c4d'
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={s =>
+                        String(s).length > 18
+                          ? `${String(s).slice(0, 18)}…`
+                          : String(s)
+                      }
+                    />
+                    <Tooltip
+                      formatter={(v: any, _n: any, { payload }) => [
+                        numberFmt.format(v as number),
+                        payload.name,
+                      ]}
+                    />
+                    <Bar
+                      dataKey='remains'
+                      name='Остаток'
+                      fill='#3b82f6'
+                      barSize={22}
+                      radius={[4, 4, 4, 4]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           ) : (
             <div className='text-sm text-neutral-500'>Нет данных</div>
           )}
-        </div>
+        </section>
       </div>
 
       <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
