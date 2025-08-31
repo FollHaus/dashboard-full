@@ -10,6 +10,12 @@ vi.mock('next/link', () => ({
   ),
 }))
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/',
+}))
+
 beforeAll(() => server.listen())
 afterEach(() => {
   server.resetHandlers()

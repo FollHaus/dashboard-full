@@ -1,12 +1,29 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
+import { vi } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import TasksTable from './TasksTable'
 import { server } from '@/tests/mocks/server'
 
+const renderWithClient = (ui: React.ReactElement) => {
+  const client = new QueryClient()
+  return render(
+    <QueryClientProvider client={client}>{ui}</QueryClientProvider>,
+  )
+}
+
 describe('TasksTable', () => {
+  beforeAll(() => {
+    vi.setSystemTime(new Date('2024-01-05'))
+  })
+
+  afterAll(() => {
+    vi.useRealTimers()
+  })
+
   it('renders tasks from API (happy path)', async () => {
-    render(<TasksTable />)
+    renderWithClient(<TasksTable />)
     expect(await screen.findByText('Task 1')).toBeInTheDocument()
   })
 
@@ -14,7 +31,7 @@ describe('TasksTable', () => {
     server.use(
       http.get('http://localhost:4000/api/task', () => HttpResponse.error())
     )
-    render(<TasksTable />)
+    renderWithClient(<TasksTable />)
     await waitFor(() => expect(screen.getByText(/error/i)).toBeInTheDocument())
   })
 
@@ -22,7 +39,7 @@ describe('TasksTable', () => {
     server.use(
       http.get('http://localhost:4000/api/task', () => HttpResponse.json([]))
     )
-    render(<TasksTable />)
+    renderWithClient(<TasksTable />)
     await waitFor(() => {
       const rows = screen.queryAllByRole('row')
       // header + no data
@@ -31,7 +48,7 @@ describe('TasksTable', () => {
   })
 
   it('filters by priority', async () => {
-    render(<TasksTable />)
+    renderWithClient(<TasksTable />)
     await screen.findByText('Task 1')
     const select = screen.getByRole('combobox', { name: /приоритет/i })
     await userEvent.selectOptions(select, 'Высокий')
@@ -39,7 +56,7 @@ describe('TasksTable', () => {
   })
 
   it('deletes a task', async () => {
-    render(<TasksTable />)
+    renderWithClient(<TasksTable />)
     const menuBtn = await screen.findByRole('button', { name: /действия/i })
     await userEvent.click(menuBtn)
     const deleteItem = await screen.findByRole('menuitem', { name: /удалить/i })
@@ -53,7 +70,7 @@ describe('TasksTable', () => {
   })
 
   it('opens task info modal on row click and closes with ESC', async () => {
-    render(<TasksTable />)
+    renderWithClient(<TasksTable />)
     const cell = await screen.findByText('Task 1')
     await userEvent.click(cell)
     const dialog = await screen.findByRole('dialog', { name: /task 1/i })
