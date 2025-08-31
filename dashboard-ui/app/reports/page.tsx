@@ -396,7 +396,7 @@ export default function ReportsPage() {
 
         {active === 'sales' && (
           <>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6'>
               {kpisLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <div
