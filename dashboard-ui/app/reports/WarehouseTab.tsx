@@ -8,7 +8,7 @@ import {
   Pie,
   Cell,
   Tooltip,
-  Legend,
+  TooltipProps,
   BarChart,
   CartesianGrid,
   XAxis,
@@ -42,6 +42,20 @@ const compactFmt = new Intl.NumberFormat('ru-RU', {
   notation: 'compact',
   compactDisplay: 'short',
 })
+
+const pieColors = ['#c8b08d', '#9c9480', '#d4af37', '#cc7357', '#6b7d47']
+
+const PieTooltip: FC<TooltipProps<number, string>> = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const p = payload[0]
+    return (
+      <div className='bg-neutral-100 text-neutral-900 text-sm p-2 rounded shadow-card'>
+        {`${p.name} / ${numberFmt.format(p.value as number)} / ${(p.percent * 100).toFixed(1)}%`}
+      </div>
+    )
+  }
+  return null
+}
 
 const WarehouseTab: FC<Props> = ({ filters }) => {
   const { data: products, isLoading, error, refetch } = useQuery<
@@ -140,12 +154,12 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
 
   return (
     <div className='flex flex-col gap-6 md:gap-8'>
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4'>
         {isLoading ? (
           Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className='h-20 rounded-2xl bg-neutral-200 shadow-card animate-pulse'
+              className='h-24 rounded-2xl bg-neutral-200 shadow-card animate-pulse'
             />
           ))
         ) : error ? (
@@ -160,101 +174,94 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
             {
               label: 'Общий остаток',
               value: totalRemains,
-              icon: '📦',
-              circle: 'bg-primary-300 text-neutral-900',
             },
             {
               label: 'Мало на складе',
               value: lowCount,
-              icon: '⚠️',
-              circle: 'bg-warning/10 text-warning',
             },
             {
               label: 'Неликвиды (%)',
               value: nonMovingPercent,
-              icon: '🚫',
-              circle: 'bg-error/10 text-error',
               percent: true,
             },
           ].map(k => (
             <div
               key={k.label}
-              className='rounded-2xl shadow-card p-4 md:p-5 bg-neutral-200 flex items-center gap-3'
+              className='rounded-2xl bg-neutral-200 shadow-card p-4 flex flex-col items-center justify-center'
             >
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${k.circle}`}
-              >
-                {k.icon}
-              </div>
-              <div className='flex-1 min-w-0'>
-                <div className='text-sm text-neutral-800 truncate'>{k.label}</div>
-                <div
-                  className='text-xl sm:text-2xl md:text-3xl font-semibold tabular-nums text-neutral-900 truncate'
-                  title={
-                    k.percent
-                      ? `${k.value.toFixed(1)}%`
-                      : numberFmt.format(k.value)
-                  }
-                >
-                  {k.percent
+                className='text-2xl md:text-3xl font-semibold tabular-nums text-neutral-900'
+                title={
+                  k.percent
                     ? `${k.value.toFixed(1)}%`
-                    : compactFmt.format(k.value)}
-                </div>
+                    : numberFmt.format(k.value)
+                }
+              >
+                {k.percent
+                  ? `${k.value.toFixed(1)}%`
+                  : compactFmt.format(k.value)}
               </div>
+              <div className='text-sm text-neutral-800'>{k.label}</div>
             </div>
           ))
         )}
       </div>
 
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-        <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
-          <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 mb-4'>
+        <div className='rounded-2xl bg-neutral-200 shadow-card p-5 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start justify-start'>
+          <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 col-span-full'>
             <span>🥧</span>
             <span>Остатки по категориям</span>
           </h3>
           {isLoading ? (
-            <div className='h-64 animate-pulse bg-neutral-300 rounded' />
+            <div className='h-80 w-full col-span-full animate-pulse bg-neutral-300 rounded' />
           ) : error ? (
-            <div className='text-sm text-error'>
+            <div className='col-span-full text-sm text-error'>
               Ошибка{' '}
               <button className='underline' onClick={() => refetch()}>
                 Повторить
               </button>
             </div>
           ) : categoryData.length ? (
-            <div className='h-64'>
-              <ResponsiveContainer width='100%' height='100%'>
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    dataKey='value'
-                    nameKey='name'
-                    outerRadius={80}
-                  >
-                    {categoryData.map((_, i) => (
-                      <Cell key={i} fill={`hsl(${(i * 67) % 360} 70% 50%)`} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={v => numberFmt.format(v as number)}
-                    labelFormatter={l => String(l)}
-                  />
-                  <Legend
-                    content={({ payload }) => (
-                      <div className='flex flex-col gap-1 overflow-y-auto max-h-52 ml-4'>
-                        {payload?.map(p => (
-                          <span key={p.value} className='text-sm'>
-                            {p.value}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <>
+              <div className='h-80 w-full'>
+                <ResponsiveContainer width='100%' height='100%'>
+                  <PieChart width='100%' height='100%'>
+                    <Pie
+                      data={categoryData}
+                      dataKey='value'
+                      nameKey='name'
+                      outerRadius='70%'
+                    >
+                      {categoryData.map((_, i) => (
+                        <Cell key={i} fill={pieColors[i % pieColors.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<PieTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className='max-h-80 overflow-auto flex flex-col gap-2'>
+                {categoryData.map((c, i) => (
+                  <div key={c.name} className='flex items-center gap-2 text-sm text-neutral-900'>
+                    <span
+                      className='w-3 h-3 rounded-full flex-shrink-0'
+                      style={{ backgroundColor: pieColors[i % pieColors.length] }}
+                    />
+                    <span className='flex-1 truncate'>{c.name}</span>
+                    <span className='tabular-nums'>
+                      {numberFmt.format(c.value)} ({
+                        totalRemains
+                          ? ((c.value / totalRemains) * 100).toFixed(1)
+                          : 0
+                      }%)
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
-            <div className='text-sm text-neutral-500'>Нет данных</div>
+            <div className='col-span-full text-sm text-neutral-500'>Нет данных</div>
           )}
         </div>
 
