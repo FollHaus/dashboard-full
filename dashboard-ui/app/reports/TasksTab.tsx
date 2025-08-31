@@ -1,6 +1,6 @@
 'use client'
 
-import { FC, useMemo, ReactNode } from 'react'
+import { FC, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   ResponsiveContainer,
@@ -126,103 +126,120 @@ const TasksTab: FC<Props> = ({ filters }) => {
     }
   }, [tasks, filters])
 
-  const dataIsEmpty = (tasks?.length ?? 0) === 0
+  const dataIsEmpty = total === 0 && pieData.length === 0 && allZero
   const showEmpty = !isLoading && !isFetching && !isError && dataIsEmpty
 
-  let content: ReactNode = null
-
   if (isLoading || isFetching) {
-    content = (
-      <div className='flex flex-col gap-6 md:gap-8'>
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className='h-20 rounded-2xl bg-neutral-200 shadow-card animate-pulse'
-            />
-          ))}
-        </div>
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-          <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
-            <div className='h-72 animate-pulse bg-neutral-300 rounded' />
-          </div>
-          <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
-            <div className='h-64 animate-pulse bg-neutral-300 rounded' />
-          </div>
-        </div>
-      </div>
-    )
-  } else if (isError) {
-    content = (
-      <div role='alert' className='text-sm text-error'>
-        Ошибка загрузки{' '}
-        <button className='underline' onClick={() => refetch()}>
-          Повторить
-        </button>
-      </div>
-    )
-  } else if (!showEmpty) {
-    content = (
-      <div className='flex flex-col gap-6 md:gap-8'>
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
-          {[
-            {
-              label: 'Всего задач',
-              value: total,
-              icon: '📋',
-              circle: 'bg-info/10 text-info',
-            },
-            {
-              label: 'Выполненные',
-              value: completed,
-              icon: '✅',
-              circle: 'bg-success/10 text-success',
-            },
-            {
-              label: 'Просроченные',
-              value: overdue,
-              icon: '⏰',
-              circle: 'bg-error/10 text-error',
-            },
-            {
-              label: 'В работе',
-              value: inProgress,
-              icon: '🔄',
-              circle: 'bg-warning/10 text-warning',
-            },
-          ].map(k => (
-            <div
-              key={k.label}
-              className='rounded-2xl shadow-card p-4 md:p-5 bg-neutral-200 flex items-center gap-3'
-            >
+    return (
+      <section className='relative w-full'>
+        <div className='flex flex-col gap-6 md:gap-8'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+            {Array.from({ length: 4 }).map((_, i) => (
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${k.circle}`}
+                key={i}
+                className='h-20 rounded-2xl bg-neutral-200 shadow-card animate-pulse'
+              />
+            ))}
+          </div>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+            <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
+              <div className='h-72 animate-pulse bg-neutral-300 rounded' />
+            </div>
+            <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
+              <div className='h-64 animate-pulse bg-neutral-300 rounded' />
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (isError) {
+    return (
+      <section className='relative w-full'>
+        <div
+          role='alert'
+          className='rounded-xl bg-error/10 text-error px-3 py-2 text-sm'
+        >
+          Ошибка загрузки задач.
+          <button className='underline ml-1' onClick={() => refetch()}>
+            Повторить
+          </button>
+        </div>
+      </section>
+    )
+  }
+
+  return (
+    <section className='relative w-full'>
+      {showEmpty && (
+        <div className='absolute inset-0 flex items-center justify-center pointer-events-none'>
+          <div className='rounded-xl bg-neutral-200 px-4 py-3 shadow-card text-neutral-900 text-sm'>
+            Нет данных за выбранный период
+          </div>
+        </div>
+      )}
+
+      {!showEmpty && (
+        <div className='flex flex-col gap-6 md:gap-8'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+            {[
+              {
+                label: 'Всего задач',
+                value: total,
+                icon: '📋',
+                circle: 'bg-info/10 text-info',
+              },
+              {
+                label: 'Выполненные',
+                value: completed,
+                icon: '✅',
+                circle: 'bg-success/10 text-success',
+              },
+              {
+                label: 'Просроченные',
+                value: overdue,
+                icon: '⏰',
+                circle: 'bg-error/10 text-error',
+              },
+              {
+                label: 'В работе',
+                value: inProgress,
+                icon: '🔄',
+                circle: 'bg-warning/10 text-warning',
+              },
+            ].map(k => (
+              <div
+                key={k.label}
+                className='rounded-2xl shadow-card p-4 md:p-5 bg-neutral-200 flex items-center gap-3'
               >
-                {k.icon}
-              </div>
-              <div className='flex-1 min-w-0'>
-                <div className='text-sm text-neutral-800 truncate'>{k.label}</div>
                 <div
-                  className='text-xl sm:text-2xl md:text-3xl font-semibold tabular-nums text-neutral-900 truncate'
-                  title={numberFmt.format(k.value)}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${k.circle}`}
                 >
-                  {numberFmt.format(k.value)}
+                  {k.icon}
+                </div>
+                <div className='flex-1 min-w-0'>
+                  <div className='text-sm text-neutral-800 truncate'>{k.label}</div>
+                  <div
+                    className='text-xl sm:text-2xl md:text-3xl font-semibold tabular-nums text-neutral-900 truncate'
+                    title={numberFmt.format(k.value)}
+                  >
+                    {numberFmt.format(k.value)}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-          <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
-            <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 mb-4'>
-              <span>🗂</span>
-              <span>Статусы задач</span>
-            </h3>
-            {pieData.length > 0 ? (
-              <div className='grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-4'>
-                <div className='h-72 w-full'>
-                  <ResponsiveContainer width='100%' height='100%'>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+            <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
+              <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 mb-4'>
+                <span>🗂</span>
+                <span>Статусы задач</span>
+              </h3>
+              {pieData.length > 0 ? (
+                <div className='grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-4'>
+                  <ResponsiveContainer width='100%' height={280}>
                     <PieChart>
                       <Pie
                         data={pieData}
@@ -245,58 +262,60 @@ const TasksTab: FC<Props> = ({ filters }) => {
                       />
                     </PieChart>
                   </ResponsiveContainer>
+                  <aside className='flex flex-col gap-2 justify-start overflow-auto max-h-72'>
+                    {pieData.map((item, i) => (
+                      <div key={i} className='flex items-center gap-2 text-sm'>
+                        <span
+                          className='w-3 h-3 rounded-full'
+                          style={{ backgroundColor: statusColors[item.status] }}
+                        />
+                        <span className='text-neutral-900'>{item.status}</span>
+                        <span className='text-neutral-700'>
+                          {numberFmt.format(item.value)}
+                        </span>
+                      </div>
+                    ))}
+                  </aside>
                 </div>
-                <aside className='flex flex-col gap-2 justify-start overflow-auto max-h-72'>
-                  {pieData.map((item, i) => (
-                    <div key={i} className='flex items-center gap-2 text-sm'>
-                      <span
-                        className='w-3 h-3 rounded-full'
-                        style={{ backgroundColor: statusColors[item.status] }}
-                      />
-                      <span className='text-neutral-900'>{item.status}</span>
-                      <span className='text-neutral-700'>{numberFmt.format(item.value)}</span>
-                    </div>
-                  ))}
-                </aside>
-              </div>
-            ) : (
-              <div className='text-sm text-neutral-500'>Нет данных</div>
-            )}
-          </div>
+              ) : (
+                <div className='text-sm text-neutral-500'>Нет данных</div>
+              )}
+            </div>
 
-          <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
-            <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 mb-4'>
-              <span>📈</span>
-              <span>Динамика за неделю</span>
-            </h3>
-            <div className='h-64 relative'>
-              <ResponsiveContainer width='100%' height='100%'>
-                <LineChart data={lineData} margin={{ left: 40, right: 16, top: 8, bottom: 8 }}>
+            <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
+              <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 mb-4'>
+                <span>📈</span>
+                <span>Динамика за неделю</span>
+              </h3>
+              <ResponsiveContainer width='100%' height={280}>
+                <LineChart
+                  data={lineData}
+                  margin={{ left: 40, right: 16, top: 8, bottom: 8 }}
+                >
                   <CartesianGrid strokeDasharray='3 3' stroke='#e5e7eb' />
                   <XAxis dataKey='date' tick={{ fontSize: 12 }} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                   <Tooltip formatter={v => numberFmt.format(v as number)} />
-                  <Line type='monotone' dataKey='opened' name='Открыто' stroke='#3b82f6' strokeWidth={2} dot />
-                  <Line type='monotone' dataKey='closed' name='Закрыто' stroke='#10b981' strokeWidth={2} dot />
-                  {allZero && (
-                    <ReferenceLine y={0} stroke='#ef4444' strokeWidth={1} />
-                  )}
+                  <Line
+                    type='monotone'
+                    dataKey='opened'
+                    name='Открыто'
+                    stroke='#3b82f6'
+                    strokeWidth={2}
+                    dot
+                  />
+                  <Line
+                    type='monotone'
+                    dataKey='closed'
+                    name='Закрыто'
+                    stroke='#10b981'
+                    strokeWidth={2}
+                    dot
+                  />
+                  {allZero && <ReferenceLine y={0} stroke='#ef4444' strokeWidth={1} />}
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <section className='relative w-full'>
-      {content}
-      {showEmpty && (
-        <div className='absolute inset-0 flex items-center justify-center pointer-events-none'>
-          <div className='rounded-xl bg-neutral-200 px-4 py-3 shadow-card text-neutral-900 text-sm'>
-            Нет данных за выбранный период
           </div>
         </div>
       )}

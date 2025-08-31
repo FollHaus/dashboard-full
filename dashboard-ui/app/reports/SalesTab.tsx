@@ -215,11 +215,11 @@ const SalesTab: FC<Props> = ({ filters }) => {
         </div>
         <div className='h-64 relative overflow-visible'>
           {salesLoading ? (
-            <div className='absolute inset-0 flex items-center justify-center text-sm text-neutral-500'>
+            <div className='absolute inset-0 flex items-center justify-center text-sm text-neutral-500 pointer-events-none'>
               Загрузка...
             </div>
           ) : salesError ? (
-            <div className='absolute inset-0 flex items-center justify-center text-sm text-error'>
+            <div className='absolute inset-0 flex items-center justify-center text-sm text-error pointer-events-none'>
               Ошибка{' '}
               <button className='underline' onClick={() => refetchSales()}>
                 Повторить
@@ -285,7 +285,7 @@ const SalesTab: FC<Props> = ({ filters }) => {
             </ResponsiveContainer>
           )}
           {allZero && !salesLoading && !salesError && (
-            <div className='absolute inset-0 flex items-center justify-center text-neutral-500'>
+            <div className='absolute inset-0 flex items-center justify-center text-neutral-500 pointer-events-none'>
               Нет данных за выбранный период
             </div>
           )}
