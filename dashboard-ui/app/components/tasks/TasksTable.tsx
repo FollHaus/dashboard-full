@@ -15,7 +15,6 @@ import {
   TaskStatus,
 } from '@/shared/interfaces/task.interface'
 import { TaskFilters } from '@/hooks/useTaskFilters'
-import TaskFiltersToolbar from './TaskFiltersToolbar'
 import TaskInfoModal from './TaskInfoModal'
 import TaskForm from './TaskForm'
 
@@ -184,7 +183,6 @@ const TasksTable = ({ filters }: TasksTableProps) => {
 
   return (
     <div>
-      <TaskFiltersToolbar />
       <div className="flex justify-end mb-4">
         <Button
           className="rounded-2xl px-4 py-2 shadow-card bg-info text-neutral-50 hover:brightness-95 focus:ring-2 focus:ring-info"
