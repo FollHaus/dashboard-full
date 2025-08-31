@@ -24,6 +24,7 @@ import { ITopProduct } from '@/shared/interfaces/top-product.interface'
 interface Filters {
   from: string
   to: string
+  preset: string
   categories: number[]
 }
 
@@ -139,13 +140,17 @@ const SalesTab: FC<Props> = ({ filters }) => {
 
   const topChartData = useMemo(() => {
     if (!topProducts) return []
-    const total = topProducts.reduce((sum, p) => sum + p.totalRevenue, 0)
+    const total = topProducts.reduce(
+      (s, x) => s + (x.totalRevenue || 0),
+      0,
+    )
     return topProducts
-      .sort((a, b) => b.totalRevenue - a.totalRevenue)
+      .sort((a, b) => (b.totalRevenue || 0) - (a.totalRevenue || 0))
+      .slice(0, 10)
       .map(p => ({
         name: p.productName,
-        revenue: p.totalRevenue,
-        percent: total ? +((p.totalRevenue / total) * 100).toFixed(1) : 0,
+        revenue: p.totalRevenue || 0,
+        share: total > 0 ? (p.totalRevenue || 0) / total : 0,
       }))
   }, [topProducts])
 
@@ -153,7 +158,7 @@ const SalesTab: FC<Props> = ({ filters }) => {
 
   return (
     <div className='flex flex-col gap-6 md:gap-8'>
-      <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
+      <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 overflow-visible'>
         <div className='flex items-center justify-between mb-4'>
           <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900'>
             <span>📈</span>
@@ -176,7 +181,7 @@ const SalesTab: FC<Props> = ({ filters }) => {
             ))}
           </div>
         </div>
-        <div className='h-64 relative'>
+        <div className='h-64 relative overflow-visible'>
           {salesLoading ? (
             <div className='absolute inset-0 flex items-center justify-center text-sm text-neutral-500'>
               Загрузка...
@@ -190,13 +195,25 @@ const SalesTab: FC<Props> = ({ filters }) => {
             </div>
           ) : (
             <ResponsiveContainer width='100%' height='100%'>
-              <ComposedChart data={chartData} margin={{ left: 16, right: 16 }}>
+              <ComposedChart
+                data={chartData}
+                margin={{ left: 72, right: 16, top: 8, bottom: 8 }}
+              >
                 <CartesianGrid strokeDasharray='3 3' stroke='#e5e7eb' />
                 <XAxis dataKey='label' tick={{ fontSize: 12 }} />
                 <YAxis
                   yAxisId='left'
+                  width={80}
+                  allowDecimals={false}
                   tick={{ fontSize: 12 }}
-                  tickFormatter={v => formatCurrency(v as number)}
+                  stroke='#645c4d'
+                  tickFormatter={v =>
+                    new Intl.NumberFormat('ru-RU', {
+                      style: 'currency',
+                      currency: 'RUB',
+                      maximumFractionDigits: 0,
+                    }).format((v as number) ?? 0)
+                  }
                 />
                 <YAxis
                   yAxisId='right'
@@ -275,14 +292,25 @@ const SalesTab: FC<Props> = ({ filters }) => {
                   tickFormatter={v => truncate(v as string)}
                 />
                 <Tooltip
-                  formatter={value => formatCurrency(value as number)}
+                  formatter={(value, _name, item) => {
+                    const share = item?.payload?.share
+                    const percent = isNaN(share)
+                      ? '0%'
+                      : `${(share * 100).toFixed(1)}%`
+                    return [`${formatCurrency(value as number)} (${percent})`, 'Выручка']
+                  }}
                   labelFormatter={label => label as string}
                 />
                 <Bar dataKey='revenue' fill='#3b82f6'>
                   <LabelList
-                    dataKey='percent'
+                    dataKey='share'
                     position='right'
-                    formatter={v => `${v}%`}
+                    formatter={v => {
+                      const val = Number(v)
+                      return isNaN(val)
+                        ? '0%'
+                        : `${(val * 100).toFixed(1)}%`
+                    }}
                   />
                 </Bar>
               </BarChart>
