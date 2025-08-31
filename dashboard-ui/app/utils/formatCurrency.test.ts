@@ -11,4 +11,14 @@ describe('formatCurrency', () => {
       }).format(value),
     )
   })
+
+  it('formats number to compact RUB currency', () => {
+    const value = 1234.5
+    expect(formatCurrency(value, { compact: true })).toBe(
+      new Intl.NumberFormat('ru-RU', {
+        notation: 'compact',
+        compactDisplay: 'short',
+      }).format(value) + ' ₽',
+    )
+  })
 })
