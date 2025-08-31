@@ -3,9 +3,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Button from '@/ui/Button/Button'
-import { FaEdit, FaTrash, FaPrint, FaFileExport, FaSearch } from 'react-icons/fa'
-import { MdRemoveShoppingCart } from 'react-icons/md'
-import { HiOutlineArchiveBoxArrowDown } from 'react-icons/hi2'
+import SearchInput from '@/components/ui/SearchInput'
+import {
+  Pencil,
+  Trash2,
+  Printer,
+  Download,
+  PackageX,
+  Archive,
+} from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/utils/toast'
@@ -313,16 +319,10 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
         <h2 className="text-lg mb-2">Фильтры и поиск</h2>
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 min-w-[10rem]">
-            <FaSearch
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              aria-hidden="true"
-            />
-            <input
-              type="text"
+            <SearchInput
               placeholder="Поиск..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-3 h-11 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
             />
           </div>
           {stockOptions.map(opt => {
@@ -377,7 +377,7 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-2xl p-4 md:p-5 shadow-sm border border-red-100 bg-red-50 text-red-700 flex flex-col justify-center">
               <div className="flex items-center gap-2">
-                <MdRemoveShoppingCart className="w-5 h-5 text-red-600" aria-hidden="true" />
+                <PackageX className="w-5 h-5 text-red-600" aria-hidden="true" />
                 <span className="text-sm text-gray-600">Нет в наличии</span>
               </div>
               {isInitialLoading ? (
@@ -388,7 +388,7 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
             </div>
             <div className="rounded-2xl p-4 md:p-5 shadow-sm border border-orange-100 bg-orange-50 text-orange-700 flex flex-col justify-center">
               <div className="flex items-center gap-2">
-                <HiOutlineArchiveBoxArrowDown className="w-5 h-5 text-orange-600" aria-hidden="true" />
+                <Archive className="w-5 h-5 text-orange-600" aria-hidden="true" />
                 <span className="text-sm text-gray-600">Мало на складе</span>
               </div>
               {isInitialLoading ? (
@@ -411,7 +411,7 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
               title="Экспорт CSV"
               aria-label="Экспорт CSV"
             >
-              <FaFileExport aria-hidden="true" />
+              <Download aria-hidden="true" className="w-4 h-4" />
             </Button>
             <Button
               className="bg-neutral-200 px-2 py-1"
@@ -419,7 +419,7 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
               title="Печать"
               aria-label="Печать"
             >
-              <FaPrint aria-hidden="true" />
+              <Printer aria-hidden="true" className="w-4 h-4" />
             </Button>
           </div>
       </>
@@ -615,7 +615,7 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
                             title="Редактировать"
                             disabled={deletingId === prod.id}
                           >
-                            <FaEdit aria-hidden="true" />
+                            <Pencil aria-hidden="true" className="w-4 h-4" />
                             <span>Редактировать</span>
                           </button>
                           <button
@@ -628,7 +628,7 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
                             title="Удалить"
                             disabled={deletingId === prod.id}
                           >
-                            <FaTrash aria-hidden="true" />
+                            <Trash2 aria-hidden="true" className="w-4 h-4" />
                             <span>Удалить</span>
                           </button>
                         </div>,

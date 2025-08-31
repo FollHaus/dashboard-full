@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Plus } from 'lucide-react'
+import Fab from '@/components/ui/Fab'
 
 import TaskFiltersToolbar from '@/components/tasks/TaskFiltersToolbar'
 import TasksTable from '@/components/tasks/TasksTable'
@@ -27,16 +27,12 @@ const TasksContent = () => {
         onCloseAdd={closeAddTaskModal}
       />
       {!isAddOpen && (
-        <button
-          type="button"
+        <Fab
+          ref={fabRef}
           aria-label="Добавить задачу"
           title="Добавить задачу"
           onClick={openAddTaskModal}
-          ref={fabRef}
-          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-card flex items-center justify-center cursor-pointer bg-success text-neutral-50 hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-success"
-        >
-          <Plus className="h-6 w-6" />
-        </button>
+        />
       )}
     </>
   )
