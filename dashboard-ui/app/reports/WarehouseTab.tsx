@@ -112,14 +112,22 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
     const categoryMap = new Map<string, number>()
     list.forEach(p => {
       const cat = p.category?.name || 'Без категории'
-      categoryMap.set(cat, (categoryMap.get(cat) || 0) + (p.remains || 0))
+      const remains = Number(p.remains ?? 0)
+      categoryMap.set(cat, (categoryMap.get(cat) || 0) + remains)
     })
-    const total = Array.from(categoryMap.values()).reduce((s, x) => s + x, 0)
-    const pieData = Array.from(categoryMap.entries()).map(([category, remains]) => ({
-      category,
-      remains,
-      percent: total > 0 ? remains / total : 0,
+
+    const data = Array.from(categoryMap.entries()).map(([category, remains]) => ({
+      category: String(category),
+      remains: Number(remains) || 0,
     }))
+    const total = data.reduce((s, x) => s + x.remains, 0)
+    const pieData = data
+      .map(d => ({
+        category: d.category,
+        remains: d.remains,
+        percent: total > 0 ? d.remains / total : 0,
+      }))
+      .filter(d => d.remains > 0)
 
     const topData = [...list]
       .sort((a, b) => (b.remains || 0) - (a.remains || 0))
@@ -207,13 +215,13 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
       </div>
 
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-        <section className='rounded-2xl bg-neutral-200 shadow-card p-5 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4'>
+        <section className='rounded-2xl bg-neutral-200 shadow-card p-5 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] gap-4'>
           <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 col-span-full'>
             <span>🥧</span>
             <span>Остатки по категориям</span>
           </h3>
           {isLoading ? (
-            <div className='h-80 w-full col-span-full animate-pulse bg-neutral-300 rounded' />
+            <div className='h-[300px] lg:h-[360px] w-full col-span-full animate-pulse bg-neutral-300 rounded' />
           ) : error ? (
             <div className='col-span-full text-sm text-error'>
               Ошибка{' '}
@@ -224,16 +232,16 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
           ) : pieData.length ? (
             <>
               <div className='min-w-0'>
-                <div className='h-80 w-full'>
-                  <ResponsiveContainer width='100%' height={320}>
+                <div className='h-[300px] lg:h-[360px] w-full'>
+                  <ResponsiveContainer width='100%' height='100%'>
                     <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
                       <Pie
                         data={pieData}
                         dataKey='remains'
                         nameKey='category'
                         innerRadius='45%'
-                        outerRadius='75%'
-                        paddingAngle={1}
+                        outerRadius='78%'
+                        paddingAngle={1.5}
                         label={false}
                         labelLine={false}
                         isAnimationActive={false}
@@ -253,14 +261,22 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
                 </div>
               </div>
               <aside className='lg:block'>
-                <div className='max-h-80 overflow-auto pr-2 flex flex-col gap-2'>
+                <div className='max-h-[360px] overflow-auto pr-2 space-y-2'>
                   {pieData.map((c, i) => (
-                    <div key={c.category} className='flex items-center gap-2 text-sm text-neutral-900'>
+                    <div key={c.category} className='flex items-center gap-2 text-sm'>
                       <span
-                        className='w-3 h-3 rounded-full flex-shrink-0'
+                        className='w-3 h-3 rounded-full shrink-0'
                         style={{ backgroundColor: pieColors[i % pieColors.length] }}
                       />
-                      <span className='flex-1 truncate'>{c.category}</span>
+                      <span
+                        className='truncate max-w-[180px] text-neutral-900'
+                        title={c.category}
+                      >
+                        {c.category}
+                      </span>
+                      <span className='ml-auto text-neutral-700 whitespace-nowrap'>
+                        {((c.percent * 100) || 0).toFixed(1)}%
+                      </span>
                     </div>
                   ))}
                 </div>
