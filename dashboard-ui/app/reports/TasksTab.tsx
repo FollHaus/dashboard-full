@@ -1,6 +1,6 @@
 'use client'
 
-import { FC, useMemo } from 'react'
+import { FC, useMemo, ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   ResponsiveContainer,
@@ -44,10 +44,13 @@ const statusColors: Record<TaskStatus, string> = {
 }
 
 const TasksTab: FC<Props> = ({ filters }) => {
-  const { data: tasks, isLoading, error, refetch } = useQuery<
-    TaskWithDates[],
-    Error
-  >({
+  const {
+    data: tasks,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useQuery<TaskWithDates[], Error>({
     queryKey: ['reports', 'tasks', filters],
     queryFn: () => TaskService.getAll({ start: filters.from, end: filters.to }),
     enabled: Boolean(filters.from && filters.to),
@@ -123,25 +126,46 @@ const TasksTab: FC<Props> = ({ filters }) => {
     }
   }, [tasks, filters])
 
-  return (
-    <div className='flex flex-col gap-6 md:gap-8'>
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
+  const dataIsEmpty = (tasks?.length ?? 0) === 0
+  const showEmpty = !isLoading && !isFetching && !isError && dataIsEmpty
+
+  let content: ReactNode = null
+
+  if (isLoading || isFetching) {
+    content = (
+      <div className='flex flex-col gap-6 md:gap-8'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+          {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
               className='h-20 rounded-2xl bg-neutral-200 shadow-card animate-pulse'
             />
-          ))
-        ) : error ? (
-          <div className='col-span-full text-error text-sm'>
-            Ошибка загрузки{' '}
-            <button className='underline' onClick={() => refetch()}>
-              Повторить
-            </button>
+          ))}
+        </div>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+          <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
+            <div className='h-72 animate-pulse bg-neutral-300 rounded' />
           </div>
-        ) : (
-          [
+          <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
+            <div className='h-64 animate-pulse bg-neutral-300 rounded' />
+          </div>
+        </div>
+      </div>
+    )
+  } else if (isError) {
+    content = (
+      <div role='alert' className='text-sm text-error'>
+        Ошибка загрузки{' '}
+        <button className='underline' onClick={() => refetch()}>
+          Повторить
+        </button>
+      </div>
+    )
+  } else if (!showEmpty) {
+    content = (
+      <div className='flex flex-col gap-6 md:gap-8'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+          {[
             {
               label: 'Всего задач',
               value: total,
@@ -186,86 +210,66 @@ const TasksTab: FC<Props> = ({ filters }) => {
                 </div>
               </div>
             </div>
-          ))
-        )}
-      </div>
-
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-        <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
-          <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 mb-4'>
-            <span>🗂</span>
-            <span>Статусы задач</span>
-          </h3>
-          {isLoading ? (
-            <div className='h-72 animate-pulse bg-neutral-300 rounded' />
-          ) : error ? (
-            <div className='text-sm text-error'>
-              Ошибка{' '}
-              <button className='underline' onClick={() => refetch()}>
-                Повторить
-              </button>
-            </div>
-          ) : pieData.length > 0 ? (
-            <div className='grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-4'>
-              <div className='h-72 w-full'>
-                <ResponsiveContainer width='100%' height='100%'>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      dataKey='value'
-                      nameKey='status'
-                      innerRadius='45%'
-                      outerRadius='75%'
-                      paddingAngle={2}
-                      isAnimationActive={false}
-                    >
-                      {pieData.map((entry, idx) => (
-                        <Cell key={idx} fill={statusColors[entry.status]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(v, _n, { payload }) => [
-                        numberFmt.format(v as number),
-                        `${payload.status} (${(payload.percent * 100).toFixed(1)}%)`,
-                      ]}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <aside className='flex flex-col gap-2 justify-start overflow-auto max-h-72'>
-                {pieData.map((item, i) => (
-                  <div key={i} className='flex items-center gap-2 text-sm'>
-                    <span
-                      className='w-3 h-3 rounded-full'
-                      style={{ backgroundColor: statusColors[item.status] }}
-                    />
-                    <span className='text-neutral-900'>{item.status}</span>
-                    <span className='text-neutral-700'>{numberFmt.format(item.value)}</span>
-                  </div>
-                ))}
-              </aside>
-            </div>
-          ) : (
-            <div className='text-sm text-neutral-500'>Нет данных</div>
-          )}
+          ))}
         </div>
 
-        <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
-          <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 mb-4'>
-            <span>📈</span>
-            <span>Динамика за неделю</span>
-          </h3>
-          {isLoading ? (
-            <div className='h-64 animate-pulse bg-neutral-300 rounded' />
-          ) : error ? (
-            <div className='text-sm text-error'>
-              Ошибка{' '}
-              <button className='underline' onClick={() => refetch()}>
-                Повторить
-              </button>
-            </div>
-          ) : (
-            <div className='h-64'>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+          <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
+            <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 mb-4'>
+              <span>🗂</span>
+              <span>Статусы задач</span>
+            </h3>
+            {pieData.length > 0 ? (
+              <div className='grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-4'>
+                <div className='h-72 w-full'>
+                  <ResponsiveContainer width='100%' height='100%'>
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        dataKey='value'
+                        nameKey='status'
+                        innerRadius='45%'
+                        outerRadius='75%'
+                        paddingAngle={2}
+                        isAnimationActive={false}
+                      >
+                        {pieData.map((entry, idx) => (
+                          <Cell key={idx} fill={statusColors[entry.status]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(v, _n, { payload }) => [
+                          numberFmt.format(v as number),
+                          `${payload.status} (${(payload.percent * 100).toFixed(1)}%)`,
+                        ]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <aside className='flex flex-col gap-2 justify-start overflow-auto max-h-72'>
+                  {pieData.map((item, i) => (
+                    <div key={i} className='flex items-center gap-2 text-sm'>
+                      <span
+                        className='w-3 h-3 rounded-full'
+                        style={{ backgroundColor: statusColors[item.status] }}
+                      />
+                      <span className='text-neutral-900'>{item.status}</span>
+                      <span className='text-neutral-700'>{numberFmt.format(item.value)}</span>
+                    </div>
+                  ))}
+                </aside>
+              </div>
+            ) : (
+              <div className='text-sm text-neutral-500'>Нет данных</div>
+            )}
+          </div>
+
+          <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
+            <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 mb-4'>
+              <span>📈</span>
+              <span>Динамика за неделю</span>
+            </h3>
+            <div className='h-64 relative'>
               <ResponsiveContainer width='100%' height='100%'>
                 <LineChart data={lineData} margin={{ left: 40, right: 16, top: 8, bottom: 8 }}>
                   <CartesianGrid strokeDasharray='3 3' stroke='#e5e7eb' />
@@ -279,16 +283,24 @@ const TasksTab: FC<Props> = ({ filters }) => {
                   )}
                 </LineChart>
               </ResponsiveContainer>
-              {allZero && (
-                <div className='absolute inset-0 flex items-center justify-center text-neutral-500'>
-                  Нет данных за выбранный период
-                </div>
-              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
-    </div>
+    )
+  }
+
+  return (
+    <section className='relative w-full'>
+      {content}
+      {showEmpty && (
+        <div className='absolute inset-0 flex items-center justify-center pointer-events-none'>
+          <div className='rounded-xl bg-neutral-200 px-4 py-3 shadow-card text-neutral-900 text-sm'>
+            Нет данных за выбранный период
+          </div>
+        </div>
+      )}
+    </section>
   )
 }
 
