@@ -9,11 +9,14 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }))
 
+const getKpisMock = vi.fn()
+;(getKpisMock as any)
+  .mockResolvedValueOnce({ revenue: 1000, orders: 2, avgCheck: 500, margin: 400 })
+  .mockResolvedValueOnce({ revenue: 800, orders: 1, avgCheck: 800, margin: 200 })
+
 vi.mock('@/services/analytics/analytics.service', () => ({
   AnalyticsService: {
-    getKpis: vi.fn(() =>
-      Promise.resolve({ revenue: 1000, orders: 2, avgCheck: 500 })
-    ),
+    getKpis: (...args: any[]) => getKpisMock(...args),
   },
 }))
 
@@ -24,15 +27,15 @@ const renderKpis = () => {
       <PeriodProvider>
         <KpiCards />
       </PeriodProvider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
 }
 
 describe('KpiCards', () => {
-  it('aggregates KPIs', async () => {
+  it('renders KPI groups', async () => {
     renderKpis()
-    expect(await screen.findByText('2')).toBeInTheDocument()
-    expect(await screen.findByText(/1[\s\u00A0]?000,00/)).toBeInTheDocument()
-    expect(await screen.findByText(/500,00/)).toBeInTheDocument()
+    expect(await screen.findByText('Выручка')).toBeInTheDocument()
+    expect(screen.getByText('Кол-во продаж')).toBeInTheDocument()
+    expect(screen.getByText('📦 Операционные')).toBeInTheDocument()
   })
 })

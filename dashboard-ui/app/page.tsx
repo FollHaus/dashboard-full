@@ -7,7 +7,6 @@ import KpiCards from "@/components/dashboard/KpiCards";
 import SalesChart from "@/components/dashboard/SalesChart";
 import TopProducts from "@/components/dashboard/TopProducts";
 import WeeklyTasks from "@/components/dashboard/WeeklyTasks";
-import FinancialSummary from "@/components/dashboard/FinancialSummary";
 import { usePeriod } from "@/store/period";
 
 const metadata: Metadata = {
@@ -27,7 +26,6 @@ export default function Home() {
       </div>
       <div className="grid gap-4">
         <KpiCards />
-        <FinancialSummary />
         <SalesChart />
         <TopProducts />
         <WeeklyTasks />
