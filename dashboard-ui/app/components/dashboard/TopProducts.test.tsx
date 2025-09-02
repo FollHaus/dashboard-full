@@ -8,13 +8,8 @@ vi.mock('@/services/analytics/analytics.service', () => ({
   AnalyticsService: {
     getTopProducts: vi.fn(() =>
       Promise.resolve([
-        { productId: 1, productName: 'Prod1', categoryName: 'Cat1', totalUnits: 10, totalRevenue: 1000 },
-      ])
-    ),
-    getCategorySales: vi.fn(() =>
-      Promise.resolve([
-        { categoryId: 1, categoryName: 'Cat1', totalUnits: 10, totalRevenue: 1000 },
-      ])
+        { productId: 1, productName: 'Prod1', totalUnits: 10, totalRevenue: 1000, purchaseCostPortion: 400 },
+      ]),
     ),
   },
 }))
@@ -31,15 +26,14 @@ const renderWidget = () => {
       <PeriodProvider>
         <TopProducts />
       </PeriodProvider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
 }
 
-describe('TopProducts charts', () => {
-  it('renders headings', async () => {
+describe('TopProducts', () => {
+  it('renders header and select', async () => {
     renderWidget()
-    expect(await screen.findByText('🏆 Топ товаров')).toBeInTheDocument()
-    expect(screen.getByText('Товары')).toBeInTheDocument()
-    expect(screen.getByText('Категории')).toBeInTheDocument()
+    expect(await screen.findByText(/Топ товаров/)).toBeInTheDocument()
+    expect(screen.getByRole('combobox')).toBeInTheDocument()
   })
 })
