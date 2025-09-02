@@ -50,19 +50,14 @@ const numberCompact = new Intl.NumberFormat("ru-RU", {
   compactDisplay: "short",
 });
 const numberFull = new Intl.NumberFormat("ru-RU");
-const currencyCompact = new Intl.NumberFormat("ru-RU", {
+const currency = new Intl.NumberFormat("ru-RU", {
   style: "currency",
   currency: "RUB",
-  notation: "compact",
-  compactDisplay: "short",
-});
-const currencyFull = new Intl.NumberFormat("ru-RU", {
-  style: "currency",
-  currency: "RUB",
+  maximumFractionDigits: 0,
 });
 
 function delta(curr: number, prev: number) {
-  return ((curr - prev) / Math.max(prev, 1e-9)) * 100;
+  return (curr - prev) / Math.max(prev, 1e-9);
 }
 
 const KpiCards: React.FC = () => {
@@ -117,19 +112,20 @@ const KpiCards: React.FC = () => {
   const groups = [
     {
       title: "💰 Финансовые",
+      grid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
       items: [
         {
           label: "Выручка",
-          value: currencyCompact.format(revenue),
-          valueTitle: currencyFull.format(revenue),
+          value: currency.format(revenue),
+          valueTitle: currency.format(revenue),
           valueClass: "text-success",
           delta: delta(revenue, prevRevenue),
           icon: <FaRubleSign className="text-success" />,
         },
         {
           label: "Фин. итог",
-          value: currencyCompact.format(profit),
-          valueTitle: currencyFull.format(profit),
+          value: currency.format(profit),
+          valueTitle: currency.format(profit),
           valueClass: profit >= 0 ? "text-success" : "text-error",
           delta: delta(profit, prevProfit),
           icon: <FaBriefcase className={profit >= 0 ? "text-success" : "text-error"} />,
@@ -146,6 +142,7 @@ const KpiCards: React.FC = () => {
     },
     {
       title: "📦 Операционные",
+      grid: "grid grid-cols-1 sm:grid-cols-2 gap-4",
       items: [
         {
           label: "Кол-во продаж",
@@ -157,8 +154,8 @@ const KpiCards: React.FC = () => {
         },
         {
           label: "Средний чек",
-          value: currencyCompact.format(avg),
-          valueTitle: currencyFull.format(avg),
+          value: currency.format(avg),
+          valueTitle: currency.format(avg),
           valueClass: "text-warning",
           delta: delta(avg, prevAvg),
           icon: <FaReceipt className="text-warning" />,
@@ -175,7 +172,7 @@ const KpiCards: React.FC = () => {
           className="rounded-2xl bg-neutral-200 shadow-card p-4 relative"
         >
           <h3 className="text-lg font-semibold mb-4">{g.title}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className={g.grid}>
             {g.items.map((item) => (
               <KpiCard
                 key={item.label}
@@ -185,7 +182,7 @@ const KpiCards: React.FC = () => {
                 valueTitle={item.valueTitle}
                 valueClassName={item.valueClass}
                 isLoading={isLoading && !curr}
-                deltaPct={item.delta}
+                delta={item.delta}
               />
             ))}
           </div>
