@@ -168,7 +168,7 @@ const KpiCards: React.FC = () => {
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-6 md:gap-8">
       {groups.map((g) => (
         <div
           key={g.title}
