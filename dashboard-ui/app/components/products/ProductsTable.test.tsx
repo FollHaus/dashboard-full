@@ -84,7 +84,7 @@ describe('ProductsTable', () => {
   it('filters by name', async () => {
     renderTable()
     await screen.findByText('Product 1')
-    const input = screen.getByPlaceholderText('Поиск...')
+    const input = screen.getByPlaceholderText('Поиск…')
     await userEvent.type(input, 'Second')
     await waitFor(() => {
       expect(screen.getByText('Second')).toBeInTheDocument()
@@ -94,7 +94,7 @@ describe('ProductsTable', () => {
   it('filters by sku', async () => {
     renderTable()
     await screen.findByText('Product 1')
-    const input = screen.getByPlaceholderText('Поиск...')
+    const input = screen.getByPlaceholderText('Поиск…')
     await userEvent.type(input, 'B2')
     await waitFor(() => {
       expect(screen.getByText('Second')).toBeInTheDocument()

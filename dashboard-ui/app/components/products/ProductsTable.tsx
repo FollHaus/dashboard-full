@@ -316,49 +316,50 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
     <>
       <div className="space-y-4 pb-24">
       <div className="bg-white rounded shadow p-4">
-        <h2 className="text-lg mb-2">Фильтры и поиск</h2>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-[10rem]">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-4">
+          <div className="relative w-full sm:w-auto flex-1 min-w-[220px]">
             <SearchInput
-              placeholder="Поиск..."
+              placeholder="Поиск…"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
-          {stockOptions.map(opt => {
-            const isActive = stockFilter === opt.value
-            const base =
-              'px-4 py-2 rounded-lg text-sm font-medium transition-colors select-none focus:outline-none focus:ring-2'
-            let variant = ''
-            if (isActive) {
-              switch (opt.value) {
-                case 'low':
-                  variant =
-                    'bg-warning text-neutral-950 hover:brightness-95 focus:ring-warning'
-                  break
-                case 'out':
-                  variant =
-                    'bg-error text-neutral-50 hover:brightness-95 focus:ring-error'
-                  break
-                default:
-                  variant =
-                    'bg-primary-500 text-neutral-50 hover:bg-primary-400 focus:ring-primary-300'
+          <div className="flex items-center gap-2">
+            {stockOptions.map(opt => {
+              const isActive = stockFilter === opt.value
+              const base =
+                'h-10 px-3 rounded-xl text-sm font-medium transition-colors select-none focus:outline-none focus:ring-2'
+              let variant = ''
+              if (isActive) {
+                switch (opt.value) {
+                  case 'low':
+                    variant =
+                      'bg-warning text-neutral-950 hover:brightness-95 focus:ring-warning'
+                    break
+                  case 'out':
+                    variant =
+                      'bg-error text-neutral-50 hover:brightness-95 focus:ring-error'
+                    break
+                  default:
+                    variant =
+                      'bg-primary-500 text-neutral-50 hover:bg-primary-400 focus:ring-primary-300'
+                }
+              } else {
+                variant =
+                  'bg-neutral-100 text-neutral-900 hover:bg-neutral-300 focus:ring-primary-300 dark:bg-neutral-600 dark:text-neutral-50 dark:hover:bg-neutral-500'
               }
-            } else {
-              variant =
-                'bg-neutral-200 text-neutral-900 hover:bg-neutral-300 focus:ring-primary-300 dark:bg-neutral-600 dark:text-neutral-50 dark:hover:bg-neutral-500'
-            }
-            return (
-              <button
-                key={opt.value}
-                aria-pressed={isActive}
-                className={`${base} ${variant}`}
-                onClick={() => setStockFilter(opt.value)}
-              >
-                {opt.label}
-              </button>
-            )
-          })}
+              return (
+                <button
+                  key={opt.value}
+                  aria-pressed={isActive}
+                  className={`${base} ${variant}`}
+                  onClick={() => setStockFilter(opt.value)}
+                >
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 
