@@ -24,7 +24,7 @@ export default function Home() {
       <div className="flex justify-end mb-4">
         <DashboardControls />
       </div>
-      <div className="grid gap-4">
+      <div className="grid gap-6 md:gap-8">
         <KpiCards />
         <SalesChart />
         <TopProducts />
