@@ -315,7 +315,6 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
   return (
     <>
       <div className="space-y-4 pb-24">
-      <div className="bg-white rounded shadow p-4">
         <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-4 rounded-xl bg-neutral-200 shadow-card px-3 py-2">
           <div className="w-full sm:w-auto flex-1 min-w-[220px]">
             <SearchInput
@@ -361,7 +360,6 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
             })}
           </div>
         </div>
-      </div>
 
       {isError && !data ? (
         <div className="text-center text-error py-4">
