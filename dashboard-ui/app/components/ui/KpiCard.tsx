@@ -45,9 +45,11 @@ export default function KpiCard({
 
   let iconEl: ReactNode
   if (isValidElement(icon)) {
-      iconEl = cloneElement(icon, {
-        className: cn('w-5 h-5 md:w-5 md:h-5 text-current', icon.props.className),
-      })
+    iconEl = cloneElement(icon, {
+      className: cn('w-5 h-5 md:w-5 md:h-5 text-current', icon.props.className),
+    })
+  } else if (typeof icon === 'string') {
+    iconEl = <span className='w-5 h-5 md:w-5 md:h-5 text-current'>{icon}</span>
   } else {
     const IconComp = icon as ElementType
     iconEl = <IconComp className='w-5 h-5 md:w-5 md:h-5 text-current' />
