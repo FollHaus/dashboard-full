@@ -48,7 +48,10 @@ const Statistics: React.FC = () => {
   return (
     <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 mb-6 md:mb-8 relative overflow-visible">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <h2 className="text-lg font-semibold text-neutral-900">Статистика</h2>
+        <h2 className="flex items-center text-lg font-semibold text-neutral-900">
+          <span className="mr-2">📋</span>
+          Статистика
+        </h2>
         <div className="flex flex-wrap items-center gap-2 md:justify-end">
           {(['day', 'week', 'month', 'year'] as const).map((p) => (
             <button
