@@ -13,6 +13,7 @@ import WarehouseTab from './WarehouseTab'
 import TasksTab from './TasksTab'
 import { ICategory } from '@/shared/interfaces/category.interface'
 import { formatCurrency } from '@/utils/formatCurrency'
+import KpiCard from '@/components/ui/KpiCard'
 
 const presets = [
   { label: 'Сегодня', value: 'today' },
@@ -192,34 +193,31 @@ export default function ReportsPage() {
   const kpiCards = kpis
     ? [
         {
-          label: 'Количество продаж',
-          value: kpis.orders,
+          title: 'Количество продаж',
+          value: new Intl.NumberFormat('ru-RU', {
+            notation: 'compact',
+            compactDisplay: 'short',
+          }).format(kpis.orders),
           icon: '📦',
-          iconClass: 'bg-primary-300 text-neutral-900',
-          valueClass: 'text-neutral-900',
+          accent: 'info' as const,
         },
         {
-          label: 'Средний чек',
-          value: kpis.avgCheck,
-          currency: true,
+          title: 'Средний чек',
+          value: formatCurrency(kpis.avgCheck, { compact: true }),
           icon: '🛒',
-          iconClass: 'bg-warning/10 text-warning',
-          valueClass: 'text-warning',
+          accent: 'warning' as const,
         },
         {
-          label: 'Маржа',
-          value: kpis.margin,
-          currency: true,
+          title: 'Маржа',
+          value: formatCurrency(kpis.margin),
           icon: '📊',
-          iconClass: 'bg-success/10 text-success',
-          valueClass: kpis.margin >= 0 ? 'text-success' : 'text-error',
+          accent: (kpis.margin >= 0 ? 'success' : 'error') as const,
         },
         {
-          label: 'Выполненные задачи',
-          value: kpis.completedTasks,
+          title: 'Выполненные задачи',
+          value: new Intl.NumberFormat('ru-RU').format(kpis.completedTasks),
           icon: '✅',
-          iconClass: 'bg-info/10 text-info',
-          valueClass: 'text-info',
+          accent: 'info' as const,
         },
       ]
     : []
@@ -418,12 +416,12 @@ export default function ReportsPage() {
 
         {active === 'sales' && (
           <>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-6'>
               {kpisLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <div
                     key={i}
-                    className='rounded-2xl bg-neutral-200 p-4 shadow-card animate-pulse h-20'
+                    className='rounded-xl bg-neutral-100 shadow-card h-[92px] md:h-[100px] animate-pulse'
                   />
                 ))
               ) : kpisError ? (
@@ -435,34 +433,13 @@ export default function ReportsPage() {
                 </div>
               ) : (
                 kpiCards.map(k => (
-                  <div
-                    key={k.label}
-                    className='rounded-2xl shadow-card p-4 md:p-5 bg-neutral-200 flex items-center gap-3'
-                  >
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${k.iconClass}`}
-                    >
-                      {k.icon}
-                    </div>
-                    <div className='flex-1 min-w-0'>
-                      <div className='text-sm text-neutral-800 truncate'>{k.label}</div>
-                      <div
-                        className={`max-w-full overflow-hidden text-ellipsis whitespace-nowrap tabular-nums font-semibold text-xl sm:text-2xl md:text-3xl ${k.valueClass}`}
-                        title={
-                          k.currency
-                            ? formatCurrency(k.value)
-                            : new Intl.NumberFormat('ru-RU').format(k.value)
-                        }
-                      >
-                        {k.currency
-                          ? formatCurrency(k.value, { compact: true })
-                          : new Intl.NumberFormat('ru-RU', {
-                              notation: 'compact',
-                              compactDisplay: 'short',
-                            }).format(k.value)}
-                      </div>
-                    </div>
-                  </div>
+                  <KpiCard
+                    key={k.title}
+                    title={k.title}
+                    value={k.value}
+                    icon={k.icon}
+                    accent={k.accent}
+                  />
                 ))
               )}
             </div>

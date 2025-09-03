@@ -1,94 +1,63 @@
+import { ElementType, ReactNode } from 'react'
 import clsx from 'classnames'
-import { ReactNode } from 'react'
 
-interface KpiCardProps {
-  /**
-   * Заголовок карточки
-   */
-  label: string
-  /**
-   * Значение, отображаемое в карточке
-   */
-  value: ReactNode
-  /**
-   * Подсказка для значения
-   */
-  valueTitle?: string
-  /**
-   * CSS класс для цвета текста
-   */
-  valueClassName?: string
-  /**
-   * CSS класс для контейнера карточки
-   */
-  className?: string
-  /**
-   * Иконка, отображаемая сверху
-   */
-  icon?: ReactNode
-  /**
-   * Индикатор загрузки
-   */
-  isLoading?: boolean
-  /**
-   * Дельта в процентах
-   */
-  delta?: number | string
+const ACCENTS: Record<string, string> = {
+  success: '#10b981',
+  warning: '#f59e0b',
+  info: '#3b82f6',
+  error: '#ef4444',
+  neutral: '#c8b08d',
 }
 
-const KpiCard = ({
-  label,
+export interface KpiCardProps {
+  /** Заголовок карточки */
+  title: string
+  /** Значение внутри карточки */
+  value: ReactNode
+  /** Иконка или эмодзи */
+  icon: ElementType | string
+  /** Цветовой акцент */
+  accent?: keyof typeof ACCENTS
+  /** Дополнительные классы */
+  className?: string
+}
+
+export default function KpiCard({
+  title,
   value,
-  valueTitle,
-  valueClassName,
+  icon: Icon,
+  accent = 'neutral',
   className,
-  icon,
-  isLoading,
-  delta,
-}: KpiCardProps) => {
-  let deltaEl: ReactNode = null
-  const d = Number(delta)
-  if (!Number.isNaN(d)) {
-    const isUp = d > 0
-    const isDown = d < 0
-    const cls = isUp ? 'text-success' : isDown ? 'text-error' : 'text-neutral-800'
-    const formatted = (Math.abs(d) * 100).toLocaleString('ru-RU', {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    })
-    deltaEl = (
-      <div className={clsx('flex items-center gap-1 text-sm', cls)}>
-        {isUp && <span>▲</span>}
-        {isDown && <span>▼</span>}
-        <span>{formatted}%</span>
-      </div>
-    )
-  }
+}: KpiCardProps) {
+  const iconEl = typeof Icon === 'string' ? (
+    <span className='text-base md:text-lg'>{Icon}</span>
+  ) : (
+    <Icon className='w-5 h-5 md:w-5 md:h-5 text-current' />
+  )
 
   return (
     <div
       className={clsx(
-        'rounded-xl shadow-card p-3 md:p-4 flex flex-col items-center text-center gap-2',
+        'kpi-card relative rounded-xl bg-neutral-100 shadow-card p-3 md:p-4 flex items-center gap-3 h-[92px] md:h-[100px]',
         className,
-        valueClassName,
       )}
+      style={{ ['--kpi-accent' as any]: ACCENTS[accent] }}
     >
-      {icon && (
-        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white/70 text-current text-lg md:text-xl">
-          {icon}
+      <span
+        className='absolute inset-x-0 top-0 h-1 rounded-t-xl bg-[var(--kpi-accent,#c8b08d)]'
+        aria-hidden
+      />
+      <div className='kpi-icon w-10 h-10 md:w-11 md:h-11 rounded-full bg-white/70 flex items-center justify-center flex-shrink-0'>
+        {iconEl}
+      </div>
+      <div className='flex-1 min-w-0 flex flex-col justify-center'>
+        <div className='kpi-title text-[13px] md:text-sm font-semibold text-neutral-900 leading-5 truncate'>
+          {title}
         </div>
-      )}
-      <div className="text-sm font-medium text-neutral-700">{label}</div>
-      {isLoading ? (
-        <div className="h-6 w-16 bg-neutral-300 rounded animate-pulse" />
-      ) : (
-        <div className="text-xl md:text-2xl font-bold tabular-nums text-current" title={valueTitle}>
+        <div className='kpi-value text-xl md:text-2xl font-bold tabular-nums text-neutral-900 whitespace-nowrap overflow-hidden text-ellipsis'>
           {value}
         </div>
-      )}
-      {deltaEl}
+      </div>
     </div>
   )
 }
-
-export default KpiCard

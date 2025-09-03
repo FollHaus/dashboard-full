@@ -111,57 +111,42 @@ const KpiCards: React.FC = () => {
   const groups = [
     {
       title: "💰 Финансовые KPI",
-      grid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
+      grid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4",
       items: [
         {
-          label: "Выручка",
+          title: "Выручка",
           icon: "💰",
           value: currency.format(revenue),
-          valueTitle: currency.format(revenue),
-          valueClass: "text-[#059669]",
-          className: "bg-[#D1FAE5]",
           delta: delta(revenue, prevRevenue),
         },
         {
-          label: "Финансовый итог",
+          title: "Финансовый итог",
           icon: "📈",
           value: currency.format(profit),
-          valueTitle: currency.format(profit),
-          valueClass: "text-[#047857]",
-          className: "bg-[#A7F3D0]",
           delta: delta(profit, prevProfit),
         },
         {
-          label: "Маржа",
+          title: "Маржа",
           icon: "📊",
           value: `${marginPct.toFixed(1).replace('.', ',')}%`,
-          valueTitle: `${marginPct.toFixed(2).replace('.', ',')}%`,
-          valueClass: marginPct < 0 ? "text-[#DC2626]" : "text-[#7C3AED]",
-          className: "bg-[#EDE9FE]",
           delta: delta(marginPct, prevMarginPct),
         },
       ],
     },
     {
       title: "📦 Операционные KPI",
-      grid: "grid grid-cols-1 sm:grid-cols-2 gap-4",
+      grid: "grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4",
       items: [
         {
-          label: "Кол-во продаж",
+          title: "Кол-во продаж",
           icon: "🛒",
           value: numberCompact.format(orders),
-          valueTitle: numberFull.format(orders),
-          valueClass: "text-[#2563EB]",
-          className: "bg-[#DBEAFE]",
           delta: delta(orders, prevOrders),
         },
         {
-          label: "Средний чек",
+          title: "Средний чек",
           icon: "💳",
           value: currency.format(avg),
-          valueTitle: currency.format(avg),
-          valueClass: "text-[#D97706]",
-          className: "bg-[#FEF3C7]",
           delta: delta(avg, prevAvg),
         },
       ],
@@ -181,15 +166,11 @@ const KpiCards: React.FC = () => {
           <div className={g.grid}>
             {g.items.map((item) => (
               <KpiCard
-                key={item.label}
-                label={item.label}
+                key={item.title}
+                title={item.title}
                 icon={item.icon}
                 value={item.value}
-                valueTitle={item.valueTitle}
-                valueClassName={item.valueClass}
-                className={item.className}
-                isLoading={isLoading && !curr}
-                delta={item.delta}
+                accent={item.delta < 0 ? 'error' : item.delta > 0 ? 'success' : 'neutral'}
               />
             ))}
           </div>
