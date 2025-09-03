@@ -8,7 +8,7 @@ import { Menu, User } from 'lucide-react'
 
 const routes = [
   { label: 'Главная', path: '/', icon: '🏠' },
-  { label: 'Склад', path: '/stock', icon: '📦' },
+  { label: 'Склад', path: '/products', icon: '📦' },
   { label: 'Задачи', path: '/tasks', icon: '✅' },
   { label: 'Отчёты', path: '/reports', icon: '📊' },
 ]
@@ -78,7 +78,10 @@ export default function Header() {
           И.П. Мулиев
         </Link>
 
-        <nav ref={navRef} className="relative hidden md:flex items-center gap-8">
+        <nav
+          ref={navRef}
+          className="relative hidden md:flex flex-1 items-center justify-evenly"
+        >
           {routes.map((r) => renderLink(r))}
           <span
             id="nav-underline"
