@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import KpiCard from "@/components/ui/KpiCard";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
 import { getPeriodRange } from "@/utils/buckets";
-import { usePeriod } from "@/store/period";
+import { useDashboardFilter } from "@/store/dashboardFilter";
 
 type KpiData = {
   revenue: number;
@@ -14,8 +14,8 @@ type KpiData = {
   margin: number;
 };
 
-function getPrevRange(period: any) {
-  const { start, end } = getPeriodRange(period);
+function getPrevRange(period: any, filter: any) {
+  const { start, end } = getPeriodRange(filter);
   switch (period) {
     case "day": {
       const prev = new Date(start);
@@ -60,9 +60,10 @@ function delta(curr: number, prev: number) {
 }
 
 const KpiCards: React.FC = () => {
-  const { period } = usePeriod();
-  const { start, end } = getPeriodRange(period);
-  const prevRange = getPrevRange(period);
+  const { filter } = useDashboardFilter();
+  const { period } = filter;
+  const { start, end } = getPeriodRange(filter);
+  const prevRange = getPrevRange(period, filter);
 
   const startStr = start.toISOString().slice(0, 10);
   const endStr = end.toISOString().slice(0, 10);

@@ -2,30 +2,26 @@
 import Layout from "@/ui/Layout";
 import React, { useEffect } from "react";
 import type { Metadata } from "next";
-import DashboardControls from "@/components/dashboard/DashboardControls";
-import KpiCards from "@/components/dashboard/KpiCards";
+import Overview from "@/components/dashboard/Overview";
 import SalesChart from "@/components/dashboard/SalesChart";
 import TopProducts from "@/components/dashboard/TopProducts";
 import WeeklyTasks from "@/components/dashboard/WeeklyTasks";
-import { usePeriod } from "@/store/period";
+import { useDashboardFilter } from "@/store/dashboardFilter";
 
 const metadata: Metadata = {
   title: "Главная",
 };
 
 export default function Home() {
-  const { initFrom } = usePeriod();
+  const { initFrom } = useDashboardFilter();
   useEffect(() => {
     initFrom();
   }, [initFrom]);
 
   return (
     <Layout>
-      <div className="flex justify-end mb-4">
-        <DashboardControls />
-      </div>
       <div className="grid gap-6 md:gap-8">
-        <KpiCards />
+        <Overview />
         <SalesChart />
         <TopProducts />
         <WeeklyTasks />

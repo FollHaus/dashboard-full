@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
 import { buildBuckets, getPeriodRange, MONTH_LABELS } from "@/utils/buckets";
-import { usePeriod } from "@/store/period";
+import { useDashboardFilter } from "@/store/dashboardFilter";
 
 const currency = new Intl.NumberFormat("ru-RU", {
   style: "currency",
@@ -30,8 +30,9 @@ const formatDate = (date: Date) =>
     .slice(0, 10);
 
 const SalesChart: React.FC = () => {
-  const { period } = usePeriod();
-  const { start, end } = getPeriodRange(period);
+  const { filter } = useDashboardFilter();
+  const { period } = filter;
+  const { start, end } = getPeriodRange(filter);
   const s = formatDate(start);
   const e = formatDate(end);
 

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { vi } from 'vitest'
 import KpiCards from './KpiCards'
-import { PeriodProvider } from '@/store/period'
+import { DashboardFilterProvider } from '@/store/dashboardFilter'
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: vi.fn() }),
@@ -24,9 +24,9 @@ const renderKpis = () => {
   const client = new QueryClient()
   render(
     <QueryClientProvider client={client}>
-      <PeriodProvider>
+      <DashboardFilterProvider>
         <KpiCards />
-      </PeriodProvider>
+      </DashboardFilterProvider>
     </QueryClientProvider>,
   )
 }
