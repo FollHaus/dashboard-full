@@ -4,7 +4,23 @@ export interface Bucket {
   key: string; // ISO date (YYYY-MM-DD) or YYYY-MM for months
   label: string;
   value: number;
+  monthIndex?: number;
 }
+
+export const MONTH_LABELS = [
+  "Янв",
+  "Фев",
+  "Мар",
+  "Апр",
+  "Май",
+  "Июн",
+  "Июл",
+  "Авг",
+  "Сен",
+  "Окт",
+  "Ноя",
+  "Дек",
+];
 
 export function getPeriodRange(period: Period): { start: Date; end: Date } {
   const now = new Date();
@@ -41,13 +57,11 @@ export function buildBuckets(
   const buckets: Bucket[] = [];
   if (period === "year") {
     for (let m = 0; m < 12; m++) {
-      const date = new Date(range.start.getFullYear(), m, 1);
+      const year = range.start.getFullYear();
       buckets.push({
-        key: `${date.getFullYear()}-${String(m + 1).padStart(2, "0")}`,
-        label: date.toLocaleDateString("ru-RU", {
-          month: "short",
-          year: "numeric",
-        }),
+        key: `${year}-${String(m + 1).padStart(2, "0")}`,
+        label: MONTH_LABELS[m],
+        monthIndex: m,
         value: 0,
       });
     }

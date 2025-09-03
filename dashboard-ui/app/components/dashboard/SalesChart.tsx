@@ -14,12 +14,13 @@ import {
   ReferenceLine,
 } from "recharts";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
-import { buildBuckets, getPeriodRange } from "@/utils/buckets";
+import { buildBuckets, getPeriodRange, MONTH_LABELS } from "@/utils/buckets";
 import { usePeriod } from "@/store/period";
 
 const currency = new Intl.NumberFormat("ru-RU", {
   style: "currency",
   currency: "RUB",
+  maximumFractionDigits: 0,
 });
 const intFmt = new Intl.NumberFormat("ru-RU");
 
@@ -79,7 +80,10 @@ const SalesChart: React.FC = () => {
     quantity: mapQty.get(b.key) ?? 0,
   }));
 
-  const allZero = chartData.every((d) => d.revenue === 0 && d.quantity === 0);
+  const hasData = chartData.some((d) => d.revenue !== 0 || d.quantity !== 0);
+
+  const MONTH_TICKS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+  const showAllTicks = chartData.length <= 15;
 
   if (error) {
     return (
@@ -95,7 +99,7 @@ const SalesChart: React.FC = () => {
   return (
     <div className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5">
       <h3 className="text-lg font-semibold mb-4">📊 Продажи</h3>
-      <div className="relative" style={{ height: 360 }}>
+      <div className="relative h-[340px]">
         {loading ? (
           <div className="absolute inset-0 flex items-end space-x-2">
             {buckets.map((_, idx) => (
@@ -103,21 +107,45 @@ const SalesChart: React.FC = () => {
             ))}
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 5, right: 8, bottom: 5, left: 8 }}>
+          <ResponsiveContainer width="100%" height={340}>
+            <ComposedChart data={chartData} margin={{ top: 8, right: 16, bottom: 8, left: 72 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis
-                dataKey="label"
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 14 }}
-              />
+              {period === "year" ? (
+                <XAxis
+                  dataKey="monthIndex"
+                  ticks={MONTH_TICKS}
+                  tickFormatter={(i) => MONTH_LABELS[i]}
+                  stroke="#645c4d"
+                  tick={{ fontSize: 12 }}
+                  interval={0}
+                  height={36}
+                  allowDecimals={false}
+                />
+              ) : (
+                <XAxis
+                  dataKey="label"
+                  tickLine={false}
+                  axisLine={false}
+                  stroke="#645c4d"
+                  tick={{ fontSize: 12 }}
+                  interval={showAllTicks ? 0 : undefined}
+                  minTickGap={showAllTicks ? undefined : 8}
+                  preserveStartEnd
+                />
+              )}
               <YAxis
                 yAxisId="left"
-                tickFormatter={(v) => currency.format(Number(v))}
-                width={72}
-                tickLine={false}
-                axisLine={false}
+                width={80}
+                allowDecimals={false}
+                tick={{ fontSize: 12 }}
+                stroke="#645c4d"
+                tickFormatter={(v) =>
+                  new Intl.NumberFormat("ru-RU", {
+                    style: "currency",
+                    currency: "RUB",
+                    maximumFractionDigits: 0,
+                  }).format(v ?? 0)
+                }
               />
               <YAxis
                 yAxisId="right"
@@ -144,11 +172,13 @@ const SalesChart: React.FC = () => {
                 strokeWidth={2}
                 dot
               />
-              {allZero && <ReferenceLine y={0} stroke="#EF4444" strokeWidth={1} />}
+              {!hasData && (
+                <ReferenceLine y={0} yAxisId="left" stroke="#8a8578" />
+              )}
             </ComposedChart>
           </ResponsiveContainer>
         )}
-        {allZero && !loading && (
+        {!hasData && !loading && (
           <div className="absolute inset-0 flex items-center justify-center text-neutral-500">
             Нет данных
           </div>
