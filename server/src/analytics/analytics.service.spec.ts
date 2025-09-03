@@ -97,7 +97,7 @@ describe('AnalyticsService', () => {
         revenue: '100',
         orders: '5',
         unitsSold: '20',
-        margin: '30'
+        cogs: '60'
       })
       const result = await service.getKpis('2024-01-01', '2024-01-31', [1])
 
@@ -113,7 +113,9 @@ describe('AnalyticsService', () => {
         orders: 5,
         unitsSold: 20,
         avgCheck: 20,
-        margin: 30
+        cogs: 60,
+        grossProfit: 40,
+        marginPct: 40
       })
     })
   })

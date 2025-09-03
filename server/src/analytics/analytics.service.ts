@@ -290,7 +290,9 @@ export class AnalyticsService {
                 orders: number
                 unitsSold: number
                 avgCheck: number
-                margin: number
+                cogs: number
+                grossProfit: number
+                marginPct: number
         }> {
                 const whereSales: any = {}
                 if (startDate || endDate) {
@@ -317,11 +319,10 @@ export class AnalyticsService {
                                         fn(
                                                 'SUM',
                                                 literal(
-                                                        '("product"."sale_price" - "product"."purchase_price") * ' +
-                                                                '"SaleModel"."quantity_sold"'
+                                                        '"product"."purchase_price" * "SaleModel"."quantity_sold"'
                                                 )
                                         ),
-                                        'margin'
+                                        'cogs'
                                 ]
                         ],
                         where: whereSales,
@@ -332,10 +333,12 @@ export class AnalyticsService {
                 const revenue = parseFloat(kpiRow?.revenue) || 0
                 const orders = parseInt(kpiRow?.orders) || 0
                 const unitsSold = parseInt(kpiRow?.unitsSold) || 0
-                const margin = parseFloat(kpiRow?.margin) || 0
+                const cogs = parseFloat(kpiRow?.cogs) || 0
                 const avgCheck = orders > 0 ? revenue / orders : 0
+                const grossProfit = revenue - cogs
+                const marginPct = revenue > 0 ? (grossProfit / revenue) * 100 : 0
 
-                return { revenue, orders, unitsSold, avgCheck, margin }
+                return { revenue, orders, unitsSold, avgCheck, cogs, grossProfit, marginPct }
         }
 
         /**

@@ -3,6 +3,7 @@ import { ITopProduct } from '@/shared/interfaces/top-product.interface'
 import { ICategorySales } from '@/shared/interfaces/category-sales.interface'
 import { ISalesStat } from '@/shared/interfaces/sales-stat.interface'
 import { ITurnover } from '@/shared/interfaces/turnover.interface'
+import { IKpis } from '@/shared/interfaces/kpi.interface'
 
 export const AnalyticsService = {
   async getTopProducts(
@@ -57,7 +58,7 @@ export const AnalyticsService = {
     if (startDate) params.startDate = startDate
     if (endDate) params.endDate = endDate
     if (categories && categories.length) params.categories = categories.join(',')
-    const res = await axios.get(
+    const res = await axios.get<IKpis>(
       '/analytics/kpis',
       { params }
     )
