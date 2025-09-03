@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Wallet, TrendingUp, Percent, ShoppingCart, CreditCard } from "lucide-react";
 import KpiCard from "@/components/ui/KpiCard";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
 import { getPeriodRange } from "@/utils/buckets";
@@ -109,39 +110,39 @@ const KpiCards: React.FC = () => {
       title: "Статистика",
       grid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4",
       items: [
-        {
-          title: "Выручка",
-          icon: "💰",
-          value: currency.format(revenue),
-          delta: delta(revenue, prevRevenue),
-        },
-        {
-          title: "Прибыль",
-          icon: "📈",
-          value: currency.format(profit),
-          delta: delta(profit, prevProfit),
-        },
-        {
-          title: "Маржа",
-          icon: "📊",
-          value: `${marginPct.toFixed(1).replace('.', ',')}%`,
-          delta: delta(marginPct, prevMarginPct),
-        },
+    {
+      title: "Выручка",
+      icon: Wallet,
+      value: currency.format(revenue),
+      delta: delta(revenue, prevRevenue),
+    },
+    {
+      title: "Прибыль",
+      icon: TrendingUp,
+      value: currency.format(profit),
+      delta: delta(profit, prevProfit),
+    },
+    {
+      title: "Маржа",
+      icon: Percent,
+      value: `${marginPct.toFixed(1).replace('.', ',')}%`,
+      delta: delta(marginPct, prevMarginPct),
+    },
       ],
     },
     {
-      title: "📦 Операционные KPI",
+      title: "Операционные KPI",
       grid: "grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4",
       items: [
         {
           title: "Кол-во продаж",
-          icon: "🛒",
+          icon: ShoppingCart,
           value: numberCompact.format(orders),
           delta: delta(orders, prevOrders),
         },
         {
           title: "Средний чек",
-          icon: "💳",
+          icon: CreditCard,
           value: currency.format(avg),
           delta: delta(avg, prevAvg),
         },
