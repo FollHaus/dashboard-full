@@ -37,7 +37,7 @@ const FinancialSummary: React.FC = () => {
         : "text-neutral-900";
 
   return (
-    <div className="rounded-2xl shadow-card p-4 md:p-5 bg-neutral-200 flex items-center gap-3">
+    <div className="rounded-xl shadow-card p-4 md:p-5 bg-neutral-100 flex items-center gap-3">
       <span className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-300 text-neutral-900">
         <FaBriefcase />
       </span>
