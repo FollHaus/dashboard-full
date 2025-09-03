@@ -9,8 +9,8 @@ import React, {
 } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
-
-export type Period = 'day' | 'week' | 'month' | 'year' | 'range'
+import { Period, isValidPeriod } from '@/store/period'
+export type { Period } from '@/store/period'
 
 export interface DashboardFilter {
   period: Period
@@ -28,8 +28,6 @@ interface FilterCtx {
 const DashboardFilterContext = createContext<FilterCtx | null>(null)
 
 const STORAGE_KEY = 'dashboard.filter'
-const isValidPeriod = (p: any): p is Period =>
-  p === 'day' || p === 'week' || p === 'month' || p === 'year' || p === 'range'
 
 let initialized = false
 
