@@ -193,6 +193,11 @@ export default function ReportsPage() {
 
   const gross = kpis ? kpis.revenue - kpis.cogs : 0
   const marginPct = kpis && kpis.revenue > 0 ? (gross / kpis.revenue) * 100 : 0
+  const currency = new Intl.NumberFormat('ru-RU', {
+    style: 'currency',
+    currency: 'RUB',
+    maximumFractionDigits: 0,
+  })
 
   const kpiCards = kpis
     ? [
@@ -454,23 +459,17 @@ export default function ReportsPage() {
               <section className='rounded-xl bg-neutral-100 shadow-card p-4 md:p-5 mb-6'>
                 <h3 className='text-sm font-semibold text-neutral-900 mb-2'>Итог за период</h3>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                  <div className='text-center'>
-                    <div className='text-2xl md:text-3xl font-semibold tabular-nums'>
-                      {formatCurrency(kpis.revenue)}
-                    </div>
-                    <div className='text-sm'>Выручка</div>
+                  <div className='flex flex-col'>
+                    <span className='text-[13px] md:text-sm font-semibold text-neutral-600 leading-5'>Выручка</span>
+                    <span className='text-xl md:text-2xl font-bold tabular-nums'>
+                      {currency.format(kpis.revenue)}
+                    </span>
                   </div>
-                  <div className='text-center'>
-                    <div className='text-2xl md:text-3xl font-semibold tabular-nums'>
-                      {formatCurrency(gross)}
-                    </div>
-                    <div className='text-sm'>Прибыль</div>
-                  </div>
-                  <div className='text-center'>
-                    <div className={`text-2xl md:text-3xl font-semibold tabular-nums ${marginPct > 0 ? 'text-emerald-600' : marginPct < 0 ? 'text-red-600' : 'text-neutral-600'}`}>
-                      {marginPct.toFixed(1)}%
-                    </div>
-                    <div className='text-sm'>Маржа</div>
+                  <div className='flex flex-col'>
+                    <span className='text-[13px] md:text-sm font-semibold text-neutral-600 leading-5'>Прибыль</span>
+                    <span className='text-xl md:text-2xl font-bold tabular-nums'>
+                      {currency.format(gross)}
+                    </span>
                   </div>
                 </div>
               </section>
