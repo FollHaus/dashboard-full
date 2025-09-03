@@ -105,6 +105,22 @@ const TopAnalytics: React.FC = () => {
   const truncate = (s: string, n = 12) =>
     s.length > n ? `${s.slice(0, n)}…` : s;
 
+  const renderTick = ({ x, y, payload }: any) => (
+    <g transform={`translate(${x},${y})`} className="cursor-default">
+      <title>{payload.value}</title>
+      <text
+        x={0}
+        y={0}
+        dy={12}
+        textAnchor="end"
+        transform="rotate(-30)"
+        className="text-xs fill-neutral-900"
+      >
+        {truncate(String(payload.value))}
+      </text>
+    </g>
+  );
+
   const data = scope === "products" ? products : categories;
   const color = metric === "revenue" ? "#10B981" : "#3B82F6";
 
@@ -185,9 +201,14 @@ const TopAnalytics: React.FC = () => {
             <ResponsiveContainer width="100%" height={340}>
               <BarChart
                 data={data}
-                margin={{ top: 12, right: 16, bottom: 36, left: 64 }}
+                margin={{ top: 12, right: 16, bottom: 64, left: 64 }}
               >
-                <XAxis dataKey="name" tickFormatter={truncate} />
+                <XAxis
+                  dataKey="name"
+                  interval={0}
+                  height={64}
+                  tick={renderTick}
+                />
                 <YAxis tickFormatter={formatValue} />
                 <ReTooltip
                   content={({ active, payload }) => {
