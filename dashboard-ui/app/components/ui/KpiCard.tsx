@@ -40,7 +40,7 @@ const KpiCard = ({
   }
 
   return (
-    <div className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 flex items-center gap-3">
+    <div className="rounded-xl bg-neutral-100 shadow-card p-4 md:p-5 flex items-center gap-3">
       <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-neutral-100">
         {icon}
       </div>
