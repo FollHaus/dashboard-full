@@ -222,6 +222,20 @@ export default function ReportsPage() {
           icon: '📊',
           accent: (marginPct > 0 ? 'success' : marginPct < 0 ? 'error' : 'neutral') as const,
         },
+        {
+          title: 'Выручка',
+          value: fmt.format(kpis.revenue),
+          icon: '💰',
+          accentBg: 'bg-[#D1FAE5]',
+          accentText: 'text-[#047857]',
+        },
+        {
+          title: 'Прибыль',
+          value: fmt.format(gross),
+          icon: '📈',
+          accentBg: 'bg-[#DBEAFE]',
+          accentText: 'text-[#1D4ED8]',
+        },
       ]
     : []
 
@@ -419,9 +433,9 @@ export default function ReportsPage() {
 
         {active === 'sales' && (
           <>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3'>
               {kpisLoading ? (
-                Array.from({ length: 3 }).map((_, i) => (
+                Array.from({ length: 5 }).map((_, i) => (
                   <div
                     key={i}
                     className='rounded-xl bg-neutral-100 shadow-card h-[92px] md:h-[100px] animate-pulse'
@@ -442,40 +456,12 @@ export default function ReportsPage() {
                     value={k.value}
                     icon={k.icon}
                     accent={k.accent}
+                    accentBg={k.accentBg}
+                    accentText={k.accentText}
                   />
                 ))
               )}
             </div>
-            {kpisLoading ? (
-              <div className='rounded-xl bg-neutral-100 shadow-card p-4 md:p-5 mb-6 text-sm text-neutral-500'>Загрузка...</div>
-            ) : kpisError ? (
-              <div className='rounded-xl bg-neutral-100 shadow-card p-4 md:p-5 mb-6 text-sm text-error'>
-                Ошибка{' '}
-                <button className='underline' onClick={() => refetchKpis()}>
-                  Повторить
-                </button>
-              </div>
-            ) : kpis ? (
-              <section className='mb-6'>
-                <h3 className='text-sm font-semibold text-neutral-900 mb-2'>Итог за период</h3>
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                  <KpiCard
-                    title='Выручка'
-                    value={fmt.format(kpis.revenue)}
-                    icon='💰'
-                    accentBg='bg-[#D1FAE5]'
-                    accentText='text-[#047857]'
-                  />
-                  <KpiCard
-                    title='Прибыль'
-                    value={fmt.format(gross)}
-                    icon='📈'
-                    accentBg='bg-[#DBEAFE]'
-                    accentText='text-[#1D4ED8]'
-                  />
-                </div>
-              </section>
-            ) : null}
             <SalesTab filters={appliedFilters} />
           </>
         )}
