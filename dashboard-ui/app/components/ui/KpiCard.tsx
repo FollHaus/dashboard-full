@@ -2,21 +2,21 @@ import clsx from 'classnames'
 import { ReactNode } from 'react'
 
 interface KpiCardProps {
-  icon: ReactNode
   label: string
   value: ReactNode
   valueTitle?: string
   valueClassName?: string
+  className?: string
   isLoading?: boolean
   delta?: number | string
 }
 
 const KpiCard = ({
-  icon,
   label,
   value,
   valueTitle,
   valueClassName,
+  className,
   isLoading,
   delta,
 }: KpiCardProps) => {
@@ -31,7 +31,7 @@ const KpiCard = ({
       maximumFractionDigits: 1,
     })
     deltaEl = (
-      <div className={clsx('flex items-center gap-1 text-sm ml-auto', cls)}>
+      <div className={clsx('flex items-center gap-1 text-sm', cls)}>
         {isUp && <span>▲</span>}
         {isDown && <span>▼</span>}
         <span>{formatted}%</span>
@@ -40,26 +40,27 @@ const KpiCard = ({
   }
 
   return (
-    <div className="rounded-xl bg-neutral-100 shadow-card p-4 md:p-5 flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-neutral-100">
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm text-neutral-800 truncate">{label}</div>
-        {isLoading ? (
-          <div className="mt-1 h-7 w-20 bg-neutral-300 rounded animate-pulse" />
-        ) : (
-          <div
-            className={clsx(
-              'text-2xl md:text-3xl font-semibold tabular-nums whitespace-nowrap overflow-hidden text-ellipsis',
-              valueClassName,
-            )}
-            title={valueTitle}
-          >
-            {value}
-          </div>
-        )}
-      </div>
+    <div
+      className={clsx(
+        'rounded-xl p-4 md:p-5 shadow-card text-center flex flex-col items-center justify-center gap-1',
+        'bg-neutral-100',
+        className,
+      )}
+    >
+      <div className="text-sm text-neutral-800 truncate">{label}</div>
+      {isLoading ? (
+        <div className="mt-1 h-7 w-20 bg-neutral-300 rounded animate-pulse" />
+      ) : (
+        <div
+          className={clsx(
+            'text-2xl md:text-3xl font-bold tabular-nums whitespace-nowrap overflow-hidden text-ellipsis',
+            valueClassName,
+          )}
+          title={valueTitle}
+        >
+          {value}
+        </div>
+      )}
       {deltaEl}
     </div>
   )
