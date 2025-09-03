@@ -194,7 +194,7 @@ const SalesChart: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 
