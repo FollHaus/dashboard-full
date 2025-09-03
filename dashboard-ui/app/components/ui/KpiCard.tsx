@@ -15,7 +15,7 @@ interface KpiCardProps {
    */
   valueTitle?: string
   /**
-   * CSS класс для значения
+   * CSS класс для цвета текста
    */
   valueClassName?: string
   /**
@@ -68,19 +68,21 @@ const KpiCard = ({
   return (
     <div
       className={clsx(
-        'rounded-xl shadow-card p-4 md:p-5 flex flex-col items-center justify-center text-center gap-2',
+        'rounded-xl shadow-card p-4 flex flex-col items-center text-center gap-2',
         className,
+        valueClassName,
       )}
     >
-      {icon && <div className="text-3xl">{icon}</div>}
-      <div className="text-sm font-medium text-neutral-800 truncate">{label}</div>
+      {icon && (
+        <div className="w-12 h-12 flex items-center justify-center rounded-full bg-white/70 text-current text-xl md:text-2xl">
+          {icon}
+        </div>
+      )}
+      <div className="text-sm font-medium text-neutral-800">{label}</div>
       {isLoading ? (
         <div className="h-7 w-20 bg-neutral-300 rounded animate-pulse" />
       ) : (
-        <div
-          className={clsx('text-2xl font-bold tabular-nums', valueClassName)}
-          title={valueTitle}
-        >
+        <div className="text-2xl md:text-3xl font-bold tabular-nums text-current" title={valueTitle}>
           {value}
         </div>
       )}
