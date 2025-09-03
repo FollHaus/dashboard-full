@@ -36,6 +36,6 @@ describe('KpiCards', () => {
     renderKpis()
     expect(await screen.findByText('Выручка')).toBeInTheDocument()
     expect(screen.getByText('Кол-во продаж')).toBeInTheDocument()
-    expect(screen.getByText('📦 Операционные')).toBeInTheDocument()
+    expect(screen.getByText('📦 Операционные KPI')).toBeInTheDocument()
   })
 })

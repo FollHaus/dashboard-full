@@ -2,7 +2,6 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FaBriefcase, FaPercent, FaReceipt, FaRubleSign, FaShoppingCart } from "react-icons/fa";
 import KpiCard from "@/components/ui/KpiCard";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
 import { getPeriodRange } from "@/utils/buckets";
@@ -111,54 +110,52 @@ const KpiCards: React.FC = () => {
 
   const groups = [
     {
-      title: "💰 Финансовые",
-      grid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
+      title: "💰 Финансовые KPI",
       items: [
         {
           label: "Выручка",
           value: currency.format(revenue),
           valueTitle: currency.format(revenue),
           valueClass: "text-success",
+          className: "bg-success/20",
           delta: delta(revenue, prevRevenue),
-          icon: <FaRubleSign className="text-success" />,
         },
         {
           label: "Фин. итог",
           value: currency.format(profit),
           valueTitle: currency.format(profit),
           valueClass: profit >= 0 ? "text-success" : "text-error",
+          className: "bg-success/30",
           delta: delta(profit, prevProfit),
-          icon: <FaBriefcase className={profit >= 0 ? "text-success" : "text-error"} />,
         },
         {
           label: "Маржа",
           value: `${marginPct.toFixed(1).replace('.', ',')}%`,
           valueTitle: `${marginPct.toFixed(2).replace('.', ',')}%`,
-          valueClass: marginPct >= 0 ? "text-success" : "text-error",
+          valueClass: marginPct > 0 ? "text-success" : marginPct < 0 ? "text-error" : "text-purple-700",
+          className: "bg-purple-200",
           delta: delta(marginPct, prevMarginPct),
-          icon: <FaPercent className={marginPct >= 0 ? "text-success" : "text-error"} />,
         },
       ],
     },
     {
-      title: "📦 Операционные",
-      grid: "grid grid-cols-1 sm:grid-cols-2 gap-4",
+      title: "📦 Операционные KPI",
       items: [
         {
           label: "Кол-во продаж",
           value: numberCompact.format(orders),
           valueTitle: numberFull.format(orders),
           valueClass: "text-info",
+          className: "bg-info/20",
           delta: delta(orders, prevOrders),
-          icon: <FaShoppingCart className="text-info" />,
         },
         {
           label: "Средний чек",
           value: currency.format(avg),
           valueTitle: currency.format(avg),
           valueClass: "text-warning",
+          className: "bg-warning/20",
           delta: delta(avg, prevAvg),
-          icon: <FaReceipt className="text-warning" />,
         },
       ],
     },
@@ -167,17 +164,22 @@ const KpiCards: React.FC = () => {
   return (
     <div className="grid grid-cols-1 gap-6 md:gap-8">
       {groups.map((g) => (
-        <div key={g.title} className="relative">
-          <h3 className="text-lg font-semibold mb-4">{g.title}</h3>
-          <div className={g.grid}>
+        <section
+          key={g.title}
+          className="relative rounded-2xl bg-neutral-200 shadow-card p-5 space-y-4"
+        >
+          <h2 className="text-lg font-semibold text-neutral-900 flex items-center gap-2">
+            {g.title}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {g.items.map((item) => (
               <KpiCard
                 key={item.label}
-                icon={item.icon}
                 label={item.label}
                 value={item.value}
                 valueTitle={item.valueTitle}
                 valueClassName={item.valueClass}
+                className={item.className}
                 isLoading={isLoading && !curr}
                 delta={item.delta}
               />
@@ -188,7 +190,7 @@ const KpiCards: React.FC = () => {
               <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
             </div>
           )}
-        </div>
+        </section>
       ))}
     </div>
   );
