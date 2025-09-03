@@ -433,35 +433,62 @@ export default function ReportsPage() {
 
         {active === 'sales' && (
           <>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3'>
-              {kpisLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className='rounded-xl bg-neutral-100 shadow-card h-[92px] md:h-[100px] animate-pulse'
-                  />
-                ))
-              ) : kpisError ? (
-                <div className='col-span-full text-error text-sm'>
-                  Ошибка загрузки{' '}
-                  <button className='underline' onClick={() => refetchKpis()}>
-                    Повторить
-                  </button>
+            {kpisLoading ? (
+              <>
+                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3'>
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className='rounded-xl bg-neutral-100 shadow-card h-[92px] md:h-[100px] animate-pulse'
+                    />
+                  ))}
                 </div>
-              ) : (
-                kpiCards.map(k => (
-                  <KpiCard
-                    key={k.title}
-                    title={k.title}
-                    value={k.value}
-                    icon={k.icon}
-                    accent={k.accent}
-                    accentBg={k.accentBg}
-                    accentText={k.accentText}
-                  />
-                ))
-              )}
-            </div>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3'>
+                  {Array.from({ length: 2 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className='rounded-xl bg-neutral-100 shadow-card h-[92px] md:h-[100px] animate-pulse'
+                    />
+                  ))}
+                </div>
+              </>
+            ) : kpisError ? (
+              <div className='text-error text-sm mb-3'>
+                Ошибка загрузки{' '}
+                <button className='underline' onClick={() => refetchKpis()}>
+                  Повторить
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3'>
+                  {kpiCards.slice(0, 3).map(k => (
+                    <KpiCard
+                      key={k.title}
+                      title={k.title}
+                      value={k.value}
+                      icon={k.icon}
+                      accent={k.accent}
+                      accentBg={k.accentBg}
+                      accentText={k.accentText}
+                    />
+                  ))}
+                </div>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3'>
+                  {kpiCards.slice(3).map(k => (
+                    <KpiCard
+                      key={k.title}
+                      title={k.title}
+                      value={k.value}
+                      icon={k.icon}
+                      accent={k.accent}
+                      accentBg={k.accentBg}
+                      accentText={k.accentText}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
             <SalesTab filters={appliedFilters} />
           </>
         )}
