@@ -34,75 +34,87 @@ export default function WarehouseKpiCards({
   isLoading,
 }: WarehouseKpiCardsProps) {
   const topCards: {
-    label: string
+    title: string
     icon: LucideIcon
     value: string
-    className: string
+    accent: 'info' | 'warning' | 'error'
   }[] = [
     {
-      label: 'Товары',
+      title: 'Товары',
       icon: Package,
       value: numberFormatter.format(totalCount),
-      className: 'bg-blue-100 text-blue-600',
+      accent: 'info',
     },
     {
-      label: 'Мало на складе',
+      title: 'Мало на складе',
       icon: AlertTriangle,
       value: numberFormatter.format(lowStock),
-      className: 'bg-yellow-100 text-yellow-700',
+      accent: 'warning',
     },
     {
-      label: 'Нет в наличии',
+      title: 'Нет в наличии',
       icon: XCircle,
       value: numberFormatter.format(outOfStock),
-      className: 'bg-red-100 text-red-600',
+      accent: 'error',
     },
   ]
 
   const bottomCards: {
-    label: string
+    title: string
     icon: LucideIcon
     value: string
-    className: string
+    accent: 'info' | 'success'
   }[] = [
     {
-      label: 'Закупочная стоимость',
+      title: 'Закупочная стоимость',
       icon: Wallet,
       value: currencyFormatter.format(purchaseValue),
-      className: 'bg-indigo-100 text-indigo-700',
+      accent: 'info',
     },
     {
-      label: 'Продажная стоимость',
+      title: 'Продажная стоимость',
       icon: DollarSign,
       value: currencyFormatter.format(saleValue),
-      className: 'bg-green-100 text-green-600',
+      accent: 'success',
     },
   ]
 
   return (
-    <div className="grid grid-cols-1 gap-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-3 md:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         {topCards.map(card => (
-          <KpiCard
-            key={card.label}
-            label={card.label}
-            value={card.value}
-            icon={<card.icon className="w-6 h-6 md:w-7 md:h-7" />}
-            className={card.className}
-            isLoading={isLoading}
-          />
+          isLoading ? (
+            <div
+              key={card.title}
+              className="rounded-xl bg-neutral-100 shadow-card h-[92px] md:h-[100px] animate-pulse"
+            />
+          ) : (
+            <KpiCard
+              key={card.title}
+              title={card.title}
+              value={card.value}
+              icon={card.icon}
+              accent={card.accent}
+            />
+          )
         ))}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
         {bottomCards.map(card => (
-          <KpiCard
-            key={card.label}
-            label={card.label}
-            value={card.value}
-            icon={<card.icon className="w-6 h-6 md:w-7 md:h-7" />}
-            className={card.className}
-            isLoading={isLoading}
-          />
+          isLoading ? (
+            <div
+              key={card.title}
+              className="rounded-xl bg-neutral-100 shadow-card h-[92px] md:h-[100px] animate-pulse"
+            />
+          ) : (
+            <KpiCard
+              key={card.title}
+              title={card.title}
+              value={card.value}
+              icon={card.icon}
+              accent={card.accent}
+            />
+          )
         ))}
       </div>
     </div>

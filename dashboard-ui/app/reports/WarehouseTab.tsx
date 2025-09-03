@@ -18,6 +18,7 @@ import {
 import { ProductService } from '@/services/product/product.service'
 import { IProduct } from '@/shared/interfaces/product.interface'
 import { ISale } from '@/shared/interfaces/sale.interface'
+import KpiCard from '@/components/ui/KpiCard'
 
 interface Filters {
   from: string
@@ -153,12 +154,12 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
 
   return (
     <div className='flex flex-col gap-6 md:gap-8'>
-      <div className='kpi-wrap grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+      <div className='kpi-wrap grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4'>
         {isLoading ? (
           Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className='h-24 rounded-2xl bg-neutral-200 shadow-card animate-pulse'
+              className='rounded-xl bg-neutral-100 shadow-card h-[92px] md:h-[100px] animate-pulse'
             />
           ))
         ) : error ? (
@@ -171,47 +172,31 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
         ) : (
           [
             {
-              label: 'Общий остаток',
-              value: totalRemains,
+              title: 'Общий остаток',
+              value: compactFmt.format(totalRemains),
               icon: '📦',
+              accent: 'info' as const,
             },
             {
-              label: 'Мало на складе',
-              value: lowCount,
+              title: 'Мало на складе',
+              value: compactFmt.format(lowCount),
               icon: '⚠️',
+              accent: 'warning' as const,
             },
             {
-              label: 'Неликвиды',
-              value: nonMovingPercent,
-              percent: true,
+              title: 'Неликвиды',
+              value: `${nonMovingPercent.toFixed(1)}%`,
               icon: '🧊',
+              accent: 'info' as const,
             },
           ].map(k => (
-            <div
-              key={k.label}
-              className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 flex items-center gap-3'
-            >
-              <div className='w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-neutral-300'>
-                <span className='text-xl' aria-hidden='true'>
-                  {k.icon}
-                </span>
-              </div>
-              <div className='flex-1 min-w-0'>
-                <div className='text-sm text-neutral-800 truncate'>{k.label}</div>
-                <div
-                  className='text-2xl md:text-3xl font-semibold tabular-nums whitespace-nowrap overflow-hidden text-ellipsis'
-                  title={
-                    k.percent
-                      ? `${k.value.toFixed(1)}%`
-                      : numberFmt.format(k.value)
-                  }
-                >
-                  {k.percent
-                    ? `${k.value.toFixed(1)}%`
-                    : compactFmt.format(k.value)}
-                </div>
-              </div>
-            </div>
+            <KpiCard
+              key={k.title}
+              title={k.title}
+              value={k.value}
+              icon={k.icon}
+              accent={k.accent}
+            />
           ))
         )}
       </div>
