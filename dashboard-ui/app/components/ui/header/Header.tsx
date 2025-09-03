@@ -8,7 +8,7 @@ import { User } from 'lucide-react'
 
 const routes = [
   { label: 'Главная', path: '/' },
-  { label: 'Склад', path: '/stock' },
+  { label: 'Склад', path: '/products' },
   { label: 'Задачи', path: '/tasks' },
   { label: 'Отчёты', path: '/reports' },
 ]
