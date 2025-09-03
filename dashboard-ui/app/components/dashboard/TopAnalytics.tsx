@@ -28,6 +28,7 @@ const currency = new Intl.NumberFormat("ru-RU", {
 const intFmt = new Intl.NumberFormat("ru-RU");
 
 type Metric = "revenue" | "quantity";
+type Scope = "products" | "categories";
 type TopN = 5 | 10 | 15;
 
 const TopAnalytics: React.FC = () => {
@@ -36,10 +37,9 @@ const TopAnalytics: React.FC = () => {
   const { start, end } = getPeriodRange(filter);
   const s = formatDate(start);
   const e = formatDate(end);
-  const [state, setState] = useState<{ metric: Metric; topN: TopN }>({
-    metric: "revenue",
-    topN: 5,
-  });
+  const [metric, setMetric] = useState<Metric>("revenue");
+  const [scope, setScope] = useState<Scope>("products");
+  const [topN, setTopN] = useState<TopN>(5);
 
   const {
     data: prodData,
@@ -48,8 +48,8 @@ const TopAnalytics: React.FC = () => {
     error: prodError,
     refetch: prodRefetch,
   } = useQuery({
-    queryKey: ["top-products", s, e, state.topN],
-    queryFn: () => AnalyticsService.getTopProducts(state.topN, s, e),
+    queryKey: ["top-products", s, e, topN],
+    queryFn: () => AnalyticsService.getTopProducts(topN, s, e),
     keepPreviousData: true,
   });
 
@@ -76,14 +76,13 @@ const TopAnalytics: React.FC = () => {
       quantity: Number(row.totalUnits ?? 0),
     }));
     const sorted = [...items]
-      .sort((a, b) => b[state.metric] - a[state.metric])
-      .slice(0, state.topN);
-    return sorted.map((p, idx) => ({
+      .sort((a, b) => b[metric] - a[metric])
+      .slice(0, topN);
+    return sorted.map((p) => ({
       ...p,
-      idx: idx + 1,
-      value: state.metric === "revenue" ? p.revenue : p.quantity,
+      value: metric === "revenue" ? p.revenue : p.quantity,
     }));
-  }, [prodData, state.metric, state.topN]);
+  }, [prodData, metric, topN]);
 
   const categories = useMemo(() => {
     const items = (catData ?? []).map((row: any) => ({
@@ -92,17 +91,22 @@ const TopAnalytics: React.FC = () => {
       quantity: Number(row.totalUnits ?? 0),
     }));
     const sorted = [...items]
-      .sort((a, b) => b[state.metric] - a[state.metric])
-      .slice(0, state.topN);
-    return sorted.map((c, idx) => ({
+      .sort((a, b) => b[metric] - a[metric])
+      .slice(0, topN);
+    return sorted.map((c) => ({
       ...c,
-      idx: idx + 1,
-      value: state.metric === "revenue" ? c.revenue : c.quantity,
+      value: metric === "revenue" ? c.revenue : c.quantity,
     }));
-  }, [catData, state.metric, state.topN]);
+  }, [catData, metric, topN]);
 
   const formatValue = (v: number) =>
-    state.metric === "revenue" ? currency.format(v) : intFmt.format(v);
+    metric === "revenue" ? currency.format(v) : intFmt.format(v);
+
+  const truncate = (s: string, n = 12) =>
+    s.length > n ? `${s.slice(0, n)}…` : s;
+
+  const data = scope === "products" ? products : categories;
+  const color = metric === "revenue" ? "#10B981" : "#3B82F6";
 
   return (
     <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 mb-6 md:mb-8 overflow-visible">
@@ -113,31 +117,48 @@ const TopAnalytics: React.FC = () => {
         {(["revenue", "quantity"] as Metric[]).map((m) => (
           <button
             key={m}
-            onClick={() => setState((s) => ({ ...s, metric: m }))}
+            onClick={() => setMetric(m)}
             className={cn(
               "h-9 px-3 rounded-full text-sm font-medium",
-              state.metric === m
+              metric === m
                 ? "bg-primary-500 text-neutral-50"
                 : "bg-neutral-100 hover:bg-neutral-300",
             )}
-            aria-pressed={state.metric === m}
+            aria-pressed={metric === m}
           >
             {m === "revenue" ? "Выручка" : "Количество"}
           </button>
         ))}
-        <select
-          value={state.topN}
-          onChange={(e) =>
-            setState((st) => ({ ...st, topN: Number(e.target.value) as TopN }))
-          }
-          className="h-9 px-3 rounded-full text-sm bg-neutral-100 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-300"
-        >
-          {[5, 10, 15].map((n) => (
-            <option key={n} value={n}>
-              {n}
-            </option>
-          ))}
-        </select>
+        {(["products", "categories"] as Scope[]).map((sc) => (
+          <button
+            key={sc}
+            onClick={() => setScope(sc)}
+            className={cn(
+              "h-9 px-3 rounded-full text-sm font-medium",
+              scope === sc
+                ? "bg-primary-500 text-neutral-50"
+                : "bg-neutral-100 hover:bg-neutral-300",
+            )}
+            aria-pressed={scope === sc}
+          >
+            {sc === "products" ? "По товарам" : "По категориям"}
+          </button>
+        ))}
+        {[5, 10, 15].map((n) => (
+          <button
+            key={n}
+            onClick={() => setTopN(n as TopN)}
+            className={cn(
+              "h-9 px-3 rounded-full text-sm font-medium",
+              topN === n
+                ? "bg-primary-500 text-neutral-50"
+                : "bg-neutral-100 hover:bg-neutral-300",
+            )}
+            aria-pressed={topN === n}
+          >
+            {n}
+          </button>
+        ))}
       </div>
 
       {error ? (
@@ -154,95 +175,49 @@ const TopAnalytics: React.FC = () => {
           </button>
         </div>
       ) : isLoading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="h-[320px]" />
-          <div className="h-[320px]" />
-        </div>
+        <div className="h-[340px]" />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div>
-            <h3 className="text-base font-medium text-neutral-900 mb-2">
-              Топ-{state.topN} продуктов
-            </h3>
-            {products.length ? (
-              <ResponsiveContainer width="100%" height={320}>
-                <BarChart
-                  data={products}
-                  margin={{ top: 16, right: 16, left: 16, bottom: 32 }}
-                >
-                  <XAxis dataKey="idx" />
-                  <YAxis tickFormatter={formatValue} />
-                  <ReTooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
-                      const p = payload[0].payload as any;
-                      return (
-                        <div className="bg-white p-2 rounded shadow text-sm">
-                          <div>Товар: {p.name}</div>
-                          <div>
-                            {state.metric === "revenue"
-                              ? "Выручка"
-                              : "Количество"}: {formatValue(p.value)}
-                          </div>
+        <div>
+          <h3 className="text-base font-medium text-neutral-900 mb-2">
+            Топ-{topN} {scope === "products" ? "товаров" : "категорий"}
+          </h3>
+          {data.length ? (
+            <ResponsiveContainer width="100%" height={340}>
+              <BarChart
+                data={data}
+                margin={{ top: 12, right: 16, bottom: 36, left: 64 }}
+              >
+                <XAxis dataKey="name" tickFormatter={truncate} />
+                <YAxis tickFormatter={formatValue} />
+                <ReTooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const p = payload[0].payload as any;
+                    return (
+                      <div className="bg-white p-2 rounded shadow text-sm">
+                        <div>{scope === "products" ? "Товар" : "Категория"}: {p.name}</div>
+                        <div>
+                          {metric === "revenue" ? "Выручка" : "Количество"}: {formatValue(p.value)}
                         </div>
-                      );
-                    }}
-                  />
-                  <Bar
-                    dataKey="value"
-                    radius={[4, 4, 0, 0]}
-                    fill={state.metric === "revenue" ? "#10B981" : "#3B82F6"}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[320px] flex items-center justify-center text-neutral-500 border-t border-neutral-300">
+                      </div>
+                    );
+                  }}
+                />
+                <Bar
+                  dataKey="value"
+                  radius={[4, 4, 0, 0]}
+                  fill={color}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="relative h-[340px]">
+              <div className="absolute inset-x-0 bottom-9 h-px bg-neutral-300" />
+              <div className="absolute inset-0 flex items-center justify-center text-neutral-500">
                 Нет данных за период
               </div>
-            )}
-          </div>
-
-          <div>
-            <h3 className="text-base font-medium text-neutral-900 mb-2">
-              Топ-{state.topN} категорий
-            </h3>
-            {categories.length ? (
-              <ResponsiveContainer width="100%" height={320}>
-                <BarChart
-                  data={categories}
-                  margin={{ top: 16, right: 16, left: 16, bottom: 32 }}
-                >
-                  <XAxis dataKey="idx" />
-                  <YAxis tickFormatter={formatValue} />
-                  <ReTooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
-                      const p = payload[0].payload as any;
-                      return (
-                        <div className="bg-white p-2 rounded shadow text-sm">
-                          <div>Категория: {p.name}</div>
-                          <div>
-                            {state.metric === "revenue"
-                              ? "Выручка"
-                              : "Количество"}: {formatValue(p.value)}
-                          </div>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Bar
-                    dataKey="value"
-                    radius={[4, 4, 0, 0]}
-                    fill={state.metric === "revenue" ? "#10B981" : "#3B82F6"}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[320px] flex items-center justify-center text-neutral-500 border-t border-neutral-300">
-                Нет данных за период
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
