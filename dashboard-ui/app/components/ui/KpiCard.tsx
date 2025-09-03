@@ -68,21 +68,21 @@ const KpiCard = ({
   return (
     <div
       className={clsx(
-        'rounded-xl shadow-card p-4 flex flex-col items-center text-center gap-2',
+        'rounded-xl shadow-card p-3 md:p-4 flex flex-col items-center text-center gap-2',
         className,
         valueClassName,
       )}
     >
       {icon && (
-        <div className="w-12 h-12 flex items-center justify-center rounded-full bg-white/70 text-current text-xl md:text-2xl">
+        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white/70 text-current text-lg md:text-xl">
           {icon}
         </div>
       )}
-      <div className="text-sm font-medium text-neutral-800">{label}</div>
+      <div className="text-sm font-medium text-neutral-700">{label}</div>
       {isLoading ? (
-        <div className="h-7 w-20 bg-neutral-300 rounded animate-pulse" />
+        <div className="h-6 w-16 bg-neutral-300 rounded animate-pulse" />
       ) : (
-        <div className="text-2xl md:text-3xl font-bold tabular-nums text-current" title={valueTitle}>
+        <div className="text-xl md:text-2xl font-bold tabular-nums text-current" title={valueTitle}>
           {value}
         </div>
       )}
