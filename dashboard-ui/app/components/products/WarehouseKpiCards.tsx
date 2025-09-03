@@ -3,10 +3,11 @@
 import clsx from 'classnames'
 import {
   Package,
-  CircleDollarSign,
+  AlertTriangle,
+  XCircle,
+  Wallet,
   DollarSign,
-  PackageX,
-  Archive,
+  type LucideIcon,
 } from 'lucide-react'
 
 interface WarehouseKpiCardsProps {
@@ -32,41 +33,60 @@ export default function WarehouseKpiCards({
   saleValue,
   isLoading,
 }: WarehouseKpiCardsProps) {
-  const topCards = [
+  const topCards: {
+    label: string
+    icon: LucideIcon
+    color: string
+    value: string
+    valueClass: string
+    bg: string
+  }[] = [
     {
       label: 'Товаров',
-      icon: <Package className="w-5 h-5 text-info" />,
+      icon: Package,
+      color: 'text-info',
       value: numberFormatter.format(totalCount),
       valueClass: 'text-info font-semibold',
       bg: 'bg-info/20',
     },
     {
       label: 'Мало на складе',
-      icon: <Archive className="w-5 h-5 text-warning" />,
+      icon: AlertTriangle,
+      color: 'text-warning',
       value: numberFormatter.format(lowStock),
       valueClass: 'text-warning font-semibold',
       bg: 'bg-warning/20',
     },
     {
       label: 'Нет в наличии',
-      icon: <PackageX className="w-5 h-5 text-error" />,
+      icon: XCircle,
+      color: 'text-error',
       value: numberFormatter.format(outOfStock),
       valueClass: 'text-error font-semibold',
       bg: 'bg-error/20',
     },
   ]
 
-  const bottomCards = [
+  const bottomCards: {
+    label: string
+    icon: LucideIcon
+    color: string
+    value: string
+    valueClass: string
+    bg: string
+  }[] = [
     {
       label: 'Закупочная стоимость',
-      icon: <CircleDollarSign className="w-5 h-5 text-neutral-900" />,
+      icon: Wallet,
+      color: 'text-neutral-900',
       value: currencyFormatter.format(purchaseValue),
       valueClass: 'text-neutral-900',
       bg: 'bg-neutral-200',
     },
     {
       label: 'Продажная стоимость',
-      icon: <DollarSign className="w-5 h-5 text-success" />,
+      icon: DollarSign,
+      color: 'text-success',
       value: currencyFormatter.format(saleValue),
       valueClass: 'text-success font-semibold',
       bg: 'bg-success/20',
@@ -84,11 +104,23 @@ export default function WarehouseKpiCards({
               card.bg,
             )}
           >
-            {card.icon}
+            <div
+              className={clsx(
+                'w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-neutral-100',
+                card.color,
+              )}
+            >
+              <card.icon className="w-6 h-6 md:w-7 md:h-7 text-current" />
+            </div>
             {isLoading ? (
               <div className="mt-2 h-7 w-20 bg-neutral-300 rounded animate-pulse" />
             ) : (
-              <div className={clsx('text-2xl md:text-3xl font-bold', card.valueClass)}>
+              <div
+                className={clsx(
+                  'mt-2 text-2xl md:text-3xl font-bold',
+                  card.valueClass,
+                )}
+              >
                 {card.value}
               </div>
             )}
@@ -105,11 +137,23 @@ export default function WarehouseKpiCards({
               card.bg,
             )}
           >
-            {card.icon}
+            <div
+              className={clsx(
+                'w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-neutral-100',
+                card.color,
+              )}
+            >
+              <card.icon className="w-6 h-6 md:w-7 md:h-7 text-current" />
+            </div>
             {isLoading ? (
               <div className="mt-2 h-7 w-20 bg-neutral-300 rounded animate-pulse" />
             ) : (
-              <div className={clsx('text-2xl md:text-3xl font-bold', card.valueClass)}>
+              <div
+                className={clsx(
+                  'mt-2 text-2xl md:text-3xl font-bold',
+                  card.valueClass,
+                )}
+              >
                 {card.value}
               </div>
             )}
