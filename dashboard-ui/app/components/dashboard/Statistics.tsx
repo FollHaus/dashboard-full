@@ -3,6 +3,9 @@
 import React, { useState } from 'react'
 import cn from 'classnames'
 import { useQuery } from '@tanstack/react-query'
+import { format } from 'date-fns'
+import ru from 'date-fns/locale/ru'
+
 import { AnalyticsService } from '@/services/analytics/analytics.service'
 import KpiCard from '@/components/ui/KpiCard'
 import { useDashboardFilter, DEFAULT_FILTER } from '@/store/dashboardFilter'
@@ -18,7 +21,7 @@ const intFmt = new Intl.NumberFormat('ru-RU')
 
 const formatISO = (d: Date) => d.toISOString().slice(0, 10)
 
-const Overview: React.FC = () => {
+const Statistics: React.FC = () => {
   const { filter: ctxFilter, setFilter } = useDashboardFilter()
   const filter = ctxFilter ?? DEFAULT_FILTER
   const { start, end } = getPeriodRange(filter)
@@ -43,10 +46,10 @@ const Overview: React.FC = () => {
   const orders = data?.orders ?? 0
 
   return (
-    <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 mb-6 relative">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <h2 className="text-lg font-semibold text-neutral-900">Обзор</h2>
-        <div className="flex items-center gap-2">
+    <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 mb-6 relative overflow-visible">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h2 className="text-lg font-semibold text-neutral-900">Статистика</h2>
+        <div className="flex flex-wrap items-center gap-2 md:justify-end">
           {(['day', 'week', 'month', 'year'] as const).map((p) => (
             <button
               key={p}
@@ -55,7 +58,7 @@ const Overview: React.FC = () => {
                 'h-9 px-3 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-300',
                 filter.period === p
                   ? 'bg-primary-500 text-neutral-50'
-                  : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-300',
+                  : 'bg-neutral-100 hover:bg-neutral-300',
               )}
               aria-pressed={filter.period === p}
             >
@@ -75,12 +78,16 @@ const Overview: React.FC = () => {
               'h-9 px-3 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-300',
               filter.period === 'range'
                 ? 'bg-primary-500 text-neutral-50'
-                : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-300',
+                : 'bg-neutral-100 hover:bg-neutral-300',
             )}
             aria-pressed={filter.period === 'range'}
             title={
               filter.from && filter.to
-                ? `${filter.from} — ${filter.to}`
+                ? `${format(new Date(filter.from), 'd MMMM yyyy', { locale: ru })} — ${format(
+                    new Date(filter.to),
+                    'd MMMM yyyy',
+                    { locale: ru },
+                  )}`
                 : 'Выбрать диапазон дат'
             }
           >
@@ -146,5 +153,5 @@ const Overview: React.FC = () => {
   )
 }
 
-export default Overview
+export default Statistics
 
