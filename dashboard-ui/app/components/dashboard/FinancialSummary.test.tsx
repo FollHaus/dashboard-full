@@ -35,7 +35,7 @@ describe('FinancialSummary', () => {
   it('shows positive profit in green', async () => {
     ;(AnalyticsService.getKpis as unknown as any).mockResolvedValueOnce({
       revenue: 1000,
-      margin: 700,
+      cogs: 300,
     })
     renderWidget()
     const value = await screen.findByText(/700,00/)
@@ -45,7 +45,7 @@ describe('FinancialSummary', () => {
   it('shows negative profit in red', async () => {
     ;(AnalyticsService.getKpis as unknown as any).mockResolvedValueOnce({
       revenue: 1000,
-      margin: -200,
+      cogs: 1200,
     })
     renderWidget()
     const value = await screen.findByText(/-200,00/)

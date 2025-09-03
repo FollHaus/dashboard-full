@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import cn from 'classnames'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import ru from 'date-fns/locale/ru'
@@ -31,7 +30,6 @@ const Statistics: React.FC = () => {
 
   const {
     data,
-    isLoading,
     isFetching,
     error,
     refetch,
@@ -42,28 +40,23 @@ const Statistics: React.FC = () => {
   })
 
   const revenue = data?.revenue ?? 0
-  const profit = data?.margin ?? 0
+  const cogs = data?.cogs ?? 0
+  const profit = revenue - cogs
   const orders = data?.orders ?? 0
 
   return (
     <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 mb-6 md:mb-8 relative overflow-visible">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <h2 className="flex items-center text-lg font-semibold text-neutral-900">
-          <span className="mr-2">📋</span>
-          Статистика
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4 overflow-visible">
+        <h2 className="text-lg font-semibold text-neutral-900 flex items-center gap-2">
+          <span>📋</span>Статистика
         </h2>
-        <div className="flex flex-wrap items-center gap-2 md:justify-end">
+        <div className="flex flex-wrap items-center gap-2 md:justify-end w-auto">
           {(['day', 'week', 'month', 'year'] as const).map((p) => (
             <button
               key={p}
+              data-active={filter.period === p}
               onClick={() => setFilter({ period: p, from: null, to: null })}
-              className={cn(
-                'h-9 px-3 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-300',
-                filter.period === p
-                  ? 'bg-primary-500 text-neutral-50'
-                  : 'bg-neutral-100 hover:bg-neutral-300',
-              )}
-              aria-pressed={filter.period === p}
+              className="h-9 px-3 rounded-full text-sm font-medium bg-neutral-100 hover:bg-neutral-300 text-neutral-900 data-[active=true]:bg-primary-500 data-[active=true]:text-neutral-50 whitespace-nowrap"
             >
               {p === 'day'
                 ? 'Сегодня'
@@ -76,14 +69,9 @@ const Statistics: React.FC = () => {
           ))}
           <button
             type="button"
+            data-active={filter.period === 'range'}
             onClick={() => setOpenRange(true)}
-            className={cn(
-              'h-9 px-3 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-300',
-              filter.period === 'range'
-                ? 'bg-primary-500 text-neutral-50'
-                : 'bg-neutral-100 hover:bg-neutral-300',
-            )}
-            aria-pressed={filter.period === 'range'}
+            className="h-9 px-3 rounded-full text-sm font-medium bg-neutral-100 hover:bg-neutral-300 text-neutral-900 data-[active=true]:bg-primary-500 data-[active=true]:text-neutral-50 whitespace-nowrap"
             title={
               filter.from && filter.to
                 ? `${format(new Date(filter.from), 'd MMMM yyyy', { locale: ru })} — ${format(
@@ -115,10 +103,10 @@ const Statistics: React.FC = () => {
             accent="info"
           />
           <KpiCard
-            title="Финансовый итог"
+            title="Прибыль"
             icon="📈"
             value={currency.format(profit)}
-            accent="success"
+            accent={profit > 0 ? 'success' : profit < 0 ? 'error' : 'neutral'}
           />
           <KpiCard
             title="Кол-во продаж"

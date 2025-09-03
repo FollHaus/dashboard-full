@@ -28,8 +28,8 @@ const FinancialSummary: React.FC = () => {
   });
 
   const revenue = data?.revenue ?? 0;
-  const purchaseCost = revenue - (data?.margin ?? 0);
-  const profit = revenue - purchaseCost;
+  const cogs = data?.cogs ?? 0;
+  const profit = revenue - cogs;
   const profitText = currency.format(profit);
   const color =
     profit > 0

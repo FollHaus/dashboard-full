@@ -14,6 +14,7 @@ import TasksTab from './TasksTab'
 import { ICategory } from '@/shared/interfaces/category.interface'
 import { formatCurrency } from '@/utils/formatCurrency'
 import KpiCard from '@/components/ui/KpiCard'
+import { IKpis } from '@/shared/interfaces/kpi.interface'
 
 const presets = [
   { label: 'Сегодня', value: 'today' },
@@ -179,7 +180,7 @@ export default function ReportsPage() {
     isLoading: kpisLoading,
     error: kpisError,
     refetch: refetchKpis,
-  } = useQuery({
+  } = useQuery<IKpis>({
     queryKey: ['reports', 'kpis', appliedFilters],
     queryFn: () =>
       AnalyticsService.getKpis(
@@ -189,6 +190,9 @@ export default function ReportsPage() {
       ),
     enabled: Boolean(appliedFilters.from && appliedFilters.to),
   })
+
+  const gross = kpis ? kpis.revenue - kpis.cogs : 0
+  const marginPct = kpis && kpis.revenue > 0 ? (gross / kpis.revenue) * 100 : 0
 
   const kpiCards = kpis
     ? [
@@ -209,9 +213,9 @@ export default function ReportsPage() {
         },
         {
           title: 'Маржа',
-          value: formatCurrency(kpis.margin),
+          value: `${marginPct.toFixed(1)}%`,
           icon: '📊',
-          accent: (kpis.margin >= 0 ? 'success' : 'error') as const,
+          accent: (marginPct > 0 ? 'success' : marginPct < 0 ? 'error' : 'neutral') as const,
         },
       ]
     : []
@@ -410,7 +414,7 @@ export default function ReportsPage() {
 
         {active === 'sales' && (
           <>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4'>
               {kpisLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <div
@@ -437,6 +441,40 @@ export default function ReportsPage() {
                 ))
               )}
             </div>
+            {kpisLoading ? (
+              <div className='rounded-xl bg-neutral-100 shadow-card p-4 md:p-5 mb-6 text-sm text-neutral-500'>Загрузка...</div>
+            ) : kpisError ? (
+              <div className='rounded-xl bg-neutral-100 shadow-card p-4 md:p-5 mb-6 text-sm text-error'>
+                Ошибка{' '}
+                <button className='underline' onClick={() => refetchKpis()}>
+                  Повторить
+                </button>
+              </div>
+            ) : kpis ? (
+              <section className='rounded-xl bg-neutral-100 shadow-card p-4 md:p-5 mb-6'>
+                <h3 className='text-sm font-semibold text-neutral-900 mb-2'>Итог за период</h3>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                  <div className='text-center'>
+                    <div className='text-2xl md:text-3xl font-semibold tabular-nums'>
+                      {formatCurrency(kpis.revenue)}
+                    </div>
+                    <div className='text-sm'>Выручка</div>
+                  </div>
+                  <div className='text-center'>
+                    <div className='text-2xl md:text-3xl font-semibold tabular-nums'>
+                      {formatCurrency(gross)}
+                    </div>
+                    <div className='text-sm'>Прибыль</div>
+                  </div>
+                  <div className='text-center'>
+                    <div className={`text-2xl md:text-3xl font-semibold tabular-nums ${marginPct > 0 ? 'text-emerald-600' : marginPct < 0 ? 'text-red-600' : 'text-neutral-600'}`}>
+                      {marginPct.toFixed(1)}%
+                    </div>
+                    <div className='text-sm'>Маржа</div>
+                  </div>
+                </div>
+              </section>
+            ) : null}
             <SalesTab filters={appliedFilters} />
           </>
         )}

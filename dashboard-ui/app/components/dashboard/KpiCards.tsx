@@ -6,13 +6,7 @@ import KpiCard from "@/components/ui/KpiCard";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
 import { getPeriodRange } from "@/utils/buckets";
 import { useDashboardFilter, DEFAULT_FILTER } from "@/store/dashboardFilter";
-
-type KpiData = {
-  revenue: number;
-  orders: number;
-  avgCheck: number;
-  margin: number;
-};
+import { IKpis } from "@/shared/interfaces/kpi.interface";
 
 function getPrevRange(period: any, filter: any) {
   const { start, end } = getPeriodRange(filter);
@@ -77,12 +71,12 @@ const KpiCards: React.FC = () => {
     isFetching,
     error,
     refetch,
-  } = useQuery<KpiData>({
+  } = useQuery<IKpis>({
     queryKey: ["kpi", period, startStr, endStr],
     queryFn: () => AnalyticsService.getKpis(startStr, endStr),
     keepPreviousData: true,
   });
-  const { data: prev } = useQuery<KpiData>({
+  const { data: prev } = useQuery<IKpis>({
     queryKey: ["kpi", period, prevStartStr, prevEndStr],
     queryFn: () => AnalyticsService.getKpis(prevStartStr, prevEndStr),
     keepPreviousData: true,
@@ -101,8 +95,8 @@ const KpiCards: React.FC = () => {
 
   const revenue = curr?.revenue ?? 0;
   const prevRevenue = prev?.revenue ?? 0;
-  const profit = curr?.margin ?? 0;
-  const prevProfit = prev?.margin ?? 0;
+  const profit = curr ? curr.revenue - curr.cogs : 0;
+  const prevProfit = prev ? prev.revenue - prev.cogs : 0;
   const marginPct = revenue ? (profit / revenue) * 100 : 0;
   const prevMarginPct = prevRevenue ? (prevProfit / prevRevenue) * 100 : 0;
   const orders = curr?.orders ?? 0;
@@ -122,7 +116,7 @@ const KpiCards: React.FC = () => {
           delta: delta(revenue, prevRevenue),
         },
         {
-          title: "Финансовый итог",
+          title: "Прибыль",
           icon: "📈",
           value: currency.format(profit),
           delta: delta(profit, prevProfit),

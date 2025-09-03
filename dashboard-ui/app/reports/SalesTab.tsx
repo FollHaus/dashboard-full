@@ -86,21 +86,6 @@ const SalesTab: FC<Props> = ({ filters }) => {
     enabled: Boolean(filters.from && filters.to),
   })
 
-  const {
-    data: summary,
-    isLoading: summaryLoading,
-    error: summaryError,
-    refetch: refetchSummary,
-  } = useQuery({
-    queryKey: ['reports', 'sales-summary', filters],
-    queryFn: () =>
-      AnalyticsService.getKpis(
-        filters.from,
-        filters.to,
-        filters.categories,
-      ),
-    enabled: Boolean(filters.from && filters.to),
-  })
   const chartData = useMemo(() => {
     if (!salesData) return []
     const map = new Map<string, { revenue: number; count: number }>()
@@ -363,43 +348,6 @@ const SalesTab: FC<Props> = ({ filters }) => {
         ) : (
           <div className='text-sm text-neutral-500'>Нет данных</div>
         )}
-      </div>
-      <div className='rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5'>
-        <h3 className='flex items-center gap-2 text-base md:text-lg font-semibold text-neutral-900 mb-4'>
-          <span>📊</span>
-          <span>Итог за период</span>
-        </h3>
-        {summaryLoading ? (
-          <div className='text-sm text-neutral-500'>Загрузка...</div>
-        ) : summaryError ? (
-          <div className='text-sm text-error'>
-            Ошибка{' '}
-            <button className='underline' onClick={() => refetchSummary()}>
-              Повторить
-            </button>
-          </div>
-        ) : summary ? (
-          <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
-            <div className='text-center'>
-              <div className='text-2xl md:text-3xl font-semibold tabular-nums'>
-                {formatCurrency(summary.revenue)}
-              </div>
-              <div className='text-sm'>Выручка</div>
-            </div>
-            <div className='text-center'>
-              <div className='text-2xl md:text-3xl font-semibold tabular-nums'>
-                {new Intl.NumberFormat('ru-RU').format(summary.orders)}
-              </div>
-              <div className='text-sm'>Количество продаж</div>
-            </div>
-            <div className='text-center'>
-              <div className='text-2xl md:text-3xl font-semibold tabular-nums'>
-                {formatCurrency(summary.margin)}
-              </div>
-              <div className='text-sm'>Прибыль</div>
-            </div>
-          </div>
-        ) : null}
       </div>
     </div>
   )

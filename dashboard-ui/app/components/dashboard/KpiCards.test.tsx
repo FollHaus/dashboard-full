@@ -11,8 +11,8 @@ vi.mock('next/navigation', () => ({
 
 const getKpisMock = vi.fn()
 ;(getKpisMock as any)
-  .mockResolvedValueOnce({ revenue: 1000, orders: 2, avgCheck: 500, margin: 400 })
-  .mockResolvedValueOnce({ revenue: 800, orders: 1, avgCheck: 800, margin: 200 })
+  .mockResolvedValueOnce({ revenue: 1000, orders: 2, avgCheck: 500, cogs: 600 })
+  .mockResolvedValueOnce({ revenue: 800, orders: 1, avgCheck: 800, cogs: 600 })
 
 vi.mock('@/services/analytics/analytics.service', () => ({
   AnalyticsService: {
