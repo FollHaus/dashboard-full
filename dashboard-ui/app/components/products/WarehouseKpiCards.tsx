@@ -1,6 +1,5 @@
 'use client'
 
-import clsx from 'classnames'
 import {
   Package,
   AlertTriangle,
@@ -9,6 +8,7 @@ import {
   DollarSign,
   type LucideIcon,
 } from 'lucide-react'
+import KpiCard from '../ui/KpiCard'
 
 interface WarehouseKpiCardsProps {
   totalCount: number
@@ -36,60 +36,46 @@ export default function WarehouseKpiCards({
   const topCards: {
     label: string
     icon: LucideIcon
-    color: string
     value: string
-    valueClass: string
-    bg: string
+    className: string
   }[] = [
     {
-      label: 'Товаров',
+      label: 'Товары',
       icon: Package,
-      color: 'text-info',
       value: numberFormatter.format(totalCount),
-      valueClass: 'text-info font-semibold',
-      bg: 'bg-info/20',
+      className: 'bg-blue-100 text-blue-600',
     },
     {
       label: 'Мало на складе',
       icon: AlertTriangle,
-      color: 'text-warning',
       value: numberFormatter.format(lowStock),
-      valueClass: 'text-warning font-semibold',
-      bg: 'bg-warning/20',
+      className: 'bg-yellow-100 text-yellow-700',
     },
     {
       label: 'Нет в наличии',
       icon: XCircle,
-      color: 'text-error',
       value: numberFormatter.format(outOfStock),
-      valueClass: 'text-error font-semibold',
-      bg: 'bg-error/20',
+      className: 'bg-red-100 text-red-600',
     },
   ]
 
   const bottomCards: {
     label: string
     icon: LucideIcon
-    color: string
     value: string
-    valueClass: string
-    bg: string
+    className: string
   }[] = [
     {
       label: 'Закупочная стоимость',
       icon: Wallet,
-      color: 'text-neutral-900',
       value: currencyFormatter.format(purchaseValue),
-      valueClass: 'text-neutral-900',
-      bg: 'bg-neutral-200',
+      className: 'bg-indigo-100 text-indigo-700',
     },
     {
       label: 'Продажная стоимость',
       icon: DollarSign,
-      color: 'text-success',
       value: currencyFormatter.format(saleValue),
-      valueClass: 'text-success font-semibold',
-      bg: 'bg-success/20',
+      className: 'bg-green-100 text-green-600',
     },
   ]
 
@@ -97,68 +83,26 @@ export default function WarehouseKpiCards({
     <div className="grid grid-cols-1 gap-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {topCards.map(card => (
-          <div
+          <KpiCard
             key={card.label}
-            className={clsx(
-              'rounded-xl shadow-card p-4 flex flex-col items-center justify-center text-center',
-              card.bg,
-            )}
-          >
-            <div
-              className={clsx(
-                'w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-neutral-100',
-                card.color,
-              )}
-            >
-              <card.icon className="w-6 h-6 md:w-7 md:h-7 text-current" />
-            </div>
-            {isLoading ? (
-              <div className="mt-2 h-7 w-20 bg-neutral-300 rounded animate-pulse" />
-            ) : (
-              <div
-                className={clsx(
-                  'mt-2 text-2xl md:text-3xl font-bold',
-                  card.valueClass,
-                )}
-              >
-                {card.value}
-              </div>
-            )}
-            <div className="text-sm text-neutral-800">{card.label}</div>
-          </div>
+            label={card.label}
+            value={card.value}
+            icon={<card.icon className="w-6 h-6 md:w-7 md:h-7" />}
+            className={card.className}
+            isLoading={isLoading}
+          />
         ))}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {bottomCards.map(card => (
-          <div
+          <KpiCard
             key={card.label}
-            className={clsx(
-              'rounded-xl shadow-card p-4 flex flex-col items-center justify-center text-center',
-              card.bg,
-            )}
-          >
-            <div
-              className={clsx(
-                'w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-neutral-100',
-                card.color,
-              )}
-            >
-              <card.icon className="w-6 h-6 md:w-7 md:h-7 text-current" />
-            </div>
-            {isLoading ? (
-              <div className="mt-2 h-7 w-20 bg-neutral-300 rounded animate-pulse" />
-            ) : (
-              <div
-                className={clsx(
-                  'mt-2 text-2xl md:text-3xl font-bold',
-                  card.valueClass,
-                )}
-              >
-                {card.value}
-              </div>
-            )}
-            <div className="text-sm text-neutral-800">{card.label}</div>
-          </div>
+            label={card.label}
+            value={card.value}
+            icon={<card.icon className="w-6 h-6 md:w-7 md:h-7" />}
+            className={card.className}
+            isLoading={isLoading}
+          />
         ))}
       </div>
     </div>
