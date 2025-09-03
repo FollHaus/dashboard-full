@@ -99,8 +99,6 @@ describe('AnalyticsService', () => {
         unitsSold: '20',
         margin: '30'
       })
-      taskRepo.count.mockResolvedValue(2)
-
       const result = await service.getKpis('2024-01-01', '2024-01-31', [1])
 
       expect(saleRepo.findOne).toHaveBeenCalledWith(expect.objectContaining({
@@ -110,14 +108,12 @@ describe('AnalyticsService', () => {
         include: [expect.objectContaining({ where: { categoryId: { [Op.in]: [1] } } })],
         raw: true
       }))
-      expect(taskRepo.count).toHaveBeenCalled()
       expect(result).toEqual({
         revenue: 100,
         orders: 5,
         unitsSold: 20,
         avgCheck: 20,
-        margin: 30,
-        completedTasks: 2
+        margin: 30
       })
     })
   })

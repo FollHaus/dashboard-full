@@ -213,12 +213,6 @@ export default function ReportsPage() {
           icon: '📊',
           accent: (kpis.margin >= 0 ? 'success' : 'error') as const,
         },
-        {
-          title: 'Выполненные задачи',
-          value: new Intl.NumberFormat('ru-RU').format(kpis.completedTasks),
-          icon: '✅',
-          accent: 'info' as const,
-        },
       ]
     : []
 
@@ -416,9 +410,9 @@ export default function ReportsPage() {
 
         {active === 'sales' && (
           <>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-6'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6'>
               {kpisLoading ? (
-                Array.from({ length: 4 }).map((_, i) => (
+                Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={i}
                     className='rounded-xl bg-neutral-100 shadow-card h-[92px] md:h-[100px] animate-pulse'

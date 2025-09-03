@@ -291,7 +291,6 @@ export class AnalyticsService {
                 unitsSold: number
                 avgCheck: number
                 margin: number
-                completedTasks: number
         }> {
                 const whereSales: any = {}
                 if (startDate || endDate) {
@@ -336,20 +335,7 @@ export class AnalyticsService {
                 const margin = parseFloat(kpiRow?.margin) || 0
                 const avgCheck = orders > 0 ? revenue / orders : 0
 
-                const whereTasks: any = { status: TaskStatus.Completed }
-                if (startDate || endDate) {
-                        if (startDate && endDate) {
-                                whereTasks.deadline = { [Op.between]: [startDate, endDate] }
-                        } else if (startDate) {
-                                whereTasks.deadline = { [Op.gte]: startDate }
-                        } else if (endDate) {
-                                whereTasks.deadline = { [Op.lte]: endDate }
-                        }
-                }
-
-                const completedTasks = await this.taskRepo.count({ where: whereTasks })
-
-                return { revenue, orders, unitsSold, avgCheck, margin, completedTasks }
+                return { revenue, orders, unitsSold, avgCheck, margin }
         }
 
         /**
