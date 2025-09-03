@@ -57,7 +57,7 @@ export default function KpiCard({
   return (
     <div
       className={cn(
-        'rounded-xl shadow-card px-4 pt-3 pb-2.5 h-[120px] flex items-start gap-3',
+        'rounded-xl shadow-card px-4 pt-3 pb-2 h-[120px] flex items-start gap-3',
         bg,
         text,
         className,
