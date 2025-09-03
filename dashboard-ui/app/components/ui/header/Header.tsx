@@ -3,57 +3,44 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import cn from 'classnames'
-import { useLayoutEffect, useRef, useState } from 'react'
-import { Menu, User } from 'lucide-react'
+import { useState } from 'react'
+import {
+  Menu,
+  User,
+  Home,
+  Package,
+  CheckSquare,
+  BarChart3,
+} from 'lucide-react'
 
 const routes = [
-  { label: 'Главная', path: '/', icon: '🏠' },
-  { label: 'Склад', path: '/products', icon: '📦' },
-  { label: 'Задачи', path: '/tasks', icon: '✅' },
-  { label: 'Отчёты', path: '/reports', icon: '📊' },
+  { label: 'Главная', path: '/', icon: Home },
+  { label: 'Склад', path: '/products', icon: Package },
+  { label: 'Задачи', path: '/tasks', icon: CheckSquare },
+  { label: 'Отчёты', path: '/reports', icon: BarChart3 },
 ]
 
 export default function Header() {
   const pathname = usePathname()
-  const navRef = useRef<HTMLElement>(null)
-  const underlineRef = useRef<HTMLSpanElement>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
 
   const toggleProfileMenu = () => setProfileOpen((prev) => !prev)
   const toggleMobile = () => setMobileOpen((prev) => !prev)
 
-  useLayoutEffect(() => {
-    const updateUnderline = () => {
-      const nav = navRef.current
-      const underline = underlineRef.current
-      const activeLink = nav?.querySelector<HTMLAnchorElement>('a.active')
-      if (nav && underline && activeLink) {
-        const el = activeLink.getBoundingClientRect()
-        const navBox = nav.getBoundingClientRect()
-        underline.style.width = `${el.width}px`
-        underline.style.left = `${el.left - navBox.left}px`
-      }
-    }
-
-    updateUnderline()
-    window.addEventListener('resize', updateUnderline)
-    return () => window.removeEventListener('resize', updateUnderline)
-  }, [pathname])
-
   const renderLink = (
-    route: { label: string; path: string; icon: string },
+    route: { label: string; path: string; icon: React.ElementType },
     isMobile = false
   ) => {
     const isActive = pathname === route.path
-    const baseClasses = isMobile
-      ? cn(
-          'px-3 py-2 rounded-lg transition-colors flex items-center',
-          isActive
-            ? 'bg-primary-300/40 text-neutral-900 font-semibold'
-            : 'hover:bg-neutral-200'
-        )
-      : cn('nav-link inline-flex items-center', isActive && 'active')
+    const Icon = route.icon
+    const baseClasses = cn(
+      'relative inline-flex items-center gap-2 px-3 py-2 text-sm font-medium',
+      'text-neutral-900/80 hover:bg-neutral-200 hover:text-neutral-900 rounded-lg transition-colors',
+      isActive && 'bg-green-100 text-green-700 font-semibold hover:bg-green-200 active:bg-green-100',
+      isMobile && 'w-full'
+    )
+
     return (
       <Link
         key={route.path}
@@ -62,7 +49,7 @@ export default function Header() {
         aria-current={isActive ? 'page' : undefined}
         onClick={() => isMobile && setMobileOpen(false)}
       >
-        <span className="mr-2">{route.icon}</span>
+        <Icon className="w-4 h-4" />
         {route.label}
       </Link>
     )
@@ -78,16 +65,8 @@ export default function Header() {
           И.П. Мулиев
         </Link>
 
-        <nav
-          ref={navRef}
-          className="relative hidden md:flex flex-1 items-center justify-evenly"
-        >
+        <nav className="relative hidden md:flex flex-1 items-center justify-center gap-8">
           {routes.map((r) => renderLink(r))}
-          <span
-            id="nav-underline"
-            ref={underlineRef}
-            className="absolute -bottom-[10px] h-[3px] bg-success rounded-full transition-all duration-300"
-          />
         </nav>
 
         <div className="flex items-center gap-3">
@@ -136,7 +115,7 @@ export default function Header() {
           mobileOpen ? 'block' : 'hidden'
         )}
       >
-        <nav className="px-3 py-2 flex flex-col">
+        <nav className="px-3 py-2 flex flex-col gap-1">
           {routes.map((r) => renderLink(r, true))}
         </nav>
       </div>
