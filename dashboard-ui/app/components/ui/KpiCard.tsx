@@ -2,12 +2,37 @@ import clsx from 'classnames'
 import { ReactNode } from 'react'
 
 interface KpiCardProps {
+  /**
+   * Заголовок карточки
+   */
   label: string
+  /**
+   * Значение, отображаемое в карточке
+   */
   value: ReactNode
+  /**
+   * Подсказка для значения
+   */
   valueTitle?: string
+  /**
+   * CSS класс для значения
+   */
   valueClassName?: string
+  /**
+   * CSS класс для контейнера карточки
+   */
   className?: string
+  /**
+   * Иконка, отображаемая сверху
+   */
+  icon?: ReactNode
+  /**
+   * Индикатор загрузки
+   */
   isLoading?: boolean
+  /**
+   * Дельта в процентах
+   */
   delta?: number | string
 }
 
@@ -17,6 +42,7 @@ const KpiCard = ({
   valueTitle,
   valueClassName,
   className,
+  icon,
   isLoading,
   delta,
 }: KpiCardProps) => {
@@ -42,20 +68,17 @@ const KpiCard = ({
   return (
     <div
       className={clsx(
-        'rounded-xl p-4 md:p-5 shadow-card text-center flex flex-col items-center justify-center gap-1',
-        'bg-neutral-100',
+        'rounded-xl shadow-card p-4 md:p-5 flex flex-col items-center justify-center text-center gap-2',
         className,
       )}
     >
-      <div className="text-sm text-neutral-800 truncate">{label}</div>
+      {icon && <div className="text-3xl">{icon}</div>}
+      <div className="text-sm font-medium text-neutral-800 truncate">{label}</div>
       {isLoading ? (
-        <div className="mt-1 h-7 w-20 bg-neutral-300 rounded animate-pulse" />
+        <div className="h-7 w-20 bg-neutral-300 rounded animate-pulse" />
       ) : (
         <div
-          className={clsx(
-            'text-2xl md:text-3xl font-bold tabular-nums whitespace-nowrap overflow-hidden text-ellipsis',
-            valueClassName,
-          )}
+          className={clsx('text-2xl font-bold tabular-nums', valueClassName)}
           title={valueTitle}
         >
           {value}
