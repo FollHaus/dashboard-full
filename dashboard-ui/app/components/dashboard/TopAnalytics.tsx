@@ -28,7 +28,6 @@ const currency = new Intl.NumberFormat("ru-RU", {
 const intFmt = new Intl.NumberFormat("ru-RU");
 
 type Metric = "revenue" | "quantity";
-type Scope = "products" | "categories";
 type TopN = 5 | 10 | 15;
 
 const TopAnalytics: React.FC = () => {
@@ -37,13 +36,10 @@ const TopAnalytics: React.FC = () => {
   const { start, end } = getPeriodRange(filter);
   const s = formatDate(start);
   const e = formatDate(end);
-  const [state, setState] = useState<{ metric: Metric; scope: Scope; topN: TopN }>(
-    {
-      metric: "revenue",
-      scope: "products",
-      topN: 5,
-    },
-  );
+  const [state, setState] = useState<{ metric: Metric; topN: TopN }>({
+    metric: "revenue",
+    topN: 5,
+  });
 
   const {
     data: prodData,
@@ -129,21 +125,6 @@ const TopAnalytics: React.FC = () => {
             {m === "revenue" ? "Выручка" : "Количество"}
           </button>
         ))}
-        {(["products", "categories"] as Scope[]).map((s) => (
-          <button
-            key={s}
-            onClick={() => setState((st) => ({ ...st, scope: s }))}
-            className={cn(
-              "h-9 px-3 rounded-full text-sm font-medium",
-              state.scope === s
-                ? "bg-primary-500 text-neutral-50"
-                : "bg-neutral-100 hover:bg-neutral-300",
-            )}
-            aria-pressed={state.scope === s}
-          >
-            {s === "products" ? "По продуктам" : "По категориям"}
-          </button>
-        ))}
         <select
           value={state.topN}
           onChange={(e) =>
@@ -173,96 +154,95 @@ const TopAnalytics: React.FC = () => {
           </button>
         </div>
       ) : isLoading ? (
-        <div className="h-[320px]" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="h-[320px]" />
+          <div className="h-[320px]" />
+        </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {state.scope === "products" && (
-            <div>
-              <h3 className="text-base font-medium text-neutral-900 mb-2">
-                Топ-{state.topN} продуктов
-              </h3>
-              {products.length ? (
-                <ResponsiveContainer width="100%" height={320}>
-                  <BarChart
-                    data={products}
-                    margin={{ top: 8, right: 12, bottom: 8, left: 56 }}
-                  >
-                    <XAxis dataKey="idx" />
-                    <YAxis tickFormatter={formatValue} width={56} />
-                    <ReTooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null;
-                        const p = payload[0].payload as any;
-                        return (
-                          <div className="bg-white p-2 rounded shadow text-sm">
-                            <div>Товар: {p.name}</div>
-                            <div>
-                              {state.metric === "revenue"
-                                ? "Выручка"
-                                : "Количество"}: {formatValue(p.value)}
-                            </div>
+          <div>
+            <h3 className="text-base font-medium text-neutral-900 mb-2">
+              Топ-{state.topN} продуктов
+            </h3>
+            {products.length ? (
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart
+                  data={products}
+                  margin={{ top: 16, right: 16, left: 16, bottom: 32 }}
+                >
+                  <XAxis dataKey="idx" />
+                  <YAxis tickFormatter={formatValue} />
+                  <ReTooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const p = payload[0].payload as any;
+                      return (
+                        <div className="bg-white p-2 rounded shadow text-sm">
+                          <div>Товар: {p.name}</div>
+                          <div>
+                            {state.metric === "revenue"
+                              ? "Выручка"
+                              : "Количество"}: {formatValue(p.value)}
                           </div>
-                        );
-                      }}
-                    />
-                    <Bar
-                      dataKey="value"
-                      radius={[4, 4, 0, 0]}
-                      fill={state.metric === "revenue" ? "#10B981" : "#3B82F6"}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-[320px] flex items-center justify-center text-neutral-500 border-t border-neutral-300">
-                  Нет данных за период
-                </div>
-              )}
-            </div>
-          )}
+                        </div>
+                      );
+                    }}
+                  />
+                  <Bar
+                    dataKey="value"
+                    radius={[4, 4, 0, 0]}
+                    fill={state.metric === "revenue" ? "#10B981" : "#3B82F6"}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[320px] flex items-center justify-center text-neutral-500 border-t border-neutral-300">
+                Нет данных за период
+              </div>
+            )}
+          </div>
 
-          {state.scope === "categories" && (
-            <div>
-              <h3 className="text-base font-medium text-neutral-900 mb-2">
-                Топ-{state.topN} категорий
-              </h3>
-              {categories.length ? (
-                <ResponsiveContainer width="100%" height={320}>
-                  <BarChart
-                    data={categories}
-                    margin={{ top: 8, right: 12, bottom: 8, left: 56 }}
-                  >
-                    <XAxis dataKey="idx" />
-                    <YAxis tickFormatter={formatValue} width={56} />
-                    <ReTooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null;
-                        const p = payload[0].payload as any;
-                        return (
-                          <div className="bg-white p-2 rounded shadow text-sm">
-                            <div>Категория: {p.name}</div>
-                            <div>
-                              {state.metric === "revenue"
-                                ? "Выручка"
-                                : "Количество"}: {formatValue(p.value)}
-                            </div>
+          <div>
+            <h3 className="text-base font-medium text-neutral-900 mb-2">
+              Топ-{state.topN} категорий
+            </h3>
+            {categories.length ? (
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart
+                  data={categories}
+                  margin={{ top: 16, right: 16, left: 16, bottom: 32 }}
+                >
+                  <XAxis dataKey="idx" />
+                  <YAxis tickFormatter={formatValue} />
+                  <ReTooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const p = payload[0].payload as any;
+                      return (
+                        <div className="bg-white p-2 rounded shadow text-sm">
+                          <div>Категория: {p.name}</div>
+                          <div>
+                            {state.metric === "revenue"
+                              ? "Выручка"
+                              : "Количество"}: {formatValue(p.value)}
                           </div>
-                        );
-                      }}
-                    />
-                    <Bar
-                      dataKey="value"
-                      radius={[4, 4, 0, 0]}
-                      fill={state.metric === "revenue" ? "#10B981" : "#3B82F6"}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-[320px] flex items-center justify-center text-neutral-500 border-t border-neutral-300">
-                  Нет данных за период
-                </div>
-              )}
-            </div>
-          )}
+                        </div>
+                      );
+                    }}
+                  />
+                  <Bar
+                    dataKey="value"
+                    radius={[4, 4, 0, 0]}
+                    fill={state.metric === "revenue" ? "#10B981" : "#3B82F6"}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[320px] flex items-center justify-center text-neutral-500 border-t border-neutral-300">
+                Нет данных за период
+              </div>
+            )}
+          </div>
         </div>
       )}
 
