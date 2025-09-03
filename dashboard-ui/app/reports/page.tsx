@@ -456,18 +456,18 @@ export default function ReportsPage() {
                 </button>
               </div>
             ) : kpis ? (
-              <section className='rounded-xl bg-neutral-100 shadow-card p-4 md:p-5 mb-6'>
+              <section className='mb-6'>
                 <h3 className='text-sm font-semibold text-neutral-900 mb-2'>Итог за период</h3>
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                  <div className='flex flex-col'>
-                    <span className='text-[13px] md:text-sm font-semibold text-neutral-600 leading-5'>Выручка</span>
-                    <span className='text-xl md:text-2xl font-bold tabular-nums'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                  <div className='rounded-xl bg-white shadow-card p-4 flex flex-col'>
+                    <span className='text-sm font-medium text-neutral-500'>Выручка</span>
+                    <span className='text-xl md:text-2xl font-bold text-neutral-900 tabular-nums'>
                       {currency.format(kpis.revenue)}
                     </span>
                   </div>
-                  <div className='flex flex-col'>
-                    <span className='text-[13px] md:text-sm font-semibold text-neutral-600 leading-5'>Прибыль</span>
-                    <span className='text-xl md:text-2xl font-bold tabular-nums'>
+                  <div className='rounded-xl bg-white shadow-card p-4 flex flex-col'>
+                    <span className='text-sm font-medium text-neutral-500'>Прибыль</span>
+                    <span className='text-xl md:text-2xl font-bold text-neutral-900 tabular-nums'>
                       {currency.format(gross)}
                     </span>
                   </div>
