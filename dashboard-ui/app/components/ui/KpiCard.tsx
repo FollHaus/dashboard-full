@@ -2,11 +2,12 @@ import { ReactNode, ElementType, isValidElement, cloneElement } from 'react'
 import cn from 'classnames'
 
 const ACCENTS: Record<string, { bg: string; text: string }> = {
-  success: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
-  warning: { bg: 'bg-amber-100', text: 'text-amber-600' },
-  info: { bg: 'bg-blue-100', text: 'text-blue-700' },
-  error: { bg: 'bg-red-100', text: 'text-red-600' },
+  success: { bg: 'bg-success/20', text: 'text-success' },
+  warning: { bg: 'bg-warning/20', text: 'text-warning' },
+  info: { bg: 'bg-info/20', text: 'text-info' },
+  error: { bg: 'bg-error/20', text: 'text-error' },
   neutral: { bg: 'bg-neutral-100', text: 'text-neutral-600' },
+  primary: { bg: 'bg-primary-100', text: 'text-primary-500' },
 }
 
 export interface KpiCardProps {
@@ -14,7 +15,7 @@ export interface KpiCardProps {
   title: string
   /** Значение внутри карточки */
   value: ReactNode
-  /** Иконка или эмодзи */
+  /** Иконка lucide */
   icon: ReactNode | ElementType
   /** Цвет фона карточки */
   accentBg?: string
@@ -43,12 +44,10 @@ export default function KpiCard({
   const text = accentText || accentCls.text || 'text-neutral-600'
 
   let iconEl: ReactNode
-  if (typeof icon === 'string') {
-    iconEl = <span className='w-5 h-5 md:w-5 md:h-5 text-current'>{icon}</span>
-  } else if (isValidElement(icon)) {
-    iconEl = cloneElement(icon, {
-      className: cn('w-5 h-5 md:w-5 md:h-5 text-current', icon.props.className),
-    })
+  if (isValidElement(icon)) {
+      iconEl = cloneElement(icon, {
+        className: cn('w-5 h-5 md:w-5 md:h-5 text-current', icon.props.className),
+      })
   } else {
     const IconComp = icon as ElementType
     iconEl = <IconComp className='w-5 h-5 md:w-5 md:h-5 text-current' />
@@ -57,7 +56,7 @@ export default function KpiCard({
   return (
     <div
       className={cn(
-        'rounded-xl shadow-card px-4 pt-3 pb-2 h-[120px] flex items-start gap-3',
+        'rounded-xl shadow-card hover:shadow-card-hover h-[100px] flex items-start gap-3 p-3 md:p-4 pb-2 md:pb-3',
         bg,
         text,
         className,
@@ -67,7 +66,7 @@ export default function KpiCard({
         {iconEl}
       </div>
       <div className='flex-1 min-w-0 flex flex-col justify-center items-start'>
-        <div className='text-[13px] md:text-sm font-medium text-neutral-800/80 leading-5 truncate'>
+        <div className='text-[13px] md:text-sm font-medium text-neutral-900/80 leading-5 truncate'>
           {title}
         </div>
         <div className='text-2xl md:text-3xl font-bold tabular-nums text-current truncate'>
