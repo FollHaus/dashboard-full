@@ -154,7 +154,7 @@ const WarehouseTab: FC<Props> = ({ filters }) => {
 
   return (
     <div className='flex flex-col gap-6 md:gap-8'>
-      <div className='kpi-wrap grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2'>
+      <div className='kpi-wrap grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-1 mb-1'>
         {isLoading ? (
           Array.from({ length: 3 }).map((_, i) => (
             <div
