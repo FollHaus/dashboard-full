@@ -37,25 +37,26 @@ interface Props {
 }
 
 const COLORS = [
+  "#2563EB",
   "#3B82F6",
+  "#60A5FA",
+  "#93C5FD",
   "#10B981",
-  "#F59E0B",
-  "#EF4444",
-  "#8B5CF6",
-  "#6366F1",
-  "#14B8A6",
-  "#F472B6",
-  "#A3E635",
-  "#FB923C",
+  "#34D399",
+  "#6EE7B7",
+  "#A7F3D0",
+  "#059669",
+  "#047857",
 ];
 
-const TopProducts: React.FC<Props> = ({ limit = 5 }) => {
+const TopAnalytics: React.FC<Props> = ({ limit = 5 }) => {
   const { filter: ctxFilter } = useDashboardFilter();
   const filter = ctxFilter ?? DEFAULT_FILTER;
   const { start, end } = getPeriodRange(filter);
   const s = formatDate(start);
   const e = formatDate(end);
   const [metric, setMetric] = useState<Metric>("revenue");
+  const [tab, setTab] = useState<"products" | "categories">("products");
 
   const {
     data: prodData,
@@ -140,51 +141,77 @@ const TopProducts: React.FC<Props> = ({ limit = 5 }) => {
 
   if (error) {
     return (
-      <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 text-error flex items-center gap-2">
+      <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 mb-6 md:mb-8 text-error flex items-center gap-2">
         Ошибка загрузки
         <button
           className="underline"
           onClick={() => {
-            prodRefetch();
-            catRefetch();
+            prodRefetch()
+            catRefetch()
           }}
         >
           Повторить
         </button>
       </section>
-    );
+    )
   }
 
   if (isLoading) {
-    return (
-      <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5" />
-    );
+    return <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 mb-6 md:mb-8" />
   }
 
   return (
-    <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 overflow-visible">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div>
-          <div className="flex items-center justify-between mb-4 gap-2">
-            <h3 className="text-lg font-semibold">Топ продуктов</h3>
-            <div className="flex gap-2">
-              {(["revenue", "quantity"] as Metric[]).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMetric(m)}
-                  className={cn(
-                    "h-8 px-3 rounded-full text-sm font-medium",
-                    metric === m
-                      ? "bg-primary-500 text-neutral-50"
-                      : "bg-neutral-100 hover:bg-neutral-300",
-                  )}
-                  aria-pressed={metric === m}
-                >
-                  {m === "revenue" ? "Выручка" : "Количество"}
-                </button>
-              ))}
-            </div>
-          </div>
+    <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 mb-6 md:mb-8 overflow-visible">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-neutral-900">🏆 Топ-аналитика</h2>
+        <div className="flex gap-2">
+          {(["revenue", "quantity"] as Metric[]).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMetric(m)}
+              className={cn(
+                "h-8 px-3 rounded-full text-sm font-medium",
+                metric === m
+                  ? "bg-primary-500 text-neutral-50"
+                  : "bg-neutral-100 hover:bg-neutral-300",
+              )}
+              aria-pressed={metric === m}
+            >
+              {m === "revenue" ? "Выручка" : "Количество"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 mb-3">
+        <button
+          className={cn(
+            "px-3 py-1.5 rounded-full text-sm",
+            tab === "products"
+              ? "bg-primary-500 text-neutral-50"
+              : "bg-neutral-100 hover:bg-neutral-300",
+          )}
+          onClick={() => setTab("products")}
+          aria-pressed={tab === "products"}
+        >
+          По продуктам
+        </button>
+        <button
+          className={cn(
+            "px-3 py-1.5 rounded-full text-sm",
+            tab === "categories"
+              ? "bg-primary-500 text-neutral-50"
+              : "bg-neutral-100 hover:bg-neutral-300",
+          )}
+          onClick={() => setTab("categories")}
+          aria-pressed={tab === "categories"}
+        >
+          По категориям
+        </button>
+      </div>
+
+      {tab === "products" && (
+        <div className="w-full">
           {barData.length ? (
             <ResponsiveContainer width="100%" height={320}>
               <BarChart data={barData} margin={{ top: 8, right: 12, bottom: 8, left: 56 }}>
@@ -192,8 +219,8 @@ const TopProducts: React.FC<Props> = ({ limit = 5 }) => {
                 <YAxis tickFormatter={formatValue} width={56} />
                 <ReTooltip
                   content={({ active, payload }) => {
-                    if (!active || !payload || !payload.length) return null;
-                    const p = payload[0].payload as any;
+                    if (!active || !payload || !payload.length) return null
+                    const p = payload[0].payload as any
                     return (
                       <div className="bg-white p-2 rounded shadow text-sm">
                         <div>Товар: {p.name}</div>
@@ -201,7 +228,7 @@ const TopProducts: React.FC<Props> = ({ limit = 5 }) => {
                           {metric === "revenue" ? "Выручка" : "Количество"}: {formatValue(p.value)}
                         </div>
                       </div>
-                    );
+                    )
                   }}
                 />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]} fill={metric === "revenue" ? "#10B981" : "#3B82F6"} />
@@ -213,8 +240,10 @@ const TopProducts: React.FC<Props> = ({ limit = 5 }) => {
             </div>
           )}
         </div>
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Топ категорий</h3>
+      )}
+
+      {tab === "categories" && (
+        <div className="w-full">
           {pieData.length ? (
             <div className="flex items-center">
               <ResponsiveContainer width="100%" height={320}>
@@ -226,8 +255,8 @@ const TopProducts: React.FC<Props> = ({ limit = 5 }) => {
                   </Pie>
                   <ReTooltip
                     content={({ active, payload }) => {
-                      if (!active || !payload || !payload.length) return null;
-                      const p = payload[0].payload as any;
+                      if (!active || !payload || !payload.length) return null
+                      const p = payload[0].payload as any
                       return (
                         <div className="bg-white p-2 rounded shadow text-sm">
                           <div>Категория: {p.name}</div>
@@ -236,7 +265,7 @@ const TopProducts: React.FC<Props> = ({ limit = 5 }) => {
                             {metric === "revenue" ? "Выручка" : "Кол-во"}: {formatValue(p.value)}
                           </div>
                         </div>
-                      );
+                      )
                     }}
                   />
                 </PieChart>
@@ -259,14 +288,15 @@ const TopProducts: React.FC<Props> = ({ limit = 5 }) => {
             </div>
           )}
         </div>
-      </div>
+      )}
+
       {isFetching && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/50">
           <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
     </section>
-  );
-};
+  )
+}
 
-export default TopProducts;
+export default TopAnalytics;

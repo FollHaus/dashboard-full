@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { vi } from 'vitest'
-import TopProducts from './TopProducts'
+import TopAnalytics from './TopAnalytics'
 import { DashboardFilterProvider } from '@/store/dashboardFilter'
 
 vi.mock('@/services/analytics/analytics.service', () => ({
@@ -21,17 +21,18 @@ const renderWidget = () => {
   render(
     <QueryClientProvider client={client}>
       <DashboardFilterProvider>
-        <TopProducts />
+        <TopAnalytics />
       </DashboardFilterProvider>
     </QueryClientProvider>,
   )
 }
 
-describe('TopProducts', () => {
-  it('renders headers and toggle', async () => {
+describe('TopAnalytics', () => {
+  it('renders tabs and metric toggle', async () => {
     renderWidget()
-    expect(await screen.findByText(/Топ продуктов/)).toBeInTheDocument()
-    expect(await screen.findByText(/Топ категорий/)).toBeInTheDocument()
+    expect(await screen.findByText(/Топ-аналитика/)).toBeInTheDocument()
+    expect(screen.getByText('По продуктам')).toBeInTheDocument()
+    expect(screen.getByText('По категориям')).toBeInTheDocument()
     expect(screen.getByText('Выручка')).toBeInTheDocument()
   })
 })
