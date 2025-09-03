@@ -2,7 +2,7 @@
 import Layout from "@/ui/Layout";
 import React, { useEffect } from "react";
 import type { Metadata } from "next";
-import Overview from "@/components/dashboard/Overview";
+import Statistics from "@/components/dashboard/Statistics";
 import SalesChart from "@/components/dashboard/SalesChart";
 import TopProducts from "@/components/dashboard/TopProducts";
 import WeeklyTasks from "@/components/dashboard/WeeklyTasks";
@@ -21,7 +21,7 @@ export default function Home() {
   return (
     <Layout>
       <div className="grid gap-6 md:gap-8">
-        <Overview />
+        <Statistics />
         <SalesChart />
         <TopProducts />
         <WeeklyTasks />

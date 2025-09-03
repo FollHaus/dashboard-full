@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { DayPicker, DateRange } from 'react-day-picker'
+import ru from 'date-fns/locale/ru'
 import 'react-day-picker/dist/style.css'
 import cn from 'classnames'
 
@@ -14,7 +16,7 @@ interface Props {
 const DateRangePicker: React.FC<Props> = ({ initial, onConfirm, onCancel }) => {
   const [range, setRange] = useState<DateRange | undefined>(initial)
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white rounded p-4 shadow-md space-y-4">
         <DayPicker
@@ -23,6 +25,7 @@ const DateRangePicker: React.FC<Props> = ({ initial, onConfirm, onCancel }) => {
           selected={range}
           onSelect={setRange}
           pagedNavigation
+          locale={ru}
         />
         <div className="flex justify-end gap-2">
           <button
@@ -49,7 +52,8 @@ const DateRangePicker: React.FC<Props> = ({ initial, onConfirm, onCancel }) => {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

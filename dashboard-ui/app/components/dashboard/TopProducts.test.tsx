@@ -6,11 +6,8 @@ import { DashboardFilterProvider } from '@/store/dashboardFilter'
 
 vi.mock('@/services/analytics/analytics.service', () => ({
   AnalyticsService: {
-    getTopProducts: vi.fn(() =>
-      Promise.resolve([
-        { productId: 1, productName: 'Prod1', totalUnits: 10, totalRevenue: 1000, purchaseCostPortion: 400 },
-      ]),
-    ),
+    getTopProducts: vi.fn(() => Promise.resolve([])),
+    getCategorySales: vi.fn(() => Promise.resolve([])),
   },
 }))
 
@@ -31,9 +28,10 @@ const renderWidget = () => {
 }
 
 describe('TopProducts', () => {
-  it('renders header and select', async () => {
+  it('renders headers and toggle', async () => {
     renderWidget()
-    expect(await screen.findByText(/Топ товаров/)).toBeInTheDocument()
-    expect(screen.getByRole('combobox')).toBeInTheDocument()
+    expect(await screen.findByText(/Топ продуктов/)).toBeInTheDocument()
+    expect(await screen.findByText(/Топ категорий/)).toBeInTheDocument()
+    expect(screen.getByText('Выручка')).toBeInTheDocument()
   })
 })
