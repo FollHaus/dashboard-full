@@ -156,11 +156,14 @@ const SalesChart: React.FC = () => {
                 axisLine={false}
               />
               <Tooltip
-                formatter={(value: any, name) =>
-                  name === "revenue"
-                    ? currency.format(Number(value))
-                    : `${intFmt.format(Number(value))} шт`}
-                labelFormatter={(label) => label}
+                formatter={(value: any, name) => {
+                  if (name === "revenue")
+                    return [currency.format(Number(value)), "Доход"];
+                  if (name === "quantity")
+                    return [intFmt.format(Number(value)), "Количество"];
+                  return [value, name];
+                }}
+                labelFormatter={(label) => `Дата: ${label}`}
                 contentStyle={{ fontSize: 12 }}
               />
               <Bar dataKey="quantity" yAxisId="right" barSize={20} fill="#3B82F6" />
