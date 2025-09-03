@@ -4,14 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Button from '@/ui/Button/Button'
 import SearchInput from '@/components/ui/SearchInput'
-import {
-  Pencil,
-  Trash2,
-  Printer,
-  Download,
-  PackageX,
-  Archive,
-} from 'lucide-react'
+import { Pencil, Trash2, Printer, Download } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/utils/toast'
@@ -373,32 +366,10 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="rounded-2xl p-4 md:p-5 shadow-sm border border-red-100 bg-red-50 text-red-700 flex flex-col justify-center">
-              <div className="flex items-center gap-2">
-                <PackageX className="w-5 h-5 text-red-600" aria-hidden="true" />
-                <span className="text-sm text-gray-600">Нет в наличии</span>
-              </div>
-              {isInitialLoading ? (
-                <div className="mt-2 h-7 w-10 bg-red-100 rounded animate-pulse" />
-              ) : (
-                <div className="mt-2 text-2xl md:text-3xl font-semibold">{stats.outOfStock}</div>
-              )}
-            </div>
-            <div className="rounded-2xl p-4 md:p-5 shadow-sm border border-orange-100 bg-orange-50 text-orange-700 flex flex-col justify-center">
-              <div className="flex items-center gap-2">
-                <Archive className="w-5 h-5 text-orange-600" aria-hidden="true" />
-                <span className="text-sm text-gray-600">Мало на складе</span>
-              </div>
-              {isInitialLoading ? (
-                <div className="mt-2 h-7 w-10 bg-orange-100 rounded animate-pulse" />
-              ) : (
-                <div className="mt-2 text-2xl md:text-3xl font-semibold">{stats.lowStock}</div>
-              )}
-            </div>
-          </div>
           <WarehouseKpiCards
             totalCount={stats.totalCount}
+            lowStock={stats.lowStock}
+            outOfStock={stats.outOfStock}
             purchaseValue={stats.purchaseValue}
             saleValue={stats.saleValue}
             isLoading={isInitialLoading}
