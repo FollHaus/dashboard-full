@@ -193,7 +193,7 @@ export default function ReportsPage() {
 
   const gross = kpis ? kpis.revenue - kpis.cogs : 0
   const marginPct = kpis && kpis.revenue > 0 ? (gross / kpis.revenue) * 100 : 0
-  const currency = new Intl.NumberFormat('ru-RU', {
+  const fmt = new Intl.NumberFormat('ru-RU', {
     style: 'currency',
     currency: 'RUB',
     maximumFractionDigits: 0,
@@ -459,17 +459,23 @@ export default function ReportsPage() {
               <section className='mb-6'>
                 <h3 className='text-sm font-semibold text-neutral-900 mb-2'>Итог за период</h3>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-                  <div className='rounded-xl bg-white shadow-card p-4 flex flex-col'>
-                    <span className='text-sm font-medium text-neutral-500'>Выручка</span>
-                    <span className='text-xl md:text-2xl font-bold text-neutral-900 tabular-nums'>
-                      {currency.format(kpis.revenue)}
-                    </span>
+                  <div className="rounded-xl shadow-card p-4 md:p-5 h-[120px] flex bg-[#D1FAE5] text-[#047857]">
+                    <div className="mr-3 text-2xl leading-none select-none">💰</div>
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      <div className="text-[13px] md:text-sm text-neutral-800/80">Выручка</div>
+                      <div className="text-2xl md:text-3xl font-bold tabular-nums truncate">
+                        {fmt.format(kpis.revenue)}
+                      </div>
+                    </div>
                   </div>
-                  <div className='rounded-xl bg-white shadow-card p-4 flex flex-col'>
-                    <span className='text-sm font-medium text-neutral-500'>Прибыль</span>
-                    <span className='text-xl md:text-2xl font-bold text-neutral-900 tabular-nums'>
-                      {currency.format(gross)}
-                    </span>
+                  <div className="rounded-xl shadow-card p-4 md:p-5 h-[120px] flex bg-[#DBEAFE] text-[#1D4ED8]">
+                    <div className="mr-3 text-2xl leading-none select-none">📈</div>
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      <div className="text-[13px] md:text-sm text-neutral-800/80">Прибыль</div>
+                      <div className="text-2xl md:text-3xl font-bold tabular-nums truncate">
+                        {fmt.format(gross)}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </section>
