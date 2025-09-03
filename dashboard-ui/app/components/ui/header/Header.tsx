@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import cn from 'classnames'
-import { useEffect, useRef, useState } from 'react'
-import { User } from 'lucide-react'
+import { useLayoutEffect, useRef, useState } from 'react'
+import { Menu, User } from 'lucide-react'
 
 const routes = [
   { label: 'Главная', path: '/' },
@@ -23,7 +23,7 @@ export default function Header() {
     console.info('profile')
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const nav = navRef.current
     const underline = underlineRef.current
     const activeLink = nav?.querySelector<HTMLAnchorElement>('a.active')
@@ -37,15 +37,22 @@ export default function Header() {
 
   const renderLink = (route: { label: string; path: string }, isMobile = false) => {
     const isActive = pathname === route.path
+    const baseClasses = isMobile
+      ? cn(
+          'px-3 py-2 rounded-lg transition-colors',
+          isActive
+            ? 'bg-primary-300/40 text-neutral-900 font-semibold'
+            : 'hover:bg-neutral-200'
+        )
+      : cn(
+          'nav-link px-1 py-1 text-neutral-900/70 hover:text-neutral-900 hover:bg-neutral-200 rounded transition-colors',
+          isActive && 'active text-neutral-900 font-semibold'
+        )
     return (
       <Link
         key={route.path}
         href={route.path}
-        data-path={route.path}
-        className={cn('nav-link', {
-          active: isActive,
-          'bg-neutral-200 text-neutral-900 rounded-lg': isMobile && isActive,
-        })}
+        className={baseClasses}
         aria-current={isActive ? 'page' : undefined}
         onClick={() => isMobile && setOpen(false)}
       >
@@ -55,21 +62,21 @@ export default function Header() {
   }
 
   return (
-    <header className="w-full sticky top-0 z-40 bg-neutral-100/95 backdrop-blur supports-[backdrop-filter]:bg-neutral-100/80 border-b border-neutral-300">
-      <div className="relative mx-auto max-w-7xl h-14 md:h-16 px-3 md:px-6 flex items-center justify-between gap-4">
-        <Link href="/" className="font-cnbold text-xl md:text-2xl text-neutral-900 select-none">
+    <header className="sticky top-0 z-40 bg-neutral-100/90 backdrop-blur border-b border-neutral-300 shadow-sm">
+      <div className="mx-auto max-w-7xl h-16 px-4 md:px-6 flex items-center justify-between gap-6">
+        <Link
+          href="/"
+          className="font-cnbold text-xl md:text-2xl font-semibold text-neutral-900/90"
+        >
           И.П. Муллиев
         </Link>
 
-        <nav
-          ref={navRef}
-          className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2"
-        >
+        <nav ref={navRef} className="relative hidden md:flex items-center gap-8">
           {routes.map((r) => renderLink(r))}
           <span
             id="nav-underline"
             ref={underlineRef}
-            className="absolute -bottom-[9px] h-[3px] bg-primary-500 rounded-full transition-all duration-300"
+            className="absolute -bottom-[10px] h-[3px] bg-primary-500 rounded-full transition-all duration-300"
           />
         </nav>
 
@@ -87,22 +94,23 @@ export default function Header() {
           </button>
 
           <button
-            className="md:hidden h-10 w-10 flex items-center justify-center rounded-xl bg-neutral-200"
-            aria-label="Меню"
-            id="burger"
+            className="md:hidden h-10 w-10 rounded-xl bg-neutral-200 flex items-center justify-center hover:bg-neutral-300"
+            aria-label="Открыть меню"
             onClick={() => setOpen((prev) => !prev)}
-          />
+          >
+            <Menu className="w-5 h-5 text-neutral-900" />
+          </button>
         </div>
       </div>
 
       <div
-        id="mobileMenu"
+        id="mobileNav"
         className={cn(
           'md:hidden border-t border-neutral-300 bg-neutral-100',
           open ? 'block' : 'hidden'
         )}
       >
-        <nav className="px-3 py-2 flex flex-col gap-1">
+        <nav className="px-3 py-2 flex flex-col">
           {routes.map((r) => renderLink(r, true))}
         </nav>
       </div>

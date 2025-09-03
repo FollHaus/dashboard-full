@@ -83,26 +83,11 @@ input[type='number'] {
 
 @layer components {
   .nav-link {
-    @apply relative text-neutral-900/80 hover:text-neutral-900 transition-colors font-medium px-1 py-1 focus:outline-none focus:ring-2 focus:ring-primary-300 rounded;
+    @apply px-1 py-1 text-neutral-900/70 hover:text-neutral-900 hover:bg-neutral-200 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary-300;
   }
 
   .nav-link.active {
     @apply text-neutral-900 font-semibold;
-  }
-
-  .nav-link::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -9px;
-    height: 2px;
-    background: transparent;
-    transition: background .2s;
-  }
-
-  .nav-link:hover::after {
-    background: rgba(0, 0, 0, .15);
   }
 }
 
