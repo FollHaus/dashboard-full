@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import cn from 'classnames'
 import { useEffect, useRef, useState } from 'react'
+import { User } from 'lucide-react'
 
 const routes = [
   { label: 'Главная', path: '/' },
@@ -14,9 +15,13 @@ const routes = [
 
 export default function Header() {
   const pathname = usePathname()
-  const navRef = useRef<HTMLDivElement>(null)
+  const navRef = useRef<HTMLElement>(null)
   const underlineRef = useRef<HTMLSpanElement>(null)
   const [open, setOpen] = useState(false)
+
+  const openProfileMenu = () => {
+    console.info('profile')
+  }
 
   useEffect(() => {
     const nav = navRef.current
@@ -51,12 +56,15 @@ export default function Header() {
 
   return (
     <header className="w-full sticky top-0 z-40 bg-neutral-100/95 backdrop-blur supports-[backdrop-filter]:bg-neutral-100/80 border-b border-neutral-300">
-      <div className="mx-auto max-w-7xl px-3 md:px-6 h-14 md:h-16 flex items-center justify-between gap-3">
+      <div className="relative mx-auto max-w-7xl h-14 md:h-16 px-3 md:px-6 flex items-center justify-between gap-4">
         <Link href="/" className="font-cnbold text-xl md:text-2xl text-neutral-900 select-none">
           И.П. Муллиев
         </Link>
 
-        <nav ref={navRef} className="relative hidden md:flex items-center gap-6">
+        <nav
+          ref={navRef}
+          className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2"
+        >
           {routes.map((r) => renderLink(r))}
           <span
             id="nav-underline"
@@ -65,14 +73,26 @@ export default function Header() {
           />
         </nav>
 
-        <button className="shadow-icon" aria-label="Профиль"></button>
+        <div className="flex items-center gap-3">
+          <button
+            id="profileBtn"
+            aria-label="Профиль"
+            className={cn(
+              'h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center hover:bg-neutral-300',
+              'focus:outline-none focus:ring-2 focus:ring-primary-300'
+            )}
+            onClick={openProfileMenu}
+          >
+            <User className="w-5 h-5 text-neutral-900" />
+          </button>
 
-        <button
-          className="md:hidden h-10 w-10 flex-center-center rounded-xl bg-neutral-200"
-          aria-label="Меню"
-          id="burger"
-          onClick={() => setOpen((prev) => !prev)}
-        />
+          <button
+            className="md:hidden h-10 w-10 flex items-center justify-center rounded-xl bg-neutral-200"
+            aria-label="Меню"
+            id="burger"
+            onClick={() => setOpen((prev) => !prev)}
+          />
+        </div>
       </div>
 
       <div
