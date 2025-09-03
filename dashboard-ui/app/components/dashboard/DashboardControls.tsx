@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useDashboardFilter, Period } from "@/store/dashboardFilter";
+import { useDashboardFilter, Period, DEFAULT_FILTER } from "@/store/dashboardFilter";
 
 interface Props {
   warehouse?: string;
@@ -16,8 +16,8 @@ const periodOptions: { value: Period; label: string }[] = [
 ];
 
 const DashboardControls: React.FC<Props> = ({ warehouse, onWarehouseChange }) => {
-  const { filter, setPeriod } = useDashboardFilter();
-  const { period } = filter;
+  const { filter: ctxFilter, setPeriod } = useDashboardFilter();
+  const { period } = ctxFilter ?? DEFAULT_FILTER;
   return (
     <div className="inline-flex items-center gap-4">
       <select

@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import KpiCard from "@/components/ui/KpiCard";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
 import { getPeriodRange } from "@/utils/buckets";
-import { useDashboardFilter } from "@/store/dashboardFilter";
+import { useDashboardFilter, DEFAULT_FILTER } from "@/store/dashboardFilter";
 
 type KpiData = {
   revenue: number;
@@ -60,7 +60,8 @@ function delta(curr: number, prev: number) {
 }
 
 const KpiCards: React.FC = () => {
-  const { filter } = useDashboardFilter();
+  const { filter: ctxFilter } = useDashboardFilter();
+  const filter = ctxFilter ?? DEFAULT_FILTER;
   const { period } = filter;
   const { start, end } = getPeriodRange(filter);
   const prevRange = getPrevRange(period, filter);

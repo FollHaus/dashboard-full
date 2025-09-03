@@ -5,7 +5,7 @@ import cn from 'classnames'
 import { useQuery } from '@tanstack/react-query'
 import { AnalyticsService } from '@/services/analytics/analytics.service'
 import KpiCard from '@/components/ui/KpiCard'
-import { useDashboardFilter } from '@/store/dashboardFilter'
+import { useDashboardFilter, DEFAULT_FILTER } from '@/store/dashboardFilter'
 import { getPeriodRange } from '@/utils/buckets'
 import DateRangePicker from '@/components/ui/DateRangePicker'
 
@@ -19,7 +19,8 @@ const intFmt = new Intl.NumberFormat('ru-RU')
 const formatISO = (d: Date) => d.toISOString().slice(0, 10)
 
 const Overview: React.FC = () => {
-  const { filter, setFilter } = useDashboardFilter()
+  const { filter: ctxFilter, setFilter } = useDashboardFilter()
+  const filter = ctxFilter ?? DEFAULT_FILTER
   const { start, end } = getPeriodRange(filter)
   const startStr = formatISO(start)
   const endStr = formatISO(end)
@@ -49,7 +50,7 @@ const Overview: React.FC = () => {
           {(['day', 'week', 'month', 'year'] as const).map((p) => (
             <button
               key={p}
-              onClick={() => setFilter({ period: p })}
+              onClick={() => setFilter({ period: p, from: null, to: null })}
               className={cn(
                 'h-9 px-3 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-300',
                 filter.period === p

@@ -14,8 +14,14 @@ export type { Period } from '@/store/period'
 
 export interface DashboardFilter {
   period: Period
-  from?: string
-  to?: string
+  from: string | null
+  to: string | null
+}
+
+export const DEFAULT_FILTER: DashboardFilter = {
+  period: 'day',
+  from: null,
+  to: null,
 }
 
 interface FilterCtx {
@@ -37,7 +43,7 @@ export const DashboardFilterProvider: React.FC<{ children: React.ReactNode }> = 
   const router = useRouter()
   const searchParams = useSearchParams()
   const queryClient = useQueryClient()
-  const [filter, setFilterState] = useState<DashboardFilter>({ period: 'day' })
+  const [filter, setFilterState] = useState<DashboardFilter>(DEFAULT_FILTER)
 
   const syncUrl = useCallback(
     (f: DashboardFilter) => {
@@ -57,10 +63,15 @@ export const DashboardFilterProvider: React.FC<{ children: React.ReactNode }> = 
 
   const setFilter = useCallback(
     (f: DashboardFilter) => {
-      setFilterState(f)
+      const next: DashboardFilter = {
+        period: f.period,
+        from: f.period === 'range' ? f.from ?? null : null,
+        to: f.period === 'range' ? f.to ?? null : null,
+      }
+      setFilterState(next)
       if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(f))
-        syncUrl(f)
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+        syncUrl(next)
         queryClient.invalidateQueries({ queryKey: ['kpi'] })
         queryClient.invalidateQueries({ queryKey: ['daily-revenue'] })
         queryClient.invalidateQueries({ queryKey: ['sales'] })
@@ -70,7 +81,10 @@ export const DashboardFilterProvider: React.FC<{ children: React.ReactNode }> = 
     [syncUrl, queryClient],
   )
 
-  const setPeriod = useCallback((p: Period) => setFilter({ period: p }), [setFilter])
+  const setPeriod = useCallback(
+    (p: Period) => setFilter({ period: p, from: null, to: null }),
+    [setFilter],
+  )
 
   const initFrom = useCallback(() => {
     if (initialized || typeof window === 'undefined') return
@@ -86,15 +100,23 @@ export const DashboardFilterProvider: React.FC<{ children: React.ReactNode }> = 
     } catch {
       /* empty */
     }
-    let initial: DashboardFilter = { period: 'day' }
+    let initial: DashboardFilter = { ...DEFAULT_FILTER }
     if (isValidPeriod(urlPeriod)) {
-      initial = { period: urlPeriod as Period }
+      initial = { period: urlPeriod as Period, from: null, to: null }
       if (urlPeriod === 'range' && urlFrom && urlTo) {
         initial.from = urlFrom
         initial.to = urlTo
       }
     } else if (storageFilter && isValidPeriod(storageFilter.period)) {
-      initial = storageFilter
+      initial = {
+        period: storageFilter.period,
+        from: storageFilter.from ?? null,
+        to: storageFilter.to ?? null,
+      }
+      if (initial.period !== 'range') {
+        initial.from = null
+        initial.to = null
+      }
     }
     setFilterState(initial)
     params.set('period', initial.period)
@@ -113,12 +135,17 @@ export const DashboardFilterProvider: React.FC<{ children: React.ReactNode }> = 
         try {
           const parsed = JSON.parse(e.newValue)
           if (isValidPeriod(parsed.period)) {
-            setFilterState(parsed)
+            const next: DashboardFilter = {
+              period: parsed.period,
+              from: parsed.period === 'range' ? parsed.from ?? null : null,
+              to: parsed.period === 'range' ? parsed.to ?? null : null,
+            }
+            setFilterState(next)
             const params = new URLSearchParams(window.location.search)
-            params.set('period', parsed.period)
-            if (parsed.period === 'range' && parsed.from && parsed.to) {
-              params.set('from', parsed.from)
-              params.set('to', parsed.to)
+            params.set('period', next.period)
+            if (next.period === 'range' && next.from && next.to) {
+              params.set('from', next.from)
+              params.set('to', next.to)
             } else {
               params.delete('from')
               params.delete('to')
@@ -138,10 +165,10 @@ export const DashboardFilterProvider: React.FC<{ children: React.ReactNode }> = 
     const from = searchParams.get('from')
     const to = searchParams.get('to')
     if (isValidPeriod(p)) {
-      const next: DashboardFilter = { period: p as Period }
-      if (p === 'range' && from && to) {
-        next.from = from
-        next.to = to
+      const next: DashboardFilter = {
+        period: p as Period,
+        from: p === 'range' ? from ?? null : null,
+        to: p === 'range' ? to ?? null : null,
       }
       setFilterState(next)
       if (typeof window !== 'undefined') {
