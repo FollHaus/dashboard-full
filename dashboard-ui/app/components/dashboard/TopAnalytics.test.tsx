@@ -28,11 +28,12 @@ const renderWidget = () => {
 }
 
 describe('TopAnalytics', () => {
-  it('renders tabs and metric toggle', async () => {
+  it('renders filter panel with controls', async () => {
     renderWidget()
     expect(await screen.findByText(/Топ-аналитика/)).toBeInTheDocument()
     expect(screen.getByText('По продуктам')).toBeInTheDocument()
     expect(screen.getByText('По категориям')).toBeInTheDocument()
     expect(screen.getByText('Выручка')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('5')).toBeInTheDocument()
   })
 })
