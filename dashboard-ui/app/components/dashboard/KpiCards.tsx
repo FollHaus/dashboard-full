@@ -111,50 +111,57 @@ const KpiCards: React.FC = () => {
   const groups = [
     {
       title: "💰 Финансовые KPI",
+      grid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
       items: [
         {
           label: "Выручка",
+          icon: "💰",
           value: currency.format(revenue),
           valueTitle: currency.format(revenue),
-          valueClass: "text-success",
-          className: "bg-success/20",
+          valueClass: "text-[#059669]",
+          className: "bg-[#D1FAE5]",
           delta: delta(revenue, prevRevenue),
         },
         {
-          label: "Фин. итог",
+          label: "Финансовый итог",
+          icon: "📈",
           value: currency.format(profit),
           valueTitle: currency.format(profit),
-          valueClass: profit >= 0 ? "text-success" : "text-error",
-          className: "bg-success/30",
+          valueClass: "text-[#047857]",
+          className: "bg-[#A7F3D0]",
           delta: delta(profit, prevProfit),
         },
         {
           label: "Маржа",
+          icon: "📊",
           value: `${marginPct.toFixed(1).replace('.', ',')}%`,
           valueTitle: `${marginPct.toFixed(2).replace('.', ',')}%`,
-          valueClass: marginPct > 0 ? "text-success" : marginPct < 0 ? "text-error" : "text-purple-700",
-          className: "bg-purple-200",
+          valueClass: marginPct < 0 ? "text-[#DC2626]" : "text-[#7C3AED]",
+          className: "bg-[#EDE9FE]",
           delta: delta(marginPct, prevMarginPct),
         },
       ],
     },
     {
       title: "📦 Операционные KPI",
+      grid: "grid grid-cols-1 sm:grid-cols-2 gap-4",
       items: [
         {
           label: "Кол-во продаж",
+          icon: "🛒",
           value: numberCompact.format(orders),
           valueTitle: numberFull.format(orders),
-          valueClass: "text-info",
-          className: "bg-info/20",
+          valueClass: "text-[#2563EB]",
+          className: "bg-[#DBEAFE]",
           delta: delta(orders, prevOrders),
         },
         {
           label: "Средний чек",
+          icon: "💳",
           value: currency.format(avg),
           valueTitle: currency.format(avg),
-          valueClass: "text-warning",
-          className: "bg-warning/20",
+          valueClass: "text-[#D97706]",
+          className: "bg-[#FEF3C7]",
           delta: delta(avg, prevAvg),
         },
       ],
@@ -171,11 +178,12 @@ const KpiCards: React.FC = () => {
           <h2 className="text-lg font-semibold text-neutral-900 flex items-center gap-2">
             {g.title}
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className={g.grid}>
             {g.items.map((item) => (
               <KpiCard
                 key={item.label}
                 label={item.label}
+                icon={item.icon}
                 value={item.value}
                 valueTitle={item.valueTitle}
                 valueClassName={item.valueClass}
