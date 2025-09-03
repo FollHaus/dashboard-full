@@ -1,0 +1,149 @@
+'use client'
+
+import React, { useState } from 'react'
+import cn from 'classnames'
+import { useQuery } from '@tanstack/react-query'
+import { AnalyticsService } from '@/services/analytics/analytics.service'
+import KpiCard from '@/components/ui/KpiCard'
+import { useDashboardFilter } from '@/store/dashboardFilter'
+import { getPeriodRange } from '@/utils/buckets'
+import DateRangePicker from '@/components/ui/DateRangePicker'
+
+const currency = new Intl.NumberFormat('ru-RU', {
+  style: 'currency',
+  currency: 'RUB',
+  maximumFractionDigits: 0,
+})
+const intFmt = new Intl.NumberFormat('ru-RU')
+
+const formatISO = (d: Date) => d.toISOString().slice(0, 10)
+
+const Overview: React.FC = () => {
+  const { filter, setFilter } = useDashboardFilter()
+  const { start, end } = getPeriodRange(filter)
+  const startStr = formatISO(start)
+  const endStr = formatISO(end)
+  const [openRange, setOpenRange] = useState(false)
+
+  const {
+    data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['overview-kpi', filter.period, startStr, endStr],
+    queryFn: () => AnalyticsService.getKpis(startStr, endStr),
+    keepPreviousData: true,
+  })
+
+  const revenue = data?.revenue ?? 0
+  const profit = data?.margin ?? 0
+  const orders = data?.orders ?? 0
+
+  return (
+    <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 mb-6 relative">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <h2 className="text-lg font-semibold text-neutral-900">Обзор</h2>
+        <div className="flex items-center gap-2">
+          {(['day', 'week', 'month', 'year'] as const).map((p) => (
+            <button
+              key={p}
+              onClick={() => setFilter({ period: p })}
+              className={cn(
+                'h-9 px-3 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-300',
+                filter.period === p
+                  ? 'bg-primary-500 text-neutral-50'
+                  : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-300',
+              )}
+              aria-pressed={filter.period === p}
+            >
+              {p === 'day'
+                ? 'Сегодня'
+                : p === 'week'
+                  ? 'Неделя'
+                  : p === 'month'
+                    ? 'Месяц'
+                    : 'Год'}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setOpenRange(true)}
+            className={cn(
+              'h-9 px-3 rounded-full text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-300',
+              filter.period === 'range'
+                ? 'bg-primary-500 text-neutral-50'
+                : 'bg-neutral-100 text-neutral-900 hover:bg-neutral-300',
+            )}
+            aria-pressed={filter.period === 'range'}
+            title={
+              filter.from && filter.to
+                ? `${filter.from} — ${filter.to}`
+                : 'Выбрать диапазон дат'
+            }
+          >
+            Диапазон…
+          </button>
+        </div>
+      </div>
+
+      {error ? (
+        <div className="text-error flex items-center gap-2">
+          Ошибка загрузки
+          <button className="underline" onClick={() => refetch()}>
+            Повторить
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          <KpiCard
+            title="Выручка"
+            icon="💰"
+            value={currency.format(revenue)}
+            accent="neutral"
+          />
+          <KpiCard
+            title="Финансовый итог"
+            icon="📈"
+            value={currency.format(profit)}
+            accent="neutral"
+          />
+          <KpiCard
+            title="Кол-во продаж"
+            icon="🛒"
+            value={intFmt.format(orders)}
+            accent="neutral"
+          />
+        </div>
+      )}
+
+      {isFetching && data && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/50">
+          <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+
+      {openRange && (
+        <DateRangePicker
+          initial={{
+            from: filter.from ? new Date(filter.from) : undefined,
+            to: filter.to ? new Date(filter.to) : undefined,
+          }}
+          onCancel={() => setOpenRange(false)}
+          onConfirm={(r) => {
+            setFilter({
+              period: 'range',
+              from: formatISO(r.from),
+              to: formatISO(r.to),
+            })
+            setOpenRange(false)
+          }}
+        />
+      )}
+    </section>
+  )
+}
+
+export default Overview
+

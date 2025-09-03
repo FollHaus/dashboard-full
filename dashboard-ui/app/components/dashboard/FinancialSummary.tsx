@@ -5,7 +5,7 @@ import { FaBriefcase } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
 import { getPeriodRange } from "@/utils/buckets";
-import { usePeriod } from "@/store/period";
+import { useDashboardFilter } from "@/store/dashboardFilter";
 
 const currency = new Intl.NumberFormat("ru-RU", {
   style: "currency",
@@ -13,8 +13,9 @@ const currency = new Intl.NumberFormat("ru-RU", {
 });
 
 const FinancialSummary: React.FC = () => {
-  const { period } = usePeriod();
-  const { start, end } = getPeriodRange(period);
+  const { filter } = useDashboardFilter();
+  const { period } = filter;
+  const { start, end } = getPeriodRange(filter);
   const { data } = useQuery({
     queryKey: ["kpi", period, start.toISOString(), end.toISOString()],
     queryFn: async () =>

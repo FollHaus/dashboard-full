@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
 import { getPeriodRange } from "@/utils/buckets";
-import { usePeriod } from "@/store/period";
+import { useDashboardFilter } from "@/store/dashboardFilter";
 
 const formatDate = (date: Date) =>
   new Date(date.getTime() - date.getTimezoneOffset() * 60000)
@@ -34,8 +34,9 @@ const options = [
 type Metric = (typeof options)[number]["value"];
 
 const TopProducts: React.FC = () => {
-  const { period } = usePeriod();
-  const { start, end } = getPeriodRange(period);
+  const { filter } = useDashboardFilter();
+  const { period } = filter;
+  const { start, end } = getPeriodRange(filter);
   const s = formatDate(start);
   const e = formatDate(end);
   const [metric, setMetric] = useState<Metric>("revenue");

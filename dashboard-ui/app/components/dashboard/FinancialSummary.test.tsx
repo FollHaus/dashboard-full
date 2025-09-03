@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { vi, afterEach } from 'vitest'
 import FinancialSummary from './FinancialSummary'
-import { PeriodProvider } from '@/store/period'
+import { DashboardFilterProvider } from '@/store/dashboardFilter'
 import { AnalyticsService } from '@/services/analytics/analytics.service'
 
 vi.mock('@/services/analytics/analytics.service', () => ({
@@ -20,9 +20,9 @@ const renderWidget = () => {
   const client = new QueryClient()
   render(
     <QueryClientProvider client={client}>
-      <PeriodProvider>
+      <DashboardFilterProvider>
         <FinancialSummary />
-      </PeriodProvider>
+      </DashboardFilterProvider>
     </QueryClientProvider>
   )
 }
