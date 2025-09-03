@@ -44,6 +44,15 @@ const Statistics: React.FC = () => {
   const profit = revenue - cogs
   const orders = data?.orders ?? 0
 
+  const rangeLabel =
+    filter.from && filter.to
+      ? `${format(new Date(filter.from), 'd MMMM yyyy', { locale: ru })} — ${format(
+          new Date(filter.to),
+          'd MMMM yyyy',
+          { locale: ru },
+        )}`
+      : 'Диапазон'
+
   return (
     <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 mb-6 md:mb-8 relative overflow-visible">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4 overflow-visible">
@@ -73,16 +82,10 @@ const Statistics: React.FC = () => {
             onClick={() => setOpenRange(true)}
             className="h-9 px-3 rounded-full text-sm font-medium bg-neutral-100 hover:bg-neutral-300 text-neutral-900 data-[active=true]:bg-primary-500 data-[active=true]:text-neutral-50 whitespace-nowrap"
             title={
-              filter.from && filter.to
-                ? `${format(new Date(filter.from), 'd MMMM yyyy', { locale: ru })} — ${format(
-                    new Date(filter.to),
-                    'd MMMM yyyy',
-                    { locale: ru },
-                  )}`
-                : 'Выбрать диапазон дат'
+              filter.from && filter.to ? rangeLabel : 'Выбрать диапазон дат'
             }
           >
-            Диапазон…
+            {rangeLabel}
           </button>
         </div>
       </div>
