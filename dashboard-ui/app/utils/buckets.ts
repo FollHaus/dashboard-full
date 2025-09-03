@@ -1,4 +1,4 @@
-import { DashboardFilter, Period } from "@/store/dashboardFilter";
+import { DashboardFilter, DEFAULT_FILTER, Period } from "@/store/dashboardFilter";
 
 export interface Bucket {
   key: string; // ISO date (YYYY-MM-DD) or YYYY-MM for months
@@ -22,37 +22,41 @@ export const MONTH_LABELS = [
   "Дек",
 ];
 
-export function getPeriodRange(filter: DashboardFilter): { start: Date; end: Date } {
-  if (filter.period === 'range' && filter.from && filter.to) {
-    return { start: new Date(filter.from), end: new Date(filter.to) };
+export function getPeriodRange(filter?: DashboardFilter): { start: Date; end: Date } {
+  const f = filter ?? DEFAULT_FILTER
+  if (f.period === 'range') {
+    if (f.from && f.to) {
+      return { start: new Date(f.from), end: new Date(f.to) }
+    }
+    // fallback to default day when range is incomplete
   }
-  const period = filter.period;
-  const now = new Date();
-  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // local midnight
+  const period = f.period === 'range' ? 'day' : f.period
+  const now = new Date()
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate()) // local midnight
   switch (period) {
     case 'day': {
-      return { start: end, end };
+      return { start: end, end }
     }
     case 'week': {
-      const day = (end.getDay() + 6) % 7; // 0=Mon
-      const start = new Date(end);
-      start.setDate(end.getDate() - day);
-      const weekEnd = new Date(start);
-      weekEnd.setDate(start.getDate() + 6);
-      return { start, end: weekEnd };
+      const day = (end.getDay() + 6) % 7 // 0=Mon
+      const start = new Date(end)
+      start.setDate(end.getDate() - day)
+      const weekEnd = new Date(start)
+      weekEnd.setDate(start.getDate() + 6)
+      return { start, end: weekEnd }
     }
     case 'month': {
-      const start = new Date(end.getFullYear(), end.getMonth(), 1);
-      const monthEnd = new Date(end.getFullYear(), end.getMonth() + 1, 0);
-      return { start, end: monthEnd };
+      const start = new Date(end.getFullYear(), end.getMonth(), 1)
+      const monthEnd = new Date(end.getFullYear(), end.getMonth() + 1, 0)
+      return { start, end: monthEnd }
     }
     case 'year': {
-      const start = new Date(end.getFullYear(), 0, 1);
-      const yearEnd = new Date(end.getFullYear(), 11, 31);
-      return { start, end: yearEnd };
+      const start = new Date(end.getFullYear(), 0, 1)
+      const yearEnd = new Date(end.getFullYear(), 11, 31)
+      return { start, end: yearEnd }
     }
     default:
-      return { start: end, end };
+      return { start: end, end }
   }
 }
 

@@ -5,7 +5,7 @@ import { FaBriefcase } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
 import { AnalyticsService } from "@/services/analytics/analytics.service";
 import { getPeriodRange } from "@/utils/buckets";
-import { useDashboardFilter } from "@/store/dashboardFilter";
+import { useDashboardFilter, DEFAULT_FILTER } from "@/store/dashboardFilter";
 
 const currency = new Intl.NumberFormat("ru-RU", {
   style: "currency",
@@ -13,7 +13,8 @@ const currency = new Intl.NumberFormat("ru-RU", {
 });
 
 const FinancialSummary: React.FC = () => {
-  const { filter } = useDashboardFilter();
+  const { filter: ctxFilter } = useDashboardFilter();
+  const filter = ctxFilter ?? DEFAULT_FILTER;
   const { period } = filter;
   const { start, end } = getPeriodRange(filter);
   const { data } = useQuery({
