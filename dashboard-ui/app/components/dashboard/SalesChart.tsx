@@ -89,18 +89,18 @@ const SalesChart: React.FC = () => {
 
   if (error) {
     return (
-      <div className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 text-error flex items-center gap-2">
+      <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 mb-6 md:mb-8 text-error flex items-center gap-2">
         Ошибка загрузки
         <button className="underline" onClick={() => { refetchRev(); refetchQty(); }}>
           Повторить
         </button>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5">
-      <h3 className="text-lg font-semibold mb-4">📊 Продажи</h3>
+    <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 mb-6 md:mb-8">
+      <h2 className="flex items-center gap-2 text-lg font-semibold text-neutral-900 mb-4">📊 Продажи</h2>
       <div className="relative h-[340px]">
         {loading ? (
           <div className="absolute inset-0 flex items-end space-x-2">

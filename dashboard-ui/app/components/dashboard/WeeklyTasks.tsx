@@ -84,12 +84,12 @@ const WeeklyTasks = () => {
   list = list.slice(0, 10);
 
   return (
-    <div className="bg-neutral-200 p-4 md:p-5 rounded-2xl shadow-card relative overflow-hidden">
+    <section className="bg-neutral-200 p-4 md:p-5 rounded-2xl shadow-card relative overflow-hidden mb-6 md:mb-8">
       {isFetching && (
         <div className="absolute inset-0 bg-neutral-200/50 animate-pulse" />
       )}
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2">✅ Задачи недели</h3>
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-neutral-900">✅ Задачи недели</h2>
         <Link
           href={`/tasks?start=${encodeURIComponent(startIso)}&end=${encodeURIComponent(
             endIso
@@ -174,7 +174,7 @@ const WeeklyTasks = () => {
           })}
         </ul>
       )}
-    </div>
+    </section>
   );
 };
 

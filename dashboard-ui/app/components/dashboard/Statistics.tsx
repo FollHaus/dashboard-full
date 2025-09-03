@@ -46,10 +46,12 @@ const Statistics: React.FC = () => {
   const orders = data?.orders ?? 0
 
   return (
-    <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 mb-6 relative overflow-visible">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <h2 className="text-lg font-semibold text-neutral-900">Статистика</h2>
-        <div className="flex flex-wrap items-center gap-2 md:justify-end">
+    <section className="rounded-2xl bg-neutral-200 shadow-card p-4 md:p-5 mb-6 md:mb-8 relative">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-neutral-900">
+          💰 Финансовые KPI
+        </h2>
+        <div className="flex flex-wrap items-center gap-2">
           {(['day', 'week', 'month', 'year'] as const).map((p) => (
             <button
               key={p}
@@ -109,19 +111,19 @@ const Statistics: React.FC = () => {
             title="Выручка"
             icon="💰"
             value={currency.format(revenue)}
-            accent="neutral"
+            accent="info"
           />
           <KpiCard
             title="Финансовый итог"
             icon="📈"
             value={currency.format(profit)}
-            accent="neutral"
+            accent="success"
           />
           <KpiCard
             title="Кол-во продаж"
             icon="🛒"
             value={intFmt.format(orders)}
-            accent="neutral"
+            accent="warning"
           />
         </div>
       )}

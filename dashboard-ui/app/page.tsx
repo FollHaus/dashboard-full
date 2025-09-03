@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import type { Metadata } from "next";
 import Statistics from "@/components/dashboard/Statistics";
 import SalesChart from "@/components/dashboard/SalesChart";
-import TopProducts from "@/components/dashboard/TopProducts";
+import TopAnalytics from "@/components/dashboard/TopAnalytics";
 import WeeklyTasks from "@/components/dashboard/WeeklyTasks";
 import { useDashboardFilter } from "@/store/dashboardFilter";
 
@@ -20,10 +20,10 @@ export default function Home() {
 
   return (
     <Layout>
-      <div className="grid gap-6 md:gap-8">
+      <div>
         <Statistics />
         <SalesChart />
-        <TopProducts />
+        <TopAnalytics />
         <WeeklyTasks />
       </div>
     </Layout>
