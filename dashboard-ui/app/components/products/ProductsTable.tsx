@@ -437,10 +437,10 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
                 </span>
               </th>
               <th
-                className="w-1/6 px-3 py-2 cursor-pointer text-right text-sm font-medium text-gray-600 uppercase tracking-wide hidden sm:table-cell"
+                className="w-1/6 min-w-[140px] px-3 py-2 cursor-pointer text-right text-sm font-medium text-gray-600 uppercase tracking-wide whitespace-nowrap hidden sm:table-cell"
                 onClick={() => handleSort('purchasePrice')}
               >
-                <span className="inline-flex items-center">
+                <span className="inline-flex w-full items-center justify-end">
                   Закупочная цена
                   <span className="ml-1 inline-block w-4">
                     {sortField === 'purchasePrice'
@@ -483,7 +483,7 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
                   <td className="w-1/6 px-3 py-2 text-right">
                     <div className="h-4 bg-neutral-200 rounded w-1/2 ml-auto" />
                   </td>
-                  <td className="w-1/6 px-3 py-2 text-right hidden sm:table-cell">
+                  <td className="w-1/6 min-w-[140px] px-3 py-2 text-right hidden sm:table-cell">
                     <div className="h-4 bg-neutral-200 rounded w-1/3 ml-auto" />
                   </td>
                   <td className="w-1/6 px-3 py-2 text-right">
@@ -555,7 +555,7 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
                       )}
                     </div>
                   </td>
-                  <td className="w-1/6 px-3 py-2 text-right hidden sm:table-cell tabular-nums">
+                  <td className="w-1/6 min-w-[140px] px-3 py-2 text-right hidden sm:table-cell whitespace-nowrap tabular-nums">
                     {Number.isFinite(prod.purchasePrice)
                       ? formatCurrency(prod.purchasePrice)
                       : '—'}
