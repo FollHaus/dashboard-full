@@ -41,7 +41,9 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
   const [pageSize] = useState(10)
   const ROW_HEIGHT = 44
   const [searchTerm, setSearchTerm] = useState(initialTerm)
-  const [sortField, setSortField] = useState<'name' | 'quantity' | 'price'>('name')
+  const [sortField, setSortField] = useState<
+    'name' | 'quantity' | 'purchasePrice' | 'price'
+  >('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [products, setProducts] = useState<IInventory[]>([])
@@ -187,7 +189,9 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
     }
   }, [status, data])
 
-  const handleSort = (field: 'name' | 'quantity' | 'price') => {
+  const handleSort = (
+    field: 'name' | 'quantity' | 'purchasePrice' | 'price',
+  ) => {
     if (sortField === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
     } else {
@@ -433,6 +437,21 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
                 </span>
               </th>
               <th
+                className="w-1/6 px-3 py-2 cursor-pointer text-right text-sm font-medium text-gray-600 uppercase tracking-wide hidden sm:table-cell"
+                onClick={() => handleSort('purchasePrice')}
+              >
+                <span className="inline-flex items-center">
+                  Закупочная цена
+                  <span className="ml-1 inline-block w-4">
+                    {sortField === 'purchasePrice'
+                      ? sortOrder === 'asc'
+                        ? '↑'
+                        : '↓'
+                      : ''}
+                  </span>
+                </span>
+              </th>
+              <th
                 className="w-1/6 px-3 py-2 cursor-pointer text-right text-sm font-medium text-gray-600 uppercase tracking-wide"
                 onClick={() => handleSort('price')}
               >
@@ -464,6 +483,9 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
                   <td className="w-1/6 px-3 py-2 text-right">
                     <div className="h-4 bg-neutral-200 rounded w-1/2 ml-auto" />
                   </td>
+                  <td className="w-1/6 px-3 py-2 text-right hidden sm:table-cell">
+                    <div className="h-4 bg-neutral-200 rounded w-1/3 ml-auto" />
+                  </td>
                   <td className="w-1/6 px-3 py-2 text-right">
                     <div className="h-4 bg-neutral-200 rounded w-1/4 ml-auto" />
                   </td>
@@ -474,7 +496,7 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
               ))}
             {!isInitialLoading && products.length === 0 && (
               <tr className="row">
-                <td colSpan={6} className="px-3 py-2 text-center">
+                <td colSpan={7} className="px-3 py-2 text-center">
                   Товары не найдены
                 </td>
               </tr>
@@ -532,6 +554,11 @@ const ProductsTable = ({ isAddOpen, onCloseAdd }: ProductsTableProps) => {
                         </span>
                       )}
                     </div>
+                  </td>
+                  <td className="w-1/6 px-3 py-2 text-right hidden sm:table-cell tabular-nums">
+                    {Number.isFinite(prod.purchasePrice)
+                      ? formatCurrency(prod.purchasePrice)
+                      : '—'}
                   </td>
                   <td className="w-1/6 px-3 py-2 text-right tabular-nums">
                     {formatCurrency(prod.price)}
