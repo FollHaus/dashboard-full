@@ -1,6 +1,83 @@
+import { NotFoundException } from '@nestjs/common'
 import { SaleService } from './sale.service'
 import { UpdateSaleDto } from './dto/update.sale.dto'
 import { CreateSaleDto } from './dto/sale.dto'
+
+describe('SaleService basic methods', () => {
+        let service: SaleService
+        let saleRepo: any
+        let sequelize: any
+        let productService: any
+
+        beforeEach(() => {
+                saleRepo = {
+                        findAll: jest.fn(),
+                        findByPk: jest.fn()
+                }
+                sequelize = { transaction: jest.fn() }
+                productService = { increaseRemains: jest.fn() }
+                service = new SaleService(
+                        saleRepo as any,
+                        sequelize as any,
+                        productService as any
+                )
+        })
+
+        describe('findAll', () => {
+                it('returns sales with product', async () => {
+                        const list: any[] = []
+                        saleRepo.findAll.mockResolvedValue(list)
+                        await expect(service.findAll()).resolves.toBe(list)
+                        expect(saleRepo.findAll).toHaveBeenCalledWith({
+                                include: ['product']
+                        })
+                })
+        })
+
+        describe('findOne', () => {
+                it('returns sale', async () => {
+                        const sale = { id: 1 }
+                        saleRepo.findByPk.mockResolvedValue(sale)
+                        await expect(service.findOne(1)).resolves.toBe(sale)
+                        expect(saleRepo.findByPk).toHaveBeenCalledWith(1, {
+                                include: ['product']
+                        })
+                })
+
+                it('throws NotFoundException', async () => {
+                        saleRepo.findByPk.mockResolvedValue(null)
+                        await expect(service.findOne(1)).rejects.toThrow(
+                                NotFoundException
+                        )
+                })
+        })
+
+        describe('remove', () => {
+                it('removes sale and restores stock', async () => {
+                        const destroy = jest.fn()
+                        saleRepo.findByPk.mockResolvedValue({
+                                productId: 1,
+                                quantitySold: 2,
+                                destroy
+                        })
+                        const trx = {}
+                        sequelize.transaction.mockImplementation(async (cb) => cb(trx))
+                        await service.remove(1)
+                        expect(productService.increaseRemains).toHaveBeenCalledWith(
+                                1,
+                                2,
+                                trx
+                        )
+                        expect(destroy).toHaveBeenCalledWith({ transaction: trx })
+                })
+
+                it('throws NotFoundException', async () => {
+                        saleRepo.findByPk.mockResolvedValue(null)
+                        sequelize.transaction.mockImplementation(async (cb) => cb({}))
+                        await expect(service.remove(1)).rejects.toThrow(NotFoundException)
+                })
+        })
+})
 
 describe('SaleService.update', () => {
         it('should handle product change with stock adjustments and price recalculation', async () => {
@@ -142,3 +219,4 @@ describe('SaleService.createSale transactions', () => {
                 expect(rollback).toHaveBeenCalled()
         })
 })
+
