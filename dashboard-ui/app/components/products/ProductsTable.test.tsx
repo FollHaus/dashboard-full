@@ -63,6 +63,12 @@ describe('ProductsTable', () => {
     expect(await screen.findByText('Product 1')).toBeInTheDocument()
   })
 
+  it('displays purchase price in table', async () => {
+    renderTable()
+    await screen.findByText('Product 1')
+    expect(screen.getByText(/10,00.*₽/)).toBeInTheDocument()
+  })
+
   it('shows error on API failure', async () => {
     server.use(
       http.get('http://localhost:4000/api/products', () => HttpResponse.error())
