@@ -495,7 +495,7 @@ export default function ReportsPage() {
 
         {active === 'warehouse' && <WarehouseTab filters={appliedFilters} />}
 
-        {active === 'tasks' && <TasksTab filters={appliedFilters} />}
+        {active === 'tasks' && <TasksTab />}
       </div>
     </Layout>
   )
